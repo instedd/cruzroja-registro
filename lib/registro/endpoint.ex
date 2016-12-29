@@ -11,6 +11,11 @@ defmodule Registro.Endpoint do
     at: "/", from: :registro, gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 
+
+  plug Plug.Static,
+    at: "/", from: "./node_modules/materialize-css/dist/", gzip: false,
+    only: ~w(css fonts js)
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

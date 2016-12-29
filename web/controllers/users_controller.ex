@@ -1,7 +1,10 @@
 defmodule Registro.UsersController do
   use Registro.Web, :controller
 
+  alias Registro.User
+
   def index(conn, _params) do
-    render conn, "index.html"
+    users = Repo.all(User)
+    render(conn, "index.html", users: users)
   end
 end

@@ -1,3 +1,8 @@
 <div>
-  Tu perfil
+  Usuarios:
+  <ul>
+  <%= for u <- @users do %>
+    <li><%= u.name %></li>
+  <% end %>
+  </ul>
 </div>

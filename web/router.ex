@@ -36,6 +36,8 @@ defmodule Registro.Router do
   scope "/", Registro do
     pipe_through :protected
     coherence_routes :protected
+
+    get "/users/:id", UsersController, :index
   end
 
 

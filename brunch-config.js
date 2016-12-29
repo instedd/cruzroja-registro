@@ -64,6 +64,11 @@ exports.config = {
   },
 
   npm: {
-    enabled: true
+    enabled: true,
+    // Materialize assumes a global jQuery object
+    globals: {
+      $: 'jquery',
+      jQuery: 'jquery'
+    }
   }
 };

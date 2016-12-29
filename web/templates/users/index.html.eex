@@ -1,27 +1,29 @@
 <h1>Usuarios</h1>
 
-<table class="bordered responsive-table">
-  <thead>
-    <tr>
-        <th data-field="name">Nombre</th>
-        <th data-field="email">Email</th>
-        <th data-field="age">Edad</th>
-        <th data-field="role">Rol</th>
-        <th data-field="status">Estado</th>
-        <th data-field="branch">Filial</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <%= for u <- @users do %>
+<div class="table">
+  <table class="bordered responsive-table">
+    <thead>
       <tr>
-        <td><%= u.name %></td>
-        <td><%= u.email %></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
+          <th data-field="name">Nombre</th>
+          <th data-field="email">Email</th>
+          <th data-field="age">Edad</th>
+          <th data-field="role">Rol</th>
+          <th data-field="status">Estado</th>
+          <th data-field="branch">Filial</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+
+    <tbody>
+      <%= for u <- @users do %>
+        <tr>
+          <td><%= u.name %></td>
+          <td><%= u.email %></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

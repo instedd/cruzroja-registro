@@ -1,7 +1,47 @@
 /* This file is for your main application css. */
 
 $background-gray: #EEEEEE;
+$white: #FFFFFF;
+$black: #000000;
 
 body {
   background-color: $background-gray;
+}
+
+#cross {
+  background: red;
+  height: 41px;
+  position: relative;
+  left: 0px;
+  top: 15px;
+  width: 15px;
+}
+#cross:after {
+  background: red;
+  content: "";
+  height: 15px;
+  left: -13px;
+  position: absolute;
+  top: 13px;
+  width: 41px;
+}
+
+nav {
+  height: 70px;
+
+  ul li a {
+    color: $black;
+  }
+}
+
+.table {
+  background: $white;
+  box-shadow: 0px 1px 5px #AAAAAA;
+  border-radius: 3px;
+
+  table {
+    tr td, th {
+      padding: 25px;
+    }
+  }
 }

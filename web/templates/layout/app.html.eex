@@ -7,13 +7,30 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Registro!</title>
+    <title>Cruz Roja Argentina</title>
     <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/materialize.min.css") %>">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
   <body>
+    <nav class="white" role="navigation">
+      <div class="nav-wrapper container">
+        <a id="logo-container" href="#" class="brand-logo"><div id="cross"></div></a>
+        <ul class="right hide-on-med-and-down">
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/users">Usuarios</a></li>
+          <li><a href="#">Filiales</a></li>
+        </ul>
+
+        <ul id="nav-mobile" class="side-nav" style="transform: translateX(-100%);">
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/users">Usuarios</a></li>
+          <li><a href="#">Filiales</a></li>
+        </ul>
+        <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+      </div>
+    </nav>
     <div class="container">
       <!-- <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p> -->
       <!-- <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p> -->

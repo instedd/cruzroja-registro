@@ -22,7 +22,7 @@ defmodule Registro.Coherence.PasswordController do
   @doc false
   def layout_view(conn, _) do
     conn
-    |> put_layout({Coherence.LayoutView, "app.html"})
+    |> put_layout({Registro.LayoutView, "app.html"})
     |> put_view(Coherence.PasswordView)
   end
 

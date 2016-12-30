@@ -1,34 +1,53 @@
-<br \>
+<div id="landing" class="row">
+  <div class="col s12 m6">
+    <div class="narrow">
+      <h1>¿Nuevo usuario?</h1>
 
-<%= form_for @conn, session_path(@conn, :create), [as: :session], fn f  -> %>
+      Registrate en el sitio como un nuevo usuario para:
+      <ul class="browser-default">
+        <li>Asociarte a Cruz Roja Argentina</li>
+        <li>Unirte como voluntario</li>
+        <li>Reempadronarte si ya sos miembro</li>
+      </ul>
 
-  <% login_field = Coherence.Config.login_field %>
-  <div class="form-group">
-    <%= required_label f, login_field, class: "control-label" %>
-    <%= text_input f, login_field, class: "form-control", required: "" %>
-    <%= error_tag f, login_field %>
-  </div>
 
-  <div class="form-group">
-    <%= required_label f, :password, class: "control-label" %>
-    <%= password_input f, :password, class: "form-control", required: "" %>
-    <%= error_tag f, :password %>
-  </div>
-
-  <%= if @remember do %>
-    <div class="form-group">
-      <input type="checkbox"  name="remember"> Remember Me?
+      <%= link(to: coherence_path(Registro.Router.Helpers, :registration_path, @conn, :new), id: "register") do %>
+        <i class="material-icons">person_add</i>
+        Registrarme
+      <% end %>
     </div>
-    <br />
-  <% end %>
 
-  <div class="form-group">
-    <%= submit "Sign In", class: "btn btn-primary" %>
-    <%= link "Cancel", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
   </div>
 
-  <div class="form-group">
-    <%= coherence_links(@conn, :new_session) %>
-  </div>
+  <div class="col s12 m6">
+    <div class="login narrow">
+      <%= form_for @conn, session_path(@conn, :create), [as: :session], fn f  -> %>
 
-<% end %>
+      <% login_field = Coherence.Config.login_field %>
+      <div class="form-group">
+        <%= label f, login_field, class: "control-label" %>
+        <%= text_input f, login_field, class: "form-control", required: "", autofocus: "" %>
+        <%= error_tag f, login_field %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, :password, "Contraseña", class: "control-label" %>
+        <%= password_input f, :password, class: "form-control", required: "" %>
+        <%= error_tag f, :password %>
+
+        <%= recover_link(@conn, Coherence.Config.user_schema, "Olvidé mi contraseña") %>
+      </div>
+
+      <%= if @remember do %>
+        <div class="form-group">
+          <input type="checkbox"  name="remember"> Remember Me?
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= submit "Iniciar sesión", class: "btn btn-large right" %>
+      </div>
+      <% end %>
+    </div>
+  </div>
+</div>

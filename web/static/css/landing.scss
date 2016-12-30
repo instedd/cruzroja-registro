@@ -1,0 +1,40 @@
+#landing {
+  > .col {
+    padding: 40px;
+
+    h1 {
+      font-size: 30px;
+    }
+
+    ul {
+      margin-top: 30px;
+      li {
+        margin-bottom: 10px;
+      }
+    }
+
+    #register {
+      float: right;
+      display: flex;
+      flex-direction: row;
+      font-size: 18px;
+      margin-top: 55px;
+
+      i {
+        margin-right: 10px;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 35px;
+    }
+  }
+
+  .narrow {
+    max-width: 380px;
+  }
+
+  .login {
+    padding-top: 30px;
+  }
+}

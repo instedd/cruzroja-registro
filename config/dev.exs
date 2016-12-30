@@ -37,7 +37,7 @@ config :phoenix, :stacktrace_depth, 20
 config :registro, Registro.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: "postgres",
+  password: "",
   database: "registro_dev",
   hostname: "localhost",
   pool_size: 10

@@ -1,0 +1,7 @@
+language: elixir
+elixir:
+  - 1.3.4
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database registro_test;' -U postgres

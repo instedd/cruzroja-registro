@@ -5,3 +5,9 @@ services:
   - postgresql
 before_script:
   - psql -c 'create database registro_test;' -U postgres
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: ./deploy.sh
+  on:
+    all_branches: true

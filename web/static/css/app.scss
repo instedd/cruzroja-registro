@@ -1,8 +1,6 @@
 /* This file is for your main application css. */
 
-$background-gray: #EEEEEE;
-$white: #FFFFFF;
-$black: #000000;
+@import "_variables";
 
 body {
   background-color: $background-gray;
@@ -45,3 +43,5 @@ nav {
     }
   }
 }
+
+@import "_landing";

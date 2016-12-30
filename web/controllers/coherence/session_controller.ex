@@ -191,7 +191,8 @@ defmodule Registro.Coherence.SessionController do
   Render the login form.
   """
   def login_callback(conn) do
-    new(conn, %{})
+    conn
+    |> redirect(to: "/")
     |> halt
   end
 

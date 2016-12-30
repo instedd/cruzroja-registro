@@ -21,14 +21,14 @@ defmodule Registro.Router do
 
   # Require authentication
   pipeline :check_authentication do
-    plug Coherence.Authentication.Session, protected: true  # Add this
+    plug Coherence.Authentication.Session, protected: true
   end
 
   scope "/", Registro do
-    pipe_through :browser
+    pipe_through [:browser, :set_user]
     coherence_routes
 
-    get "/", PageController, :index
+    get "/", HomeController, :index
   end
 
   scope "/", Registro do

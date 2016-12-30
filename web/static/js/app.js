@@ -19,3 +19,12 @@ import "phoenix_html";
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
+
+import { Filters } from "web/static/js/filters";
+
+export var App = {
+  run: function(){
+    Filters.activateSelects();
+    Filters.setupFilters()
+  }
+}

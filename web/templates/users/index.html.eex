@@ -1,5 +1,38 @@
 <h1>Usuarios</h1>
 
+<p><a class="btn-floating btn-large waves-effect waves-light red" href="<%= registration_path(@conn, :new) %>">
+  <i class="material-icons">add</i>
+</a></p>
+<div class="filters">
+  <form>
+    <div class="row">
+    <div class="input-field col s2">
+      <select id="role">
+        <option value="" disabled selected>Rol</option>
+        <option value="volunteer">Voluntario</option>
+        <option value="associate">Asociado</option>
+        <option value="employee">Empleado</option>
+      </select>
+    </div>
+    <div class="input-field col s2">
+      <select id="status">
+        <option value="" disabled selected>Estado</option>
+        <option value="at_start">Trámite iniciado</option>
+        <option value="interview_pending">Llamado a entrevista</option>
+        <option value="approved">Aprobado</option>
+      </select>
+    </div>
+    <div class="input-field col s2">
+      <select>
+        <option value="" disabled selected>Filial</option>
+        <option value="1">Villa Crespo</option>
+        <option value="2">Córdoba</option>
+        <option value="3">Rosario</option>
+      </select>
+    </div>
+    </div>
+  </form>
+</div>
 <div class="table">
   <table class="bordered responsive-table">
     <thead>
@@ -13,7 +46,7 @@
       </tr>
     </thead>
 
-    <tbody>
+    <tbody id="replaceable">
       <%= for u <- @users do %>
         <tr>
           <td><%= u.name %></td>

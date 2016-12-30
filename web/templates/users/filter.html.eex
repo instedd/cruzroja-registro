@@ -1,0 +1,10 @@
+<%= for u <- @users do %>
+  <tr>
+    <td><%= u.name %></td>
+    <td><%= u.email %></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+<% end %>

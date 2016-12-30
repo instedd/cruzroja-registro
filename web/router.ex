@@ -36,5 +36,6 @@ defmodule Registro.Router do
     coherence_routes :protected
 
     get "/users/", UsersController, :index
+    get "/users/filter", UsersController, :filter
   end
 end

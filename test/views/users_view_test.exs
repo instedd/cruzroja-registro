@@ -1,3 +1,3 @@
-defmodule Registro.PageViewTest do
+defmodule Registro.UsersViewTest do
   use Registro.ConnCase, async: true
 end

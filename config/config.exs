@@ -30,7 +30,7 @@ config :coherence,
   logged_out_url: "/",
   email_from_name: "Cruz Roja Argentina",
   email_from_email: "noreply@instedd.org",
-  opts: [:authenticatable, :recoverable, :trackable, :registerable]
+  opts: [:authenticatable, :recoverable, :trackable, :registerable, :rememberable]
 
 config :coherence, Registro.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local

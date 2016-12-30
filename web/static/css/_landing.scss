@@ -40,5 +40,15 @@
 
   .login {
     padding-top: 30px;
+
+    .login-settings {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+
+      span:first-child {
+        flex-grow: 1;
+      }
+    }
   }
 }

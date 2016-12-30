@@ -35,14 +35,17 @@
         <%= password_input f, :password, class: "form-control", required: "" %>
         <%= error_tag f, :password %>
 
-        <%= recover_link(@conn, Coherence.Config.user_schema, "Olvidé mi contraseña") %>
-      </div>
+        <div class="login-settings">
+          <span>
+            <input type="checkbox" id="remember" name="remember" checked="checked"/>
+            <label for="remember">Recordarme</label>
+          </span>
 
-      <%= if @remember do %>
-        <div class="form-group">
-          <input type="checkbox"  name="remember"> Remember Me?
+          <span>
+            <%= recover_link(@conn, Coherence.Config.user_schema, "Olvidé mi contraseña") %>
+          </span>
         </div>
-      <% end %>
+      </div>
 
       <div class="form-group">
         <%= submit "Iniciar sesión", class: "btn btn-large right" %>

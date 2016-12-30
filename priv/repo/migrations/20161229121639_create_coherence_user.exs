@@ -15,9 +15,7 @@ defmodule Registro.Repo.Migrations.CreateCoherenceUser do
       add :last_sign_in_at, :datetime
       add :current_sign_in_ip, :string
       add :last_sign_in_ip, :string
-      # unlockable_with_token
-      add :unlock_token, :string
-      
+
       timestamps()
     end
     create unique_index(:users, [:email])

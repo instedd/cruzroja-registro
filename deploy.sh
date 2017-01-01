@@ -1,5 +1,10 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
 PROJECT_VERSION=`mix run --no-compile --no-start -e 'IO.write Mix.Project.config[:version]'`
+
+EXTRA_DOCKER_TAG=""
 
 if [ "$TRAVIS_TAG" = "" ]; then
   REV=`git rev-parse --short HEAD`
@@ -45,6 +50,7 @@ echo "Version: $VERSION"
 echo $VERSION > VERSION
 
 # Build assets
+echo "Building assets"
 docker pull node:6.9.2
 docker run -w /app -v `pwd`:/app -v `pwd`/deps:/app/deps -v `pwd`/node_modules:/app/node_modules --rm node:6.9.2 npm --loglevel=silent install
 docker run -w /app -v `pwd`:/app -v `pwd`/deps:/app/deps -v `pwd`/node_modules:/app/node_modules --rm node:6.9.2 node_modules/brunch/bin/brunch build

@@ -46,7 +46,8 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def create(conn, %{"registration" => registration_params} = params) do
     user_schema = Config.user_schema
-    cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__, registration_params)
+    cs =  Helpers.changeset(:registration, user_schema, user_schema.__struct__, registration_params)
+          |> Ecto.Changeset.put_change(:role, "volunteer")
     case Config.repo.insert(cs) do
       {:ok, user} ->
         conn

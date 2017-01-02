@@ -24,7 +24,9 @@ defmodule Registro.UsersController do
 
   def filter(conn, params) do
     query = from u in User,
-              select: u
+            select: u,
+            preload: [:branch]
+
     if params["role"] do
       query = from u in query,
                 where: u.role == ^params["role"]

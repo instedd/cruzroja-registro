@@ -5,6 +5,6 @@
     <td></td>
     <td><%= u.role %></td>
     <td><%= u.status %></td>
-    <td><%= u.branch %></td>
+    <td><%= branch_label(u) %></td>
   </tr>
 <% end %>

@@ -7,7 +7,7 @@ defmodule Registro.User do
     field :email, :string
     field :status, :string
     field :role, :string
-    field :branch, :integer
+    belongs_to :branch, Registro.Branch
     coherence_schema
 
     timestamps
@@ -15,7 +15,7 @@ defmodule Registro.User do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :email, :status, :branch, :role] ++ coherence_fields)
+    |> cast(params, [:name, :email, :status, :branch_id, :role] ++ coherence_fields)
     |> validate_required([:name, :email])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email)

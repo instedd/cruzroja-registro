@@ -13,6 +13,7 @@ defmodule Registro.Coherence.RegistrationController do
   use Coherence.Web, :controller
   require Logger
   alias Coherence.ControllerHelpers, as: Helpers
+  import Ecto.Query
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
@@ -34,8 +35,12 @@ defmodule Registro.Coherence.RegistrationController do
   def new(conn, _params) do
     user_schema = Config.user_schema
     cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
+
+    branches = Registro.Repo.all(from b in Registro.Branch, select: b, order_by: :name)
+             |> Enum.map(fn branch -> { branch.name, branch.id } end)
+
     conn
-    |> render(:new, email: "", changeset: cs)
+    |> render(:new, email: "", branches: branches, changeset: cs)
   end
 
   @doc """

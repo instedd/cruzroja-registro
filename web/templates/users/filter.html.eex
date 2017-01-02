@@ -3,7 +3,7 @@
     <td><%= u.name %></td>
     <td><%= u.email %></td>
     <td></td>
-    <td><%= u.role %></td>
+    <td><%= Registro.User.role_label(u.role) %></td>
     <td><%= u.status %></td>
     <td><%= branch_label(u) %></td>
   </tr>

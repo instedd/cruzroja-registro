@@ -22,6 +22,13 @@ defmodule Registro.User do
     |> validate_coherence(params)
   end
 
+  def role_label(role) do
+    case role do
+      "administrator" -> "Empleado de Sede Central"
+      "branch_employee" -> "Empleado de Filial"
+      "volunteer" -> "Voluntario"
+    end
+  end
 
   def is_employee?(user) do
     user.role == "administrator" or user.role == "branch_employee"

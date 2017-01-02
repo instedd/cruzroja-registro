@@ -8,6 +8,16 @@ defmodule Registro.UsersController do
     render(conn, "index.html", users: users)
   end
 
+  def profile(conn, _params) do
+    changeset = User.changeset(conn.assigns[:current_user])
+    render(conn, "profile.html", changeset: changeset)
+  end
+
+  def update(conn, _params) do
+    # TODO: check authorization
+    # TODO: check which fields can be updated
+  end
+
   def filter(conn, params) do
     query = from u in User,
               select: u

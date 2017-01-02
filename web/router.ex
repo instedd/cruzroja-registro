@@ -35,7 +35,9 @@ defmodule Registro.Router do
     pipe_through [:browser, :check_authentication]
     coherence_routes :protected
 
+    get "/profile", UsersController, :profile
     get "/users/", UsersController, :index
+    put "/users/:id", UsersController, :update
     get "/users/filter", UsersController, :filter
   end
 end

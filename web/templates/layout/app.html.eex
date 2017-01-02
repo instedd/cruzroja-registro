@@ -18,7 +18,7 @@
         <a id="logo-container" href="#" class="brand-logo"><div id="cross"></div></a>
         <%= if assigns[:current_user] do %>
           <ul class="right hide-on-med-and-down">
-            <li><a href="/">Inicio</a></li>
+            <li><a href="/profile">Inicio</a></li>
             <li><a href="/users">Usuarios</a></li>
             <li><a href="#">Filiales</a></li>
             <li>
@@ -27,7 +27,7 @@
           </ul>
 
           <ul id="nav-mobile" class="side-nav" style="transform: translateX(-100%);">
-            <li><a href="/">Inicio</a></li>
+            <li><a href="/profile">Inicio</a></li>
             <li><a href="/users">Usuarios</a></li>
             <li><a href="#">Filiales</a></li>
             <li>

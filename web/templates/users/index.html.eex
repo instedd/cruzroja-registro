@@ -33,7 +33,7 @@
     </div>
   </form>
 </div>
-<div class="content-main">
+<div class="content-main table">
   <table class="bordered responsive-table">
     <thead>
       <tr>

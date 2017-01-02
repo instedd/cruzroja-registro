@@ -6,7 +6,7 @@ defmodule Registro.HomeController do
       nil ->
         Registro.Coherence.SessionController.new(conn, params)
       _ ->
-        redirect(conn, to: users_path(conn, :index))
+        redirect(conn, to: users_path(conn, :profile))
     end
   end
 end

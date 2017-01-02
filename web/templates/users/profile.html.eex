@@ -1,0 +1,28 @@
+<div id="profile">
+  <div class="content-main">
+    <h3>Tu perfil</h3>
+
+    <%= form_for @changeset, users_path(@conn, :update, @current_user), fn f -> %>
+      <div class="form-group">
+        <%= label f, :name, "Nombre", class: "control-label" %>
+        <%= text_input f, :name, class: "form-control", required: "", disabled: "" %>
+        <%= error_tag f, :name %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, :email, class: "control-label" %>
+        <%= text_input f, :email, class: "form-control", required: "", disabled: "" %>
+        <%= error_tag f, :email %>
+      </div>
+
+      <div class="form-group actions">
+        <%= submit "Actualizar", class: "btn btn-primary", disabled: "" %>
+      </div>
+
+      <p class="user-status">
+        <!-- TODO: visualize real status and branch -->
+        Actualmente te encontrás <b>en proceso de aprobación</b> para ser voluntario de la filial Saavedra.
+      </p>
+    <% end %>
+  </div>
+</div>

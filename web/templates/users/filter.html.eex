@@ -3,8 +3,8 @@
     <td><%= u.name %></td>
     <td><%= u.email %></td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td><%= u.role %></td>
+    <td><%= u.status %></td>
+    <td><%= u.branch %></td>
   </tr>
 <% end %>

@@ -9,13 +9,23 @@ defmodule Registro.UsersController do
   end
 
   def filter(conn, params) do
-    role = params["role"]
-    users = Repo.all(User)
-    # users = Repo.all from u in User,
-    #           where: u.role = role,
-    #           select: u
+    query = from u in User,
+              select: u
+    if params["role"] do
+      query = from u in query,
+                where: u.role == ^params["role"]
+    end
+    if params["branch"] do
+      query = from u in query,
+                where: u.branch == ^params["branch"]
+    end
+    if params["status"] do
+      query = from u in query,
+                where: u.status == ^params["status"]
+    end
+    users = Repo.all(query)
     conn
     |> put_layout(false)
-    |> render "filter.html", users: users
+    |> render("filter.html", users: users)
   end
 end

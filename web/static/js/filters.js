@@ -1,19 +1,28 @@
 var build_query = function() {
-  return "/users/filter?role=" + value_for('role') + "&status=" + value_for('status') + "&branch=" + value_for('branch');
+  var query = "/users/filter?"
+  if(value_for('role'))
+    query += "role=" + value_for('role') + "&"
+  if(value_for('status'))
+    query += "status=" + value_for('status') + "&"
+  if(value_for('branch'))
+    query += "branch=" + value_for('branch')
+  return query;
 }
 
 var value_for = function(name) {
+  var res = ""
   switch(name) {
     case 'role':
-      $('#role').val();
+      res = $('#role').val();
       break;
     case 'status':
-      $('#status').val();
+      res = $('#status').val();
       break;
     case 'branch':
-      $('#branch').val();
+      res = $('#branch').val();
       break;
   }
+  return res;
 }
 
 export var Filters = {
@@ -25,7 +34,6 @@ export var Filters = {
       $.ajax({
         url: build_query(),
         type: "get",
-        dataType: "json",
         success: function (data) {
           $('tbody#replaceable').html(data)
         }

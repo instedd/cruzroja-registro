@@ -6,7 +6,12 @@ defmodule Registro.HomeController do
       nil ->
         Registro.Coherence.SessionController.new(conn, params)
       _ ->
-        redirect(conn, to: users_path(conn, :profile))
+        user = conn.assigns[:current_user]
+        if Registro.User.can_read(user) do
+          redirect(conn, to: users_path(conn, :index))
+        else
+          redirect(conn, to: users_path(conn, :profile))
+        end
     end
   end
 end

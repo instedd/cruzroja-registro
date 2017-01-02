@@ -3,6 +3,8 @@ defmodule Registro.UsersController do
 
   alias Registro.User
 
+  plug :authorize_user when action in [:index, :filter]
+
   def index(conn, _params) do
     users = Repo.all(User)
     render(conn, "index.html", users: users)
@@ -37,5 +39,13 @@ defmodule Registro.UsersController do
     conn
     |> put_layout(false)
     |> render("filter.html", users: users)
+  end
+
+  defp authorize_user(conn, _) do
+    if User.can_read(conn.assigns[:current_user]) do
+      conn
+    else
+      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt
+    end
   end
 end

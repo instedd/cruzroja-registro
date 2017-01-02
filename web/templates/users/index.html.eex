@@ -1,8 +1,9 @@
 <h1>Usuarios</h1>
 
-<p><a class="btn-floating btn-large waves-effect waves-light red" href="<%= registration_path(@conn, :new) %>">
+<%# <p><a class="btn-floating btn-large waves-effect waves-light red" href="<%= registration_path(@conn, :new)">
   <i class="material-icons">add</i>
 </a></p>
+ %>
 <div class="filters">
   <form>
     <div class="row">
@@ -11,7 +12,8 @@
         <option value="" disabled selected>Rol</option>
         <option value="volunteer">Voluntario</option>
         <option value="associate">Asociado</option>
-        <option value="employee">Empleado</option>
+        <option value="branch_employee">Empleado de Filial</option>
+        <option value="administrator">Empleado de Casa Central</option>
       </select>
     </div>
     <div class="input-field col s2">

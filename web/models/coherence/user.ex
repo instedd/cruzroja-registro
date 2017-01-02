@@ -21,4 +21,8 @@ defmodule Registro.User do
     |> unique_constraint(:email)
     |> validate_coherence(params)
   end
+
+  def can_read(user) do
+    user.role == "administrator" or user.role == "branch_employee"
+  end
 end

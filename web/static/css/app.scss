@@ -37,12 +37,29 @@ nav {
   box-shadow: 0px 1px 5px #AAAAAA;
   border-radius: 3px;
 
+  &:not(.table) {
+    margin-top: 20px;
+    padding: 20px 40px 40px 40px;
+  }
+
+  h3 {
+    margin-bottom: 30px;
+  }
+
   table {
     tr td, th {
       padding: 25px;
     }
   }
+
+  form {
+    margin-top: 40px;
+
+    .form-group.actions {
+      margin-top: 30px;
+    }
+  }
 }
 
 @import "_landing";
-@import "_register";
+@import "_profile";

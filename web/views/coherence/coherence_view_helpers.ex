@@ -161,9 +161,13 @@ defmodule Registro.Coherence.ViewHelpers do
   end
 
   def required_label(f, name, opts \\ []) do
+    required_label(f, name, humanize(name), opts)
+  end
+
+  def required_label(f, name, text, opts) do
     label f, name, opts do
       [
-        "#{humanize(name)}\n",
+        "#{text}\n",
         content_tag(:abbr, "*", class: "required", title: "required")
       ]
     end

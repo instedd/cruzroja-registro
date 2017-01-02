@@ -51,6 +51,7 @@ defmodule Registro.Coherence.RegistrationController do
       {:ok, user} ->
         conn
         |> send_confirmation(user, user_schema)
+        |> translate_flash
         |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
       {:error, changeset} ->
         conn
@@ -107,5 +108,26 @@ defmodule Registro.Coherence.RegistrationController do
     conn = Coherence.SessionController.delete(conn)
     Config.repo.delete! user
     redirect_to(conn, :registration_delete, params)
+  end
+
+  @doc "
+  Hack!
+  Coherence currently provides no way to customize flash messages defined in it's internal helpers.
+  "
+  defp translate_flash(conn) do
+    translations = %{
+      "Registration created successfully." => "Registración exitosa."
+    }
+
+    info_flash = get_flash(conn, :info)
+
+    case translations[info_flash] do
+      nil ->
+        conn
+
+      translation ->
+        conn
+        |> put_flash(:info, translation)
+    end
   end
 end

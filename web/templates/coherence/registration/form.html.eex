@@ -1,7 +1,4 @@
 <%= form_for @changeset, @action, [as: :registration], fn f  -> %>
-
-  <h4>Ingresá tus datos</h4>
-
   <%= if @changeset.action do %>
     <div class="alert alert-danger">
       <p>Oops, something went wrong! Please check the errors below.</p>
@@ -39,7 +36,7 @@
     </div>
   <% end %>
 
-  <div class="form-group">
+  <div class="form-group actions">
     <%= submit "Aceptar", class: "btn btn-primary" %>
     <%= link "Cancel", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
   </div>

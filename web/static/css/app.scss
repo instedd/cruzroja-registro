@@ -32,7 +32,7 @@ nav {
   }
 }
 
-.table {
+.content-main {
   background: $white;
   box-shadow: 0px 1px 5px #AAAAAA;
   border-radius: 3px;
@@ -45,3 +45,4 @@ nav {
 }
 
 @import "_landing";
+@import "_register";

@@ -1,5 +1,11 @@
-<h3>Registración</h3>
+<div id="register">
+  <div class="content-main">
+    <h3>Registración</h3>
 
-<%= render "form.html", changeset: @changeset,
-                        required: [required: ""],
-                        action: registration_path(@conn, :create) %>
+    <h4>Ingresá tus datos</h4>
+
+    <%= render "form.html", changeset: @changeset,
+                            required: [required: ""],
+                            action: registration_path(@conn, :create) %>
+  </div>
+</div>

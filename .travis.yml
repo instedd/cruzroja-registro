@@ -10,6 +10,9 @@ before_script:
 deploy:
   skip_cleanup: true
   provider: script
-  script: ./deploy.sh
+  script: "./deploy.sh"
   on:
     all_branches: true
+notifications:
+  slack:
+    secure: r9fN0esX0Y9r6mycqAyg970JJFbsJ1cNLxLxGTKJGbKTqj2rHrap5+oNlKC+wEOIcifuaYBiyTBpDORgZqpGmAop/iavK3d9OOq7QlTGbZ0KUXsOxEM3QPhYdKbyhi+rrA7tF7ajS9bn5zBYUOLeQbbh+ygYQb/yd85C5zHq2YtO6boAGz/Ldg5W8eBKBVIf7DEWDilxrbYvjrKe+nokFZPknqBLzWcHE8/6lgHpi1RzWi/p94ixcWV/7wSNyu626tFvwI996BbJ8loGsk4s0h+wgWkEgmFQAOScP2QabGmrJnVAtsAA6HMRrTqltilO7Pa4JATd3gYzAzM987EQAE275ODDxFjztpNNYx0EwjEZQhytXDRR+stqEb/yNm3COpIYIo+IeK8u11dzCqNIMwxbo1pj4KeGiBmJiEtNLpbaRTG+9PBUr6kPr777nbO4fR9l1NTV+8vuqn/oP3Dk3/o0g7y3N/wBaCA/YHnLNqU2yWiMixsH3E3VCCeyisVdvcEYofTGchUc4JidApVG6dWPN+imx/df/GtzzGfhoWBQIJiO3ydyJwScwMTFP8NZalVHb9Yv76NrPAGY8oBkiCUE5Is4aZ4y+jCgPnEr8i9Dws1LFZwWs+Qw00AWpcnOUoF1aCDckGzudk1dCqb5K2PpXpiAzvnmSFKPRD4wQhs=

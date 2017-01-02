@@ -19,10 +19,13 @@
         <%= submit "Actualizar", class: "btn btn-primary", disabled: "" %>
       </div>
 
-      <p class="user-status">
-        <!-- TODO: visualize real status and branch -->
-        Actualmente te encontrás <b>en proceso de aprobación</b> para ser voluntario de la filial Saavedra.
-      </p>
+      <%= if Registro.User.pending_approval?(@current_user) do %>
+        <p class="user-status">
+          <!-- TODO: visualize real status -->
+          Actualmente te encontrás <b>en proceso de aprobación</b> para ser voluntario de la filial <%= branch_label(@current_user) %>.
+        </p>
+      <% end %>
+
     <% end %>
   </div>
 </div>

@@ -1,4 +1,4 @@
-<li><a href="/profile">Inicio</a></li>
+<li><a href="/profile">Perfil</a></li>
 <%= if Registro.User.can_read(@conn.assigns[:current_user]) do %>
   <li><a href="/users">Usuarios</a></li>
   <li><a href="#">Filiales</a></li>

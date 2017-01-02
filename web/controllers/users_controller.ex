@@ -13,8 +13,12 @@ defmodule Registro.UsersController do
   end
 
   def profile(conn, _params) do
-    changeset = User.changeset(conn.assigns[:current_user])
-    render(conn, "profile.html", changeset: changeset)
+    user = Coherence.current_user(conn)
+    changeset = User.changeset(user)
+
+    conn
+    |> assign(:current_user, Repo.preload(user, :branch))
+    |> render("profile.html", changeset: changeset)
   end
 
   def update(conn, _params) do

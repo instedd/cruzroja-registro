@@ -22,6 +22,16 @@ defmodule Registro.User do
     |> validate_coherence(params)
   end
 
+
+  def is_employee?(user) do
+    user.role == "administrator" or user.role == "branch_employee"
+  end
+
+  def pending_approval?(user) do
+    # TODO: check status
+    !is_employee?(user)
+  end
+
   def can_read(user) do
     user.role == "administrator" or user.role == "branch_employee"
   end

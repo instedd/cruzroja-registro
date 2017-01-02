@@ -6,7 +6,9 @@ defmodule Registro.UsersController do
   plug :authorize_user when action in [:index, :filter]
 
   def index(conn, _params) do
-    users = Repo.all(User)
+    users = Repo.all from u in User,
+                     preload: [:branch]
+
     render(conn, "index.html", users: users)
   end
 

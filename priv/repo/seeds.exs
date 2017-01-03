@@ -14,17 +14,32 @@ alias Registro.Repo
 alias Registro.Branch
 alias Registro.User
 
-File.stream!("priv/data/branches.csv")
-|> Enum.map(fn line -> String.replace(line, "\n", "") end)
-|> Enum.each(fn branch_name ->
-  Branch.changeset(%Branch{}, %{name: branch_name})
-  |> Repo.insert!
-end)
+defmodule Seed do
+  def run do
+    File.stream!("priv/data/branches.csv")
+    |> Enum.map(&parse_branch_line/1)
+    |> Enum.each(fn [branch_name, address] ->
+      Branch.changeset(%Branch{}, %{name: branch_name, address: address}) |> Repo.insert!
+    end)
+
+    users = [
+      %{name: "Admin", email: "admin@instedd.org", password: "admin", password_confirmation: "admin", role: "administrator"},
+      %{name: "Branch Employee", email: "branch@instedd.org", password: "branch", password_confirmation: "branch", role: "branch_employee", branch_id: Repo.get_by!(Branch, name: "Saavedra").id},
+    ]
+
+    Enum.map(users, &insert_user/1)
+  end
+
+  def parse_branch_line(line) do
+    line
+    |> String.replace("\n", "")
+    |> String.split(",")
+  end
 
 
-User.changeset(%User{}, %{name: "Admin", email: "admin@instedd.org", password: "admin", password_confirmation: "admin", role: "administrator"})
-|> Repo.insert!
+  def insert_user(params) do
+    User.changeset(%User{}, params) |> Repo.insert!
+  end
+end
 
-
-User.changeset(%User{}, %{name: "Branch Employee", email: "branch@instedd.org", password: "branch", password_confirmation: "branch", role: "branch_employee", branch_id: Repo.get_by!(Branch, name: "Saavedra").id})
-|> Repo.insert!
+Seed.run

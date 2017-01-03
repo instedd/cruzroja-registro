@@ -1,0 +1,17 @@
+.pager {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  .pager-position {
+    flex-grow: 1;
+    text-align: right;
+    height: 100%;
+    color: $grey-disabled;
+  }
+
+  .pager-controls {
+    width: auto;
+    display: inline;
+  }
+}

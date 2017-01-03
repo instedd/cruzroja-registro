@@ -160,7 +160,7 @@ defmodule Registro.Coherence.ViewHelpers do
     link(text, to: coherence_path(@helpers, :confirmation_path, conn, :new))
   end
 
-  def required_label(f, name, opts \\ []) do
+  def required_label(f, name, opts) do
     required_label(f, name, humanize(name), opts)
   end
 

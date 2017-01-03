@@ -27,6 +27,7 @@ defmodule Registro.User do
       "administrator" -> "Empleado de Sede Central"
       "branch_employee" -> "Empleado de Filial"
       "volunteer" -> "Voluntario"
+      "associate" -> "Asociado"
     end
   end
 

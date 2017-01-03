@@ -25,6 +25,7 @@ import { Filters } from "web/static/js/filters";
 export var App = {
   run: function(){
     Filters.activateSelects();
-    Filters.setupFilters()
+    Filters.setupFilters();
+    // Filters.activateAutocomplete()
   }
 }

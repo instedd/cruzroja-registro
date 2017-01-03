@@ -7,30 +7,40 @@
 <div class="filters">
   <form>
     <div class="row">
-    <div class="input-field col s2">
+    <div class="input-field col s3">
       <select id="role">
         <option value="" disabled selected>Rol</option>
-        <option value="volunteer">Voluntario</option>
-        <option value="associate">Asociado</option>
-        <option value="branch_employee">Empleado de Filial</option>
-        <option value="administrator">Empleado de Casa Central</option>
+        <option value="">Todos</option>
+        <option value="volunteer"><%= Registro.User.role_label("volunteer") %></option>
+        <option value="associate"><%= Registro.User.role_label("associate") %></option>
+        <option value="branch_employee"><%= Registro.User.role_label("branch_employee") %></option>
+        <option value="administrator"><%= Registro.User.role_label("administrator") %></option>
       </select>
     </div>
-    <div class="input-field col s2">
+    <div class="input-field col s3">
       <select id="status">
         <option value="" disabled selected>Estado</option>
-        <option value="at_start">Trámite iniciado</option>
-        <option value="interview_pending">Llamado a entrevista</option>
-        <option value="approved">Aprobado</option>
+        <option value="">Todos</option>
+        <option value="at_start"><%= Registro.User.status_label("at_start") %></option>
+        <option value="approved"><%= Registro.User.status_label("approved") %></option>
+        <option value="rejected"><%= Registro.User.status_label("rejected") %></option>
       </select>
     </div>
-    <div class="input-field col s2">
+    <div class="input-field col s3">
+<%#       <input type="text" id="branch" class="autocomplete">
+      <label for="autocomplete-input">Filial</label>
+ %>
       <select id="branch" name="branch">
         <option value="" disabled selected>Filial</option>
+        <option value="">Todas</option>
         <%= for b <- @branches do %>
           <option value="<%= b.id %>"><%= b.name %></option>
         <% end %>
       </select>
+    </div>
+    <div class="input-field col s3">
+      <input type="text" id="user-name">
+      <label for="user-name">Name o email</label>
     </div>
     </div>
   </form>
@@ -49,16 +59,11 @@
     </thead>
 
     <tbody id="replaceable">
-      <%= for u <- @users do %>
-        <tr>
-          <td><%= u.name %></td>
-          <td><%= u.email %></td>
-          <td></td>
-          <td><%= Registro.User.role_label(u.role) %></td>
-          <td><%= u.status %></td>
-          <td><%= branch_label(u) %></td>
-        </tr>
-      <% end %>
+      <%= render "filter.html", users: @users %>
     </tbody>
   </table>
 </div>
+
+<script>
+  var branches = <%= raw Poison.encode!(@branches) %>;
+</script>

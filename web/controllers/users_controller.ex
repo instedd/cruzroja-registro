@@ -7,8 +7,8 @@ defmodule Registro.UsersController do
 
   def index(conn, _params) do
     users = Repo.all from u in User,
+                     order_by: u.name,
                      preload: [:branch]
-
     conn
     |> assign(:branches, Registro.Branch.all)
     |> render("index.html", users: users)
@@ -44,6 +44,11 @@ defmodule Registro.UsersController do
     if params["status"] do
       query = from u in query,
                 where: u.status == ^params["status"]
+    end
+    if params["name"] do
+      name = "%" <> params["name"] <> "%"
+      query = from u in query,
+                where: ilike(u.name, ^name) or ilike(u.email, ^name)
     end
     users = Repo.all(query)
     conn

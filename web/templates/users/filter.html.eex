@@ -4,7 +4,7 @@
     <td><%= u.email %></td>
     <td></td>
     <td><%= Registro.User.role_label(u.role) %></td>
-    <td><%= u.status %></td>
+    <td><%= Registro.User.status_label(u.status) %></td>
     <td><%= branch_label(u) %></td>
   </tr>
 <% end %>

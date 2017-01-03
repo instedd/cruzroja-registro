@@ -31,6 +31,15 @@ defmodule Registro.User do
     end
   end
 
+  def status_label(status) do
+    case status do
+      "at_start" -> "Pendiente"
+      "approved" -> "Aprobado"
+      "rejected" -> "Rechazado"
+      _ -> ""
+    end
+  end
+
   def is_employee?(user) do
     user.role == "administrator" or user.role == "branch_employee"
   end

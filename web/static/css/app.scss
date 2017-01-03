@@ -61,5 +61,12 @@ nav {
   }
 }
 
+.filters {
+  .autocomplete-content {
+    position: absolute;
+    width: 90%;
+  }
+}
+
 @import "_landing";
 @import "_profile";

@@ -2,6 +2,7 @@ defmodule Registro.UsersController do
   use Registro.Web, :controller
 
   alias Registro.User
+  alias Registro.Branch
 
   plug :authorize_user when action in [:index, :filter]
 
@@ -10,7 +11,7 @@ defmodule Registro.UsersController do
                      order_by: u.name,
                      preload: [:branch]
     conn
-    |> assign(:branches, Registro.Branch.all)
+    |> assign(:branches, Branch.all)
     |> render("index.html", users: users)
   end
 
@@ -29,6 +30,13 @@ defmodule Registro.UsersController do
   end
 
   def filter(conn, params) do
+    if params["branch"] do
+      branch_id = Repo.one from b in Branch,
+                    where: b.name == ^params["branch"],
+                    select: b.id,
+                    limit: 1
+    end
+
     query = from u in User,
             select: u,
             preload: [:branch]
@@ -37,9 +45,9 @@ defmodule Registro.UsersController do
       query = from u in query,
                 where: u.role == ^params["role"]
     end
-    if params["branch"] do
+    if branch_id do
       query = from u in query,
-                where: u.branch_id == ^params["branch"]
+                where: u.branch_id == ^branch_id
     end
     if params["status"] do
       query = from u in query,

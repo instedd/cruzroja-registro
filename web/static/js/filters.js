@@ -34,7 +34,6 @@ var setup = function(data) {
   $.each(data, function(i,e) {
     res[e["name"]] = null
   })
-  console.log(res)
   return res;
 }
 
@@ -43,12 +42,23 @@ export var Filters = {
     $('select').material_select();
   },
   activateAutocomplete: function() {
-    $('input.autocomplete').autocomplete({
-      data: setup(branches)
-    });
+    $( function() {
+      $('input.autocomplete').autocomplete({
+        data: setup(branches)
+      });
+    })
   },
   setupFilters: function(){
-    $('#role, #branch, #status, #user-name').on("change input", function() {
+    $('#role, #branch, #status').on("change", function() {
+      $.ajax({
+        url: build_query(),
+        type: "get",
+        success: function (data) {
+          $('tbody#replaceable').html(data)
+        }
+      });
+    })
+    $('#user-name').on("input", function() {
       $.ajax({
         url: build_query(),
         type: "get",

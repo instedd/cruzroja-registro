@@ -1,0 +1,21 @@
+<h1>Filiales</h1>
+
+<div class="content-main table">
+  <table class="bordered responsive-table">
+    <thead>
+      <tr>
+        <th data-field="name">Nombre</th>
+        <th data-field="address">Dirección</th>
+      </tr>
+    </thead>
+
+    <tbody id="replaceable">
+      <%= for b <- @branches do %>
+        <tr>
+          <td><%= b.name %></td>
+          <td><%= b.address %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

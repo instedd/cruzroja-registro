@@ -12,4 +12,8 @@ defmodule Registro.Branch do
     |> validate_required([:name])
     |> unique_constraint(:name)
   end
+
+  def all do
+    Registro.Repo.all(from b in Registro.Branch, select: b, order_by: :name)
+  end
 end

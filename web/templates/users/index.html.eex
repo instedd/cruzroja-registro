@@ -25,11 +25,11 @@
       </select>
     </div>
     <div class="input-field col s2">
-      <select>
+      <select id="branch" name="branch">
         <option value="" disabled selected>Filial</option>
-        <option value="1">Villa Crespo</option>
-        <option value="2">Córdoba</option>
-        <option value="3">Rosario</option>
+        <%= for b <- @branches do %>
+          <option value="<%= b.id %>"><%= b.name %></option>
+        <% end %>
       </select>
     </div>
     </div>

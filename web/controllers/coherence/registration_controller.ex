@@ -36,7 +36,7 @@ defmodule Registro.Coherence.RegistrationController do
     user_schema = Config.user_schema
     cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
 
-    branches = Registro.Repo.all(from b in Registro.Branch, select: b, order_by: :name)
+    branches = Registro.Branch.all
              |> Enum.map(fn branch -> { branch.name, branch.id } end)
 
     conn

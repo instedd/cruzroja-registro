@@ -9,7 +9,9 @@ defmodule Registro.UsersController do
     users = Repo.all from u in User,
                      preload: [:branch]
 
-    render(conn, "index.html", users: users)
+    conn
+    |> assign(:branches, Registro.Branch.all)
+    |> render("index.html", users: users)
   end
 
   def profile(conn, _params) do
@@ -37,7 +39,7 @@ defmodule Registro.UsersController do
     end
     if params["branch"] do
       query = from u in query,
-                where: u.branch == ^params["branch"]
+                where: u.branch_id == ^params["branch"]
     end
     if params["status"] do
       query = from u in query,

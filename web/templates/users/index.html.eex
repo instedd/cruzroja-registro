@@ -32,7 +32,7 @@
     </div>
     <div class="input-field col s3">
       <input type="text" id="user-name">
-      <label for="user-name">Name o email</label>
+      <label for="user-name">Nombre o email</label>
     </div>
     </div>
   </form>

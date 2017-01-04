@@ -33,7 +33,13 @@ var fetch = (config, params) => {
     type: "get",
     success: function (data) {
       $('#replaceable').html(data)
-      initPagination(config);
+
+      initPagination(config)
+      bindItemClick(config)
+
+      if (config.afterFetch) {
+        config.afterFetch()
+      }
     }
   });
 }
@@ -51,11 +57,18 @@ var initPagination = (config) => {
   }
 }
 
+var bindItemClick = (config) => {
+  if (config.onItemClick) {
+    $('.listing table tr').on("click", config.onItemClick)
+  }
+}
+
 export var Filters = {
   init : (config) => {
     var applyFilters = navigatePage("currentPage", config);
 
     initPagination(config)
+    bindItemClick(config)
 
     config.filters.forEach((filter) => {
       filter.subscribe(applyFilters);

@@ -27,12 +27,12 @@ export var Users = {
           Filters.jQueryFilter("status", "#status", "change"),
           Filters.jQueryFilter("branch", "#branch", "change"),
           Filters.jQueryFilter("name", "#user-name", "input")
-        ]
+        ],
+
+        onItemClick: (e) => {
+          document.location.href = $(e.target).closest("tr").data("href")
+        }
       });
     }
-
-    $('tbody#replaceable tr').on("click", function(){
-      document.location.href = $(this).data("href")
-    })
   }
 };

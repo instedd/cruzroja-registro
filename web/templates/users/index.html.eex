@@ -34,25 +34,28 @@
     </div>
     </div>
   </form>
-</div>
-<div class="content-main table">
-  <table class="bordered responsive-table">
-    <thead>
-      <tr>
-          <th data-field="name">Nombre</th>
-          <th data-field="email">Email</th>
-          <th data-field="age">Edad</th>
-          <th data-field="role">Rol</th>
-          <th data-field="status">Estado</th>
-          <th data-field="branch">Filial</th>
-      </tr>
-    </thead>
 
-    <tbody id="replaceable">
-      <%= render "filter.html", users: @users, conn: @conn %>
-    </tbody>
-  </table>
+  <div class="content-main table">
+    <table class="bordered responsive-table">
+      <thead>
+        <tr>
+            <th data-field="name">Nombre</th>
+            <th data-field="email">Email</th>
+            <th data-field="age">Edad</th>
+            <th data-field="role">Rol</th>
+            <th data-field="status">Estado</th>
+            <th data-field="branch">Filial</th>
+        </tr>
+      </thead>
+
+      <tbody id="replaceable">
+        <%= render "filter.html", users: @users, conn: @conn %>
+      </tbody>
+    </table>
+  </div>
 </div>
+
+
 
 <script>
   var branches = <%= raw Poison.encode!(@branches) %>;

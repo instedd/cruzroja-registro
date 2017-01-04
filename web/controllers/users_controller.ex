@@ -46,6 +46,8 @@ defmodule Registro.UsersController do
               select: [u.name, u.email, u.role, u.status, b.name]
     query = apply_filters(query, params)
     users = Repo.all(query)
+
+    users = set_labels(users)
     csv_content = [["Nombre", "Email", "Rol", "Estado", "Filial"]] ++ users
     |> CSV.encode
     |> Enum.to_list
@@ -81,5 +83,18 @@ defmodule Registro.UsersController do
                 where: ilike(u.name, ^name) or ilike(u.email, ^name)
     end
     query
+  end
+
+  def nil_to_string(val) do
+    if val == nil do
+      ""
+    else
+      val
+    end
+  end
+
+  def set_labels(list) do
+    res = Enum.map(list, fn(u) -> [Enum.at(u,0), Enum.at(u,1), User.role_label(Enum.at(u,2)), nil_to_string(User.status_label(Enum.at(u,3))), nil_to_string(Enum.at(u,4))] end)
+    res
   end
 end

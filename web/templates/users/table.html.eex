@@ -1,0 +1,27 @@
+<div id="replaceable" class="content-main table">
+    <table class="bordered responsive-table">
+      <thead>
+        <tr>
+            <th data-field="name">Nombre</th>
+            <th data-field="email">Email</th>
+            <th data-field="age">Edad</th>
+            <th data-field="role">Rol</th>
+            <th data-field="status">Estado</th>
+            <th data-field="branch">Filial</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <%= for u <- @users do %>
+          <tr data-href="<%= users_path(@conn, :show, u) %>">
+            <td><%= u.name %></td>
+            <td><%= u.email %></td>
+            <td></td>
+            <td><%= Registro.User.role_label(u.role) %></td>
+            <td><%= Registro.User.status_label(u.status) %></td>
+            <td><%= branch_label(u) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+</div>

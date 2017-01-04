@@ -22,6 +22,8 @@ export var Users = {
 
         downloadEndpoint: "/users/download",
 
+        pagination: false,
+
         filters: [
           Listings.jQueryFilter("role", "#role", "change"),
           Listings.jQueryFilter("status", "#status", "change"),

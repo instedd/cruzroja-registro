@@ -1,21 +1,18 @@
-defmodule Registro.BranchesTest do
+defmodule Registro.PaginationTest do
   use Registro.ModelCase
 
+  alias Registro.Pagination
   alias Registro.Branch
 
-  test "allows to retrieve all branches without pagination" do
+  test "allows to retrieve items with pagination" do
     save_test_branches
 
-    assert (Branch.all |> Enum.count) == 3
-  end
-
-  test "allows to retrieve branches with pagination" do
-    save_test_branches
-
-    page1_names = Branch.all(page_number: 1, page_size: 2)
+    page1_names = Pagination.query(Branch, page_number: 1, page_size: 2)
+                |> Registro.Repo.all
                 |> Enum.map(fn %Branch{name: name} -> name end)
 
-    page2_names = Branch.all(page_number: 2, page_size: 2)
+    page2_names = Pagination.query(Branch, page_number: 2, page_size: 2)
+                |> Registro.Repo.all
                 |> Enum.map(fn %Branch{name: name} -> name end)
 
     assert page1_names == ["Branch 1", "Branch 2"]
@@ -25,9 +22,9 @@ defmodule Registro.BranchesTest do
   test "returns the number of pages" do
     save_test_branches
 
-    assert Branch.page_count(page_size: 1) == 3
-    assert Branch.page_count(page_size: 2) == 2
-    assert Branch.page_count(page_size: 3) == 1
+    assert Pagination.page_count(Branch, page_size: 1) == 3
+    assert Pagination.page_count(Branch, page_size: 2) == 2
+    assert Pagination.page_count(Branch, page_size: 3) == 1
   end
 
   def save_test_branches do

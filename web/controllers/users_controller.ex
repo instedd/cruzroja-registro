@@ -45,7 +45,7 @@ defmodule Registro.UsersController do
     users = Repo.all(query)
     conn
     |> put_layout(false)
-    |> render("filter.html", users: users)
+    |> render("table.html", users: users)
   end
 
   def download_csv(conn, params) do

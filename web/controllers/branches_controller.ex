@@ -1,18 +1,15 @@
 defmodule Registro.BranchesController do
   use Registro.Web, :controller
 
+  alias Registro.Repo
   alias Registro.Branch
+  alias Registro.Pagination
 
   plug Registro.Authorization, check: &Registro.Role.is_admin?/1
 
   def index(conn, params) do
-    page_count = Branch.page_count
-
-    page = (params["page"] || "1")
-            |> String.to_integer
-            |> min(page_count)
-
-    branches = Branch.all(page_number: page)
+    page_count = Pagination.page_count(Branch)
+    page = Pagination.requested_page(params, page_count)
 
     {template, conn} = case params["raw"] do
                        nil ->
@@ -23,11 +20,11 @@ defmodule Registro.BranchesController do
                      end
 
     render(conn, template,
-      branches: branches,
+      branches: Pagination.all(Branch, page_number: page),
       page: page,
       page_count: page_count,
-      page_size: Branch.default_page_size,
-      total_count: Branch.count
+      page_size: Pagination.default_page_size,
+      total_count: Pagination.total_count(Branch)
     )
   end
 end

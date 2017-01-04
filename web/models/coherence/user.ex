@@ -2,6 +2,8 @@ defmodule Registro.User do
   use Registro.Web, :model
   use Coherence.Schema
 
+  alias Registro.Role
+
   schema "users" do
     field :name, :string
     field :email, :string
@@ -23,12 +25,7 @@ defmodule Registro.User do
   end
 
   def role_label(role) do
-    case role do
-      "administrator" -> "Empleado de Sede Central"
-      "branch_employee" -> "Empleado de Filial"
-      "volunteer" -> "Voluntario"
-      "associate" -> "Asociado"
-    end
+    Registro.Role.label(role)
   end
 
   def status_label(status) do
@@ -40,16 +37,8 @@ defmodule Registro.User do
     end
   end
 
-  def is_employee?(user) do
-    user.role == "administrator" or user.role == "branch_employee"
-  end
-
   def pending_approval?(user) do
     # TODO: check status
-    !is_employee?(user)
-  end
-
-  def can_read(user) do
-    user.role == "administrator" or user.role == "branch_employee"
+    !Role.is_admin?(user.role)
   end
 end

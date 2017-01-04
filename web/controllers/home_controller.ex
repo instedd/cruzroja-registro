@@ -7,7 +7,7 @@ defmodule Registro.HomeController do
         Registro.Coherence.SessionController.new(conn, params)
       _ ->
         user = conn.assigns[:current_user]
-        if Registro.User.can_read(user) do
+        if Registro.Role.is_admin?(user.role) do
           redirect(conn, to: users_path(conn, :index))
         else
           redirect(conn, to: users_path(conn, :profile))

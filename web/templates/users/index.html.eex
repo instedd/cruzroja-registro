@@ -9,10 +9,10 @@
       <select id="role">
         <option value="" disabled selected>Rol</option>
         <option value="">Todos</option>
-        <option value="volunteer"><%= Registro.User.role_label("volunteer") %></option>
-        <option value="associate"><%= Registro.User.role_label("associate") %></option>
-        <option value="branch_employee"><%= Registro.User.role_label("branch_employee") %></option>
-        <option value="administrator"><%= Registro.User.role_label("administrator") %></option>
+        <%= role_option(Registro.Role.volunteer) %>
+        <%= role_option(Registro.Role.associate) %>
+        <%= role_option(Registro.Role.branch_admin) %>
+        <%= role_option(Registro.Role.super_admin) %>
       </select>
     </div>
     <div class="input-field col s3">

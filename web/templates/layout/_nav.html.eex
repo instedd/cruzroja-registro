@@ -1,5 +1,5 @@
 <%= menu_item(@conn, "/profile", "Perfil") %>
-<%= if Registro.User.can_read(@conn.assigns[:current_user]) do %>
+<%= if Registro.Role.is_admin?(@conn.assigns[:current_user].role) do %>
   <%= menu_item(@conn, "/users", "Usuarios") %>
   <%= menu_item(@conn, "/branches", "Filiales") %>
 <% end %>

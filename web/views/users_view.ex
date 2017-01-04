@@ -7,4 +7,10 @@ defmodule Registro.UsersView do
       b -> b.name
     end
   end
+
+  def role_option(role) do
+    content_tag(:option, value: role) do
+      Registro.Role.label(role)
+    end
+  end
 end

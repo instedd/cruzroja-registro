@@ -2,6 +2,7 @@ defmodule Registro.UsersController do
   use Registro.Web, :controller
 
   alias Registro.User
+  alias Registro.Role
   alias Registro.Branch
 
   plug :authorize_user when action in [:index, :filter]
@@ -65,7 +66,7 @@ defmodule Registro.UsersController do
   end
 
   defp authorize_user(conn, _) do
-    if User.can_read(conn.assigns[:current_user]) do
+    if Role.is_admin?(conn.assigns[:current_user].role) do
       conn
     else
       conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt

@@ -1,4 +1,4 @@
-import { Filters } from "./filters";
+import { Listings } from "./listings";
 
 var branchesAutocompleteData = (branches) => {
   var res = {}
@@ -17,16 +17,16 @@ export var Users = {
         });
       });
 
-      Filters.init({
+      Listings.init({
         endpoint: "/users/filter",
 
         downloadEndpoint: "/users/download",
 
         filters: [
-          Filters.jQueryFilter("role", "#role", "change"),
-          Filters.jQueryFilter("status", "#status", "change"),
-          Filters.jQueryFilter("branch", "#branch", "change"),
-          Filters.jQueryFilter("name", "#user-name", "input")
+          Listings.jQueryFilter("role", "#role", "change"),
+          Listings.jQueryFilter("status", "#status", "change"),
+          Listings.jQueryFilter("branch", "#branch", "change"),
+          Listings.jQueryFilter("name", "#user-name", "input")
         ],
 
         onItemClick: (e) => {

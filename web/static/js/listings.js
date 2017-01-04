@@ -63,7 +63,7 @@ var bindItemClick = (config) => {
   }
 }
 
-export var Filters = {
+export var Listings = {
   init : (config) => {
     var applyFilters = navigatePage("currentPage", config);
 

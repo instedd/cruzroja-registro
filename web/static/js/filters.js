@@ -1,81 +1,78 @@
-var build_query = function(endpoint) {
-  if(endpoint == null)
-    endpoint = "filter"
-  var query = "/users/" + endpoint + "?"
-  if(value_for('role'))
-    query += "role=" + value_for('role') + "&"
-  if(value_for('status'))
-    query += "status=" + value_for('status') + "&"
-  if(value_for('branch'))
-    query += "branch=" + value_for('branch') + "&"
-  if(value_for('name'))
-    query += "name=" + value_for('name')
-  return query;
-}
+var navigatePage = (page, config) => {
+  return (e) => {
+    e.preventDefault();
 
-var value_for = function(name) {
-  var res = ""
-  switch(name) {
-    case 'role':
-      res = $('#role').val();
-      break;
-    case 'status':
-      res = $('#status').val();
-      break;
-    case 'branch':
-      res = $('#branch').val();
-      break;
-    case 'name':
-      res = $('#user-name').val();
+    var params = filterParams(config.filters);
+
+    if (config.pagination) {
+      var paginationData = $(".pager").data();
+      var targetPage = paginationData[page];
+
+      if (targetPage) {
+        params = params.concat([["page", targetPage]])
+        fetch(config, params)
+      }
+    } else {
+      fetch(config, params)
+    }
   }
-  return res;
 }
 
-var setup = function(data) {
-  var res = {}
-  $.each(data, function(i,e) {
-    res[e["name"]] = null
-  })
-  return res;
+var buildUri = (endpoint, params) => {
+  var query = params.map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
+      .join("&")
+
+  return endpoint + "?" + query;
+}
+
+var fetch = (config, params) => {
+  params = params.concat([["raw", 1]])
+
+  $.ajax({
+    url: buildUri(config.endpoint, params),
+    type: "get",
+    success: function (data) {
+      $('#replaceable').html(data)
+      initPagination(config);
+    }
+  });
+}
+
+var filterParams = (filters) => {
+  return filters.map(f => [f.name, f.getValue()])
+    .filter(kv => kv[1])
+}
+
+var initPagination = (config) => {
+  if (config.pagination) {
+    var pager = $(".pager")
+    pager.find(".pager-left").on("click", navigatePage("previousPage", config))
+    pager.find(".pager-right").on("click", navigatePage("nextPage", config))
+  }
 }
 
 export var Filters = {
-  activateSelects: function() {
-    $('select').material_select();
+  init : (config) => {
+    var applyFilters = navigatePage("currentPage", config);
+
+    initPagination(config)
+
+    config.filters.forEach((filter) => {
+      filter.subscribe(applyFilters);
+    });
+
+    if(config.downloadEndpoint) {
+      $("#download").on("click", () => {
+        document.location.href = buildUri(config.downloadEndpoint, filterParams(config.filters))
+      })
+    }
   },
-  activateAutocompletes: function() {
-    $( function() {
-      var inputs = $('input.autocomplete')
-      if(inputs.length > 0 && branches) {
-        inputs.autocomplete({
-          data: setup(branches)
-        });
-      }
-    })
-  },
-  setupFilters: function(){
-    $('#role, #branch, #status').on("change", function() {
-      $.ajax({
-        url: build_query(),
-        type: "get",
-        success: function (data) {
-          $('tbody#replaceable').html(data)
-        }
-      });
-    })
-    $('#user-name').on("input", function() {
-      $.ajax({
-        url: build_query(),
-        type: "get",
-        success: function (data) {
-          $('tbody#replaceable').html(data)
-        }
-      });
-    })
-  },
-  setupCSVDownload: function() {
-    $('#download').on("click", function() {
-      document.location.href = build_query("download")
-    })
+
+  jQueryFilter: (name, selector, changeEvent) => {
+    return {
+      name: name,
+      getValue: () => { return $(selector).val() },
+      subscribe: (handler) => { $(selector).on(changeEvent, handler) }
+    }
   }
 }

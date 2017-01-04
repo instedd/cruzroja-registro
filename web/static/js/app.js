@@ -20,19 +20,15 @@ import "phoenix_html";
 
 // import socket from "./socket"
 
-import { Filters } from "web/static/js/filters";
+import { Users } from "./users";
+import { Branches } from "./branches";
 
 export var App = {
-  run: function(){
-    Filters.activateSelects()
-    Filters.activateAutocompletes()
-    if($('.filters').length > 0) {
-      Filters.setupFilters()
-      Filters.setupCSVDownload()
-    }
-  }
-}
+  run: function() {
+    $('select').material_select();
 
-$('tbody#replaceable tr').on("click", function(){
-  document.location.href = $(this).data("href")
-})
+    // initialize all modules
+    Users.init();
+    Branches.init();
+  }
+};

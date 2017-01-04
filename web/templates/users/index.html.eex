@@ -2,7 +2,7 @@
   <i class="material-icons">file_download</i>
 </a></p>
 
-<div class="filters">
+<div id="users" class="listing">
   <form>
     <div class="row">
     <div class="input-field col s3">

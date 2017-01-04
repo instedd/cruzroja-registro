@@ -1,4 +1,4 @@
-<div class="content-main table">
+<div id="replaceable">
   <table class="bordered responsive-table">
     <thead>
       <tr>
@@ -7,7 +7,7 @@
       </tr>
     </thead>
 
-    <tbody id="replaceable">
+    <tbody>
       <%= for b <- @branches do %>
         <tr>
           <td><%= b.name %></td>
@@ -16,5 +16,6 @@
       <% end %>
     </tbody>
   </table>
+
   <%= pager(@page, @page_size, Enum.count(@branches), @page_count, @total_count) %>
 </div>

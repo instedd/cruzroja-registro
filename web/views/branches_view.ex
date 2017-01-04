@@ -25,7 +25,12 @@ defmodule Registro.BranchesView do
                    _ -> current_page + 1
                  end
 
-    content_tag(:div, class: "pager") do
+    content_tag(:div,
+      class: "pager",
+      'data-current-page': current_page,
+      'data-previous-page': left_link,
+      'data-next-page': right_link
+    ) do
       [
         content_tag(:span, "#{first_item}-#{last_item} of #{total_count}", class: "pager-position"),
         content_tag(:ul, class: "pager-controls pagination") do
@@ -39,20 +44,16 @@ defmodule Registro.BranchesView do
   end
 
   defp pager_arrow(direction, page) do
-    { href, class } = if page do
-                        { pager_link(page), "waves_effect" }
-                      else
-                        { "#", "disabled" }
-                      end
+    class = if page do
+              "waves_effect pager-#{direction}"
+            else
+              "disabled"
+            end
 
     content_tag(:li, class: class) do
-      content_tag(:a, href: href) do
+      content_tag(:a, href: "#") do
         content_tag(:i, "chevron_#{direction}", class: "material-icons")
       end
     end
-  end
-
-  defp pager_link(page) do
-    Routes.branches_path(Registro.Endpoint, :index, page: page)
   end
 end

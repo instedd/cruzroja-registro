@@ -1,1 +1,3 @@
-<%= render "table.html", branches: @branches, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
+<div id="branches" class="content-main table listing">
+  <%= render "table.html", branches: @branches, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
+</div>

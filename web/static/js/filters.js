@@ -41,11 +41,14 @@ export var Filters = {
   activateSelects: function() {
     $('select').material_select();
   },
-  activateAutocomplete: function() {
+  activateAutocompletes: function() {
     $( function() {
-      $('input.autocomplete').autocomplete({
-        data: setup(branches)
-      });
+      var inputs = $('input.autocomplete')
+      if(inputs.length > 0 && branches) {
+        inputs.autocomplete({
+          data: setup(branches)
+        });
+      }
     })
   },
   setupFilters: function(){

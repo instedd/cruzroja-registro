@@ -24,9 +24,9 @@ import { Filters } from "web/static/js/filters";
 
 export var App = {
   run: function(){
+    Filters.activateSelects();
+    Filters.activateAutocompletes();
     if($('.filters').length > 0) {
-      Filters.activateSelects();
-      Filters.activateAutocomplete();
       Filters.setupFilters();
     }
   }

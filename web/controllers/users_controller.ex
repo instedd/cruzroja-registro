@@ -65,25 +65,29 @@ defmodule Registro.UsersController do
                     select: b.id,
                     limit: 1
     end
-    if params["role"] do
-      query = from u in query,
-                where: u.role == ^params["role"]
-    end
-    if branch_id do
-      query = from u in query,
-                where: u.branch_id == ^branch_id
-    end
-    if params["status"] do
-      query = from u in query,
-                where: u.status == ^params["status"]
-    end
-    if params["name"] do
-      name = "%" <> params["name"] <> "%"
-      query = from u in query,
-                where: ilike(u.name, ^name) or ilike(u.email, ^name)
-    end
+    query = query
+      |> role_filter(params["role"])
+      |> branch_filter(branch_id)
+      |> status_filter(params["status"])
+      |> name_filter(params["name"])
     query
   end
+
+  def role_filter(query, param) when is_nil(param), do: query
+  def role_filter(query, param), do: from u in query, where: u.role == ^param
+
+  def branch_filter(query, param) when is_nil(param), do: query
+  def branch_filter(query, param), do: from u in query, where: u.branch_id == ^param
+
+  def status_filter(query, param) when is_nil(param), do: query
+  def status_filter(query, param), do: from u in query, where: u.status == ^param
+
+  def name_filter(query, param) when is_nil(param), do: query
+  def name_filter(query, param) do
+    name = "%" <> param <> "%"
+    from u in query, where: ilike(u.name, ^name) or ilike(u.email, ^name)
+  end
+
 
   def nil_to_string(val) do
     if val == nil do

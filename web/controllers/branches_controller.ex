@@ -3,10 +3,15 @@ defmodule Registro.BranchesController do
 
   alias Registro.Branch
 
+  plug Registro.Authorization, check: &Registro.Role.is_admin?/1
+
   def index(conn, params) do
-    page = (params["page"] || "1") |> String.to_integer
-    # TODO: validate page <= page_count
     page_count = Branch.page_count
+
+    page = (params["page"] || "1")
+            |> String.to_integer
+            |> min(page_count)
+
     branches = Branch.all(page_number: page)
 
     {template, conn} = case params["raw"] do

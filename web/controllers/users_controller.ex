@@ -5,7 +5,7 @@ defmodule Registro.UsersController do
   alias Registro.Role
   alias Registro.Branch
 
-  plug :authorize_user when action in [:index, :filter]
+  plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter]
 
   def index(conn, _params) do
     users = Repo.all from u in User,
@@ -63,13 +63,5 @@ defmodule Registro.UsersController do
     conn
     |> put_layout(false)
     |> render("filter.html", users: users)
-  end
-
-  defp authorize_user(conn, _) do
-    if Role.is_admin?(conn.assigns[:current_user].role) do
-      conn
-    else
-      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt
-    end
   end
 end

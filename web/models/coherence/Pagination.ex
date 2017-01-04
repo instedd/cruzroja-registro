@@ -9,9 +9,18 @@ defmodule Registro.Pagination do
   end
 
   def query(module, page_number: page_number, page_size: page_size) do
+    q = from e in module
+    restrict(q, page_number: page_number, page_size: page_size)
+  end
+
+  def restrict(q, page_number: page_number) do
+    restrict(q, page_number: page_number, page_size: @default_page_size)
+  end
+
+  def restrict(q, page_number: page_number, page_size: page_size) do
     offset = (page_number - 1) * page_size
 
-    from e in module,
+    from e in q,
       offset: ^offset,
       limit: ^page_size,
       order_by: :name

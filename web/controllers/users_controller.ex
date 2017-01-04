@@ -1,19 +1,26 @@
 defmodule Registro.UsersController do
   use Registro.Web, :controller
 
+  alias Registro.Pagination
   alias Registro.User
   alias Registro.Role
   alias Registro.Branch
 
   plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter]
 
-  def index(conn, _params) do
-    users = Repo.all from u in User,
+  def index(conn, params) do
+    users = Repo.all from u in Pagination.query(User, page_number: 1),
                      order_by: u.name,
                      preload: [:branch]
     conn
     |> assign(:branches, Branch.all)
-    |> render("index.html", users: users)
+    |> render("index.html",
+      users: users,
+      page: 1,
+      page_count: Pagination.page_count(User),
+      page_size: Pagination.default_page_size,
+      total_count: Pagination.total_count(User)
+    )
   end
 
   def profile(conn, _params) do
@@ -39,13 +46,23 @@ defmodule Registro.UsersController do
   end
 
   def filter(conn, params) do
-    query = from u in User,
-            preload: [:branch]
+    page_count = Pagination.page_count(User)
+    page = Pagination.requested_page(params, page_count)
+
+    query = from u in User, preload: [:branch]
     query = apply_filters(query, params)
-    users = Repo.all(query)
+
+    users = Repo.all(query |> Pagination.restrict(page_number: page))
+
     conn
     |> put_layout(false)
-    |> render("table.html", users: users)
+    |> render("table.html",
+      users: users,
+      page: page,
+      page_count: Pagination.page_count(User),
+      page_size: Pagination.default_page_size,
+      total_count: Repo.aggregate(query, :count, :id)
+    )
   end
 
   def download_csv(conn, params) do

@@ -22,7 +22,7 @@ export var Users = {
 
         downloadEndpoint: "/users/download",
 
-        pagination: false,
+        pagination: true,
 
         filters: [
           Listings.jQueryFilter("role", "#role", "change"),

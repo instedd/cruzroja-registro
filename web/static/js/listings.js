@@ -6,7 +6,7 @@ var navigatePage = (page, config) => {
 
     if (config.pagination) {
       var paginationData = $(".pager").data();
-      var targetPage = paginationData[page];
+      var targetPage = paginationData[page] || 1;
 
       if (targetPage) {
         params = params.concat([["page", targetPage]])
@@ -65,7 +65,7 @@ var bindItemClick = (config) => {
 
 export var Listings = {
   init : (config) => {
-    var applyFilters = navigatePage("currentPage", config);
+    var applyFilters = navigatePage("initial", config);
 
     initPagination(config)
     bindItemClick(config)

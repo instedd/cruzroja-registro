@@ -24,4 +24,6 @@
         <% end %>
       </tbody>
     </table>
+
+  <%= pager(@page, @page_size, Enum.count(@users), @page_count, @total_count) %>
 </div>

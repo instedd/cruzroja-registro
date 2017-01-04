@@ -12,14 +12,17 @@ defmodule Registro.UsersController do
     users = Repo.all from u in Pagination.query(User, page_number: 1),
                      order_by: u.name,
                      preload: [:branch]
+
+    total_count = Repo.aggregate(User, :count, :id)
+
     conn
     |> assign(:branches, Branch.all)
     |> render("index.html",
       users: users,
       page: 1,
-      page_count: Pagination.page_count(User),
+      page_count: Pagination.page_count(total_count),
       page_size: Pagination.default_page_size,
-      total_count: Pagination.total_count(User)
+      total_count: total_count
     )
   end
 
@@ -46,12 +49,12 @@ defmodule Registro.UsersController do
   end
 
   def filter(conn, params) do
-    page_count = Pagination.page_count(User)
-    page = Pagination.requested_page(params, page_count)
+    page = Pagination.requested_page(params)
 
     query = from u in User, preload: [:branch]
     query = apply_filters(query, params)
 
+    total_count = Repo.aggregate(query, :count, :id)
     users = Repo.all(query |> Pagination.restrict(page_number: page))
 
     conn
@@ -59,9 +62,9 @@ defmodule Registro.UsersController do
     |> render("table.html",
       users: users,
       page: page,
-      page_count: Pagination.page_count(User),
+      page_count: Pagination.page_count(total_count),
       page_size: Pagination.default_page_size,
-      total_count: Repo.aggregate(query, :count, :id)
+      total_count: total_count
     )
   end
 

@@ -34,21 +34,15 @@ defmodule Registro.Pagination do
     @default_page_size
   end
 
-  def total_count(module) do
-    Registro.Repo.one(from e in module, select: count(e.id))
+  def page_count(total_count) do
+    page_count(total_count, page_size: @default_page_size)
   end
 
-  def page_count(module) do
-    page_count(module, page_size: @default_page_size)
+  def page_count(total_count, page_size: page_size) do
+    round(Float.ceil(total_count / page_size))
   end
 
-  def page_count(module, page_size: page_size) do
-    round(Float.ceil(total_count(module) / page_size))
-  end
-
-  def requested_page(params, page_count) do
-    (params["page"] || "1")
-      |> String.to_integer
-      |> min(page_count)
+  def requested_page(params) do
+    (params["page"] || "1") |> String.to_integer
   end
 end

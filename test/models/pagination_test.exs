@@ -21,10 +21,11 @@ defmodule Registro.PaginationTest do
 
   test "returns the number of pages" do
     save_test_branches
+    total_count = Registro.Repo.aggregate Branch, :count, :id
 
-    assert Pagination.page_count(Branch, page_size: 1) == 3
-    assert Pagination.page_count(Branch, page_size: 2) == 2
-    assert Pagination.page_count(Branch, page_size: 3) == 1
+    assert Pagination.page_count(total_count, page_size: 1) == 3
+    assert Pagination.page_count(total_count, page_size: 2) == 2
+    assert Pagination.page_count(total_count, page_size: 3) == 1
   end
 
   def save_test_branches do

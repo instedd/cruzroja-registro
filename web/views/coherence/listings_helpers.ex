@@ -1,4 +1,5 @@
 defmodule Registro.ListingsHelpers do
+
   use Phoenix.HTML
 
   @doc """
@@ -23,8 +24,10 @@ defmodule Registro.ListingsHelpers do
                    _ -> current_page + 1
                  end
 
+    class = if total_count > 0, do: "pager", else: "pager hide"
+
     content_tag(:div,
-      class: "pager",
+      class: class,
       'data-current-page': current_page,
       'data-previous-page': left_link,
       'data-next-page': right_link
@@ -42,11 +45,7 @@ defmodule Registro.ListingsHelpers do
   end
 
   defp pager_arrow(direction, page) do
-    class = if page do
-              "waves_effect pager-#{direction}"
-            else
-              "disabled"
-            end
+    class = if page, do: "waves_effect pager-#{direction}", else: "disabled"
 
     content_tag(:li, class: class) do
       content_tag(:a, href: "#") do

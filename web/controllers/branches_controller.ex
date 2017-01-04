@@ -8,8 +8,9 @@ defmodule Registro.BranchesController do
   plug Registro.Authorization, check: &Registro.Role.is_admin?/1
 
   def index(conn, params) do
-    page_count = Pagination.page_count(Branch)
-    page = Pagination.requested_page(params, page_count)
+    page = Pagination.requested_page(params)
+    total_count = Repo.aggregate(Branch, :count, :id)
+    page_count = Pagination.page_count(total_count)
 
     {template, conn} = case params["raw"] do
                        nil ->
@@ -24,7 +25,7 @@ defmodule Registro.BranchesController do
       page: page,
       page_count: page_count,
       page_size: Pagination.default_page_size,
-      total_count: Pagination.total_count(Branch)
+      total_count: total_count
     )
   end
 end

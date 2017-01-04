@@ -1,5 +1,7 @@
-var build_query = function() {
-  var query = "/users/filter?"
+var build_query = function(endpoint) {
+  if(endpoint == null)
+    endpoint = "filter"
+  var query = "/users/" + endpoint + "?"
   if(value_for('role'))
     query += "role=" + value_for('role') + "&"
   if(value_for('status'))
@@ -69,6 +71,11 @@ export var Filters = {
           $('tbody#replaceable').html(data)
         }
       });
+    })
+  },
+  setupCSVDownload: function() {
+    $('#download').on("click", function() {
+      document.location.href = build_query("download")
     })
   }
 }

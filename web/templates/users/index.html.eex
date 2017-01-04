@@ -1,7 +1,7 @@
-<%# <p><a class="btn-floating btn-large waves-effect waves-light red" href="<%= registration_path(@conn, :new)">
-  <i class="material-icons">add</i>
+<p><a class="btn-floating btn-large waves-effect waves-light red" href="#" id="download">
+  <i class="material-icons">file_download</i>
 </a></p>
- %>
+
 <div class="filters">
   <form>
     <div class="row">

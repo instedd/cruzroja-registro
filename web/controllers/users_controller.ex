@@ -31,17 +31,38 @@ defmodule Registro.UsersController do
   end
 
   def filter(conn, params) do
+    query = from u in User,
+            preload: [:branch]
+    query = apply_filters(query, params)
+    users = Repo.all(query)
+    conn
+    |> put_layout(false)
+    |> render("filter.html", users: users)
+  end
+
+  def download_csv(conn, params) do
+    query = from u in User,
+              left_join: b in assoc(u, :branch),
+              select: [u.name, u.email, u.role, u.status, b.name]
+    query = apply_filters(query, params)
+    users = Repo.all(query)
+    csv_content = [["Nombre", "Email", "Rol", "Estado", "Filial"]] ++ users
+    |> CSV.encode
+    |> Enum.to_list
+    |> to_string
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", "attachment; filename=\"usuarios.csv\"")
+    |> send_resp(200, csv_content)
+  end
+
+  def apply_filters(query, params) do
     if params["branch"] do
       branch_id = Repo.one from b in Branch,
                     where: b.name == ^params["branch"],
                     select: b.id,
                     limit: 1
     end
-
-    query = from u in User,
-            select: u,
-            preload: [:branch]
-
     if params["role"] do
       query = from u in query,
                 where: u.role == ^params["role"]
@@ -59,9 +80,6 @@ defmodule Registro.UsersController do
       query = from u in query,
                 where: ilike(u.name, ^name) or ilike(u.email, ^name)
     end
-    users = Repo.all(query)
-    conn
-    |> put_layout(false)
-    |> render("filter.html", users: users)
+    query
   end
 end

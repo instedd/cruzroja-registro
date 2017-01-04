@@ -39,6 +39,7 @@ defmodule Registro.Router do
     get "/users/", UsersController, :index
     put "/users/:id", UsersController, :update
     get "/users/filter", UsersController, :filter
+    get "/users/download", UsersController, :download_csv
 
     get "/branches/", BranchesController, :index
   end

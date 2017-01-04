@@ -1,3 +1,1 @@
-<h1>Filiales</h1>
-
 <%= render "table.html", branches: @branches, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>

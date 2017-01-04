@@ -1,7 +1,5 @@
 <div id="profile">
   <div class="content-main">
-    <h3>Tu perfil</h3>
-
     <%= form_for @changeset, users_path(@conn, :update, @current_user), fn f -> %>
       <div class="form-group">
         <%= label f, :name, "Nombre", class: "control-label" %>

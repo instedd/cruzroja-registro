@@ -49,7 +49,7 @@
     </thead>
 
     <tbody id="replaceable">
-      <%= render "filter.html", users: @users %>
+      <%= render "filter.html", users: @users, conn: @conn %>
     </tbody>
   </table>
 </div>

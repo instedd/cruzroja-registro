@@ -16,13 +16,6 @@
       <div class="form-group actions">
         <%= submit "Actualizar", class: "btn btn-primary", disabled: "" %>
       </div>
-
-      <%= if Registro.User.pending_approval?(@current_user) do %>
-        <p class="user-status">
-          Actualmente tu trámite se encuentra en estado <b><%= Registro.User.status_label(@current_user.status) %></b> para ser voluntario de la filial <%= branch_label(@current_user) %>.
-        </p>
-      <% end %>
-
     <% end %>
   </div>
 </div>

@@ -38,7 +38,6 @@ defmodule Registro.User do
   end
 
   def pending_approval?(user) do
-    # TODO: check status
-    !Role.is_admin?(user.role)
+    user.status == "at_start"
   end
 end

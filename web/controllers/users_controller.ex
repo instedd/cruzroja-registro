@@ -30,6 +30,14 @@ defmodule Registro.UsersController do
     # TODO: check which fields can be updated
   end
 
+  def show(conn, params) do
+    user = Repo.one(from u in User, where: u.id == ^params["id"], preload: [:branch])
+    changeset = User.changeset(user)
+
+    conn
+    |> render("show.html", changeset: changeset)
+  end
+
   def filter(conn, params) do
     query = from u in User,
             preload: [:branch]

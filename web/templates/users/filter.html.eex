@@ -1,5 +1,5 @@
 <%= for u <- @users do %>
-  <tr>
+  <tr data-href="<%= users_path(@conn, :show, u) %>">
     <td><%= u.name %></td>
     <td><%= u.email %></td>
     <td></td>

@@ -32,3 +32,7 @@ export var App = {
     }
   }
 }
+
+$('tbody#replaceable tr').on("click", function(){
+  document.location.href = $(this).data("href")
+})

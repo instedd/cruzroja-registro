@@ -9,4 +9,16 @@ defmodule Registro.LayoutView do
       end
     end
   end
+
+  def menu_item(conn, href, text) do
+    class = if String.starts_with?(conn.request_path, href) do
+              "active"
+            else
+              ""
+            end
+
+    content_tag(:li, class: class) do
+      content_tag(:a, text, href: href)
+    end
+  end
 end

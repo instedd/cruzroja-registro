@@ -24,14 +24,6 @@ body {
   width: 41px;
 }
 
-nav {
-  height: 70px;
-
-  ul li a {
-    color: $black;
-  }
-}
-
 .content-main {
   background: $white;
   box-shadow: 0px 1px 5px #AAAAAA;
@@ -68,6 +60,7 @@ nav {
   }
 }
 
+@import "_nav";
 @import "_landing";
 @import "_profile";
 @import "_pagination";

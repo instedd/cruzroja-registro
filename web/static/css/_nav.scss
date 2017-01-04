@@ -1,0 +1,29 @@
+$nav-height: 70px;
+
+nav {
+  height: $nav-height;
+
+  ul {
+    line-height: $nav-height;
+
+    li {
+      height: $nav-height; // a height is needed to keep the border inside the container
+
+      a {
+        font-weight: bold;
+        font-size: 13px;
+        text-transform: uppercase;
+        color: $grey-disabled;
+      }
+
+      &.active {
+        border-bottom: 5px solid red;
+        background-color: transparent; // override materializes style
+
+        a {
+          color: $black;
+        }
+      }
+    }
+  }
+}

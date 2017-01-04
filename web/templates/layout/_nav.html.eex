@@ -1,7 +1,7 @@
-<li><a href="/profile">Perfil</a></li>
+<%= menu_item(@conn, "/profile", "Perfil") %>
 <%= if Registro.User.can_read(@conn.assigns[:current_user]) do %>
-  <li><a href="/users">Usuarios</a></li>
-  <li><a href="/branches">Filiales</a></li>
+  <%= menu_item(@conn, "/users", "Usuarios") %>
+  <%= menu_item(@conn, "/branches", "Filiales") %>
 <% end %>
 <li>
   <%= link "Salir", to: session_path(@conn, :delete), method: :delete %>

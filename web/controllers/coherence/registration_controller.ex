@@ -52,7 +52,7 @@ defmodule Registro.Coherence.RegistrationController do
   def create(conn, %{"registration" => registration_params} = params) do
     user_schema = Config.user_schema
     cs =  Helpers.changeset(:registration, user_schema, user_schema.__struct__, registration_params)
-          |> Ecto.Changeset.put_change(:role, "volunteer")
+            |> check_role_premission
     case Config.repo.insert(cs) do
       {:ok, user} ->
         conn
@@ -62,6 +62,14 @@ defmodule Registro.Coherence.RegistrationController do
       {:error, changeset} ->
         conn
         |> render("new.html", changeset: changeset)
+    end
+  end
+
+  defp check_role_premission(changeset) do
+    if Registro.Role.is_admin?(Ecto.Changeset.get_change(changeset, :role)) do
+      Ecto.Changeset.put_change(changeset, :role, "volunteer")
+    else
+      changeset
     end
   end
 

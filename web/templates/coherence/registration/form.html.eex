@@ -41,7 +41,21 @@
     <div class="input-field">
       <%= select f, :branch_id, @branches, [class: "form-control"] ++ @required %>
       <%= required_label f, :branch_id, "Filial", [] %>
-      <%= error_tag f, :password_confirmation %>
+      <%= error_tag f, :branch_id %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="input-field">
+      Me quiero anotar como:
+      <p>
+        <%= radio_button f, :role, "volunteer", checked: "checked", id: "registration_volunteer", class: "with-gap" %>
+        <%= label f, "volunteer", "Voluntario" %>
+      </p>
+      <p>
+        <%= radio_button f, :role, "associate", id: "registration_associate", class: "with-gap" %>
+        <%= label f, "associate", "Asociado" %>
+      </p>
     </div>
   </div>
 

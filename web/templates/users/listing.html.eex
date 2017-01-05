@@ -7,7 +7,9 @@
             <th data-field="age">Edad</th>
             <th data-field="role">Rol</th>
             <th data-field="status">Estado</th>
+            <%= if @conn.assigns[:current_user].role == "super_admin" do %>
             <th data-field="branch">Filial</th>
+            <% end %>
         </tr>
       </thead>
 
@@ -19,7 +21,9 @@
             <td></td>
             <td><%= Registro.User.role_label(u.role) %></td>
             <td><%= Registro.User.status_label(u.status) %></td>
+            <%= if @conn.assigns[:current_user].role == "super_admin" do %>
             <td><%= branch_label(u) %></td>
+            <% end %>
           </tr>
         <% end %>
       </tbody>

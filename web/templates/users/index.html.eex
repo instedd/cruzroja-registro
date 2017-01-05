@@ -20,10 +20,12 @@
         <option value="rejected"><%= Registro.User.status_label("rejected") %></option>
       </select>
     </div>
+    <%= if @conn.assigns[:current_user].role == "super_admin" do %>
     <div class="input-field col s3">
       <input type="text" id="branch" class="autocomplete">
       <label for="autocomplete-input">Filial</label>
     </div>
+    <% end %>
     <div class="input-field col s3">
       <input type="text" id="user-name">
       <label for="user-name">Nombre o email</label>

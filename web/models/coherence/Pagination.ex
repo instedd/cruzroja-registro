@@ -2,7 +2,7 @@ defmodule Registro.Pagination do
 
   import Ecto.Query
 
-  @default_page_size 8
+  @default_page_size 25
 
   def query(module, page_number: page_number) do
     query(module, page_number: page_number, page_size: @default_page_size)

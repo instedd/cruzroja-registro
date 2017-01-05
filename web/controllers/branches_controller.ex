@@ -4,8 +4,9 @@ defmodule Registro.BranchesController do
   alias Registro.Repo
   alias Registro.Branch
   alias Registro.Pagination
+  alias Registro.Role
 
-  plug Registro.Authorization, check: &Registro.Role.is_admin?/1
+  plug Registro.Authorization, check: &Role.is_super_admin?/1
 
   def index(conn, params) do
     page = Pagination.requested_page(params)
@@ -27,5 +28,16 @@ defmodule Registro.BranchesController do
       page_size: Pagination.default_page_size,
       total_count: total_count
     )
+  end
+
+  def authorize_request(role) do
+    case role do
+      "super_admin" ->
+        true
+      "branch_admin" ->
+        true
+      _ ->
+        false
+    end
   end
 end

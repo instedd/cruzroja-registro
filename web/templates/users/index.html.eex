@@ -5,10 +5,10 @@
       <select id="role">
         <option value="" disabled selected>Rol</option>
         <option value="">Todos</option>
-        <%= role_option(Registro.Role.volunteer) %>
-        <%= role_option(Registro.Role.associate) %>
-        <%= role_option(Registro.Role.branch_admin) %>
-        <%= role_option(Registro.Role.super_admin) %>
+        <%= role_option("volunteer") %>
+        <%= role_option("associate") %>
+        <%= role_option("branch_admin") %>
+        <%= role_option("super_admin") %>
       </select>
     </div>
     <div class="input-field col s3">

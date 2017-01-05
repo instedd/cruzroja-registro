@@ -1,6 +1,8 @@
 <%= menu_item(@conn, "/profile", "Perfil") %>
 <%= if Registro.Role.is_admin?(@conn.assigns[:current_user].role) do %>
   <%= menu_item(@conn, "/users", "Usuarios") %>
+<% end %>
+<%= if Registro.Role.is_super_admin?(@conn.assigns[:current_user].role) do %>
   <%= menu_item(@conn, "/branches", "Filiales") %>
 <% end %>
 <li>

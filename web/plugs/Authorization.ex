@@ -11,6 +11,9 @@ defmodule Registro.Authorization do
     case opts[:check].(conn.assigns[:current_user].role) do
       true ->
         conn
+      {true, abilities} ->
+        conn
+        |> assign(:abilities, abilities)
       _ ->
         conn
         |> put_flash(:info, "Página no accesible")

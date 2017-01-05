@@ -47,6 +47,12 @@ body {
     tr td, th {
       padding: 25px;
     }
+    tbody tr {
+      &:hover {
+        background-color: $table-hover;
+        cursor: pointer;
+      }
+    }
   }
 
   form {

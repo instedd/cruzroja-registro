@@ -23,9 +23,24 @@ import "phoenix_html";
 import { Users } from "./users";
 import { Branches } from "./branches";
 
+var branchesAutocompleteData = (branches) => {
+  var res = {}
+  branches.forEach(e => {
+    res[e["name"]] = null
+  })
+  return res;
+}
+
 export var App = {
   run: function() {
     $('select').material_select();
+    $(function() {
+        if($('input.autocomplete').length > 0) {
+          $('input.autocomplete').autocomplete({
+            data: branchesAutocompleteData(branches)
+          });
+        }
+      });
 
     // initialize all modules
     Users.init();

@@ -18,5 +18,11 @@ defmodule Registro.Role do
 
   def is_super_admin?(role) do
     role == "super_admin"
+
+  def all do
+    %{label(super_admin) => super_admin,
+      label(branch_admin) => branch_admin,
+      label(associate) => associate,
+      label(volunteer) => volunteer}
   end
 end

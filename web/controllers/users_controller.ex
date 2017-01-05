@@ -46,8 +46,13 @@ defmodule Registro.UsersController do
   def show(conn, params) do
     user = Repo.one(from u in User, where: u.id == ^params["id"], preload: [:branch])
     changeset = User.changeset(user)
+    if(user.branch) do
+      changeset = Ecto.Changeset.put_change(changeset, :branch_name, user.branch.name)
+    end
 
     conn
+    |> assign(:branches, Branch.all)
+    |> assign(:roles, Role.all)
     |> render("show.html", changeset: changeset)
   end
 

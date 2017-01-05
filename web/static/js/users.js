@@ -1,22 +1,8 @@
 import { Listings } from "./listings";
 
-var branchesAutocompleteData = (branches) => {
-  var res = {}
-  branches.forEach(e => {
-    res[e["name"]] = null
-  })
-  return res;
-}
-
 export var Users = {
   init: function() {
     if ($("#users.listing").length) {
-      $(function() {
-        $('input.autocomplete').autocomplete({
-          data: branchesAutocompleteData(branches)
-        });
-      });
-
       Listings.init({
         endpoint: "/users/filter",
 

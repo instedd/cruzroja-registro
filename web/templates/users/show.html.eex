@@ -1,21 +1,58 @@
 <div id="profile">
+  <h2 class="name"><%= @changeset.data.name %></h2>
   <div class="content-main">
+    <div class="row">
+      <div class="col pe-6">
+        Este <b><%= Registro.User.role_label(@changeset.data.role) %></b> está <%= Registro.User.status_label(@changeset.data.status) %>
+        <%= if Registro.User.pending_approval?(@changeset.data) do %>
+          :
+          <a href="#" class="btn green">Aprobar</a>
+          <a href="#" class="btn red">Rechazar</a>
+        <%= else %>
+          .
+        <% end %>
+      </div>
+    </div>
     <%= form_for @changeset, users_path(@conn, :update, @current_user), fn f -> %>
-      <div class="form-group">
-        <%= label f, :name, "Nombre", class: "control-label" %>
-        <%= text_input f, :name, class: "form-control", required: "", disabled: "" %>
-        <%= error_tag f, :name %>
+      <div class="row">
+        <div class="input-field">
+          <%= label f, :email, class: "control-label" %>
+          <%= text_input f, :email, class: "form-control", required: "" %>
+          <%= error_tag f, :email %>
+        </div>
       </div>
 
-      <div class="form-group">
-        <%= label f, :email, class: "control-label" %>
-        <%= text_input f, :email, class: "form-control", required: "", disabled: "" %>
-        <%= error_tag f, :email %>
+      <div class="row">
+        <div class="input-field">
+          <%= label f, :name, "Nombre", class: "control-label" %>
+          <%= text_input f, :name, class: "form-control", required: "" %>
+          <%= error_tag f, :name %>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="input-field">
+          <%= label f, :branch_name, "Filial", class: "control-label active" %>
+          <%= text_input f, :branch_name, class: "autocomplete form-control", required: "" %>
+          <%= error_tag f, :branch_name %>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="input-field">
+          <%= label f, :role, "Rol", class: "control-label active" %>
+          <%= select f, :role, @roles, class: "form-control" %>
+          <%= error_tag f, :role %>
+        </div>
       </div>
 
       <div class="form-group actions">
-        <%= submit "Actualizar", class: "btn btn-primary", disabled: "" %>
+        <%= submit "Actualizar", class: "btn btn-primary" %>
       </div>
     <% end %>
   </div>
 </div>
+
+<script>
+  var branches = <%= raw Poison.encode!(@branches) %>;
+</script>

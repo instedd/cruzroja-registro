@@ -6,7 +6,7 @@ export var Branches = {
 
     if (listingContainer.length) {
       Listings.init({
-        endpoint: "/branches/",
+        endpoint: "/filiales/",
         pagination: true,
         filters: []
       });

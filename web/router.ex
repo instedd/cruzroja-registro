@@ -36,8 +36,8 @@ defmodule Registro.Router do
     coherence_routes :protected
 
     get "/filiales/", BranchesController, :index
-    resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/usuarios/filter", UsersController, :filter
+    resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/usuarios/descargar", UsersController, :download_csv
     get "/perfil", UsersController, :profile
   end

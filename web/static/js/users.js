@@ -4,9 +4,9 @@ export var Users = {
   init: function() {
     if ($("#users.listing").length) {
       Listings.init({
-        endpoint: "/users/filter",
+        endpoint: "/usuarios/filter",
 
-        downloadEndpoint: "/users/download",
+        downloadEndpoint: "/usuarios/descargar",
 
         pagination: true,
 

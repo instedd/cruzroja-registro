@@ -13,7 +13,7 @@
         <% end %>
       </div>
     </div>
-    <%= form_for @changeset, users_path(@conn, :update, @current_user), fn f -> %>
+    <%= form_for @changeset, users_path(@conn, :update, @user), fn f -> %>
       <div class="row">
         <div class="input-field">
           <%= label f, :email, class: "control-label" %>
@@ -33,7 +33,7 @@
       <div class="row">
         <div class="input-field">
           <%= label f, :branch_name, "Filial", class: "control-label active" %>
-          <%= text_input f, :branch_name, class: "autocomplete form-control", required: "" %>
+          <%= text_input f, :branch_name, class: "autocomplete form-control" %>
           <%= error_tag f, :branch_name %>
         </div>
       </div>
@@ -41,7 +41,7 @@
       <div class="row">
         <div class="input-field">
           <%= label f, :role, "Rol", class: "control-label active" %>
-          <%= select f, :role, @roles, class: "form-control" %>
+          <%= select f, :role, @roles, class: "form-control", required: "" %>
           <%= error_tag f, :role %>
         </div>
       </div>

@@ -6,7 +6,7 @@ defmodule Registro.UsersController do
   alias Registro.Role
   alias Registro.Branch
 
-  plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter]
+  plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter, :update, :show]
 
   def index(conn, _params) do
     query = from u in Pagination.query(User, page_number: 1),
@@ -37,9 +37,17 @@ defmodule Registro.UsersController do
     |> render("profile.html", changeset: changeset)
   end
 
-  def update(conn, _params) do
-    # TODO: check authorization
-    # TODO: check which fields can be updated
+  def update(conn, %{"user" => user_params} = params) do
+    user = Repo.get(User, params["id"])
+    changeset = User.changeset(user, user_params)
+    case Repo.update(changeset) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:info, "Account updated successfully.")
+        |> redirect(to: users_path(conn, :index))
+      {:error, changeset} ->
+        render(conn, "show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user)
+    end
   end
 
   def show(conn, params) do
@@ -52,7 +60,7 @@ defmodule Registro.UsersController do
     conn
     |> assign(:branches, Branch.all)
     |> assign(:roles, Role.all)
-    |> render("show.html", changeset: changeset)
+    |> render("show.html", changeset: changeset, user: user)
   end
 
   def filter(conn, params) do

@@ -8,11 +8,10 @@ defmodule Registro.UsersController do
 
   plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter]
 
-  def index(conn, params) do
+  def index(conn, _params) do
     query = from u in Pagination.query(User, page_number: 1),
             order_by: u.name,
             preload: [:branch]
-
     query = restrict_to_visible_users(query, conn)
 
     users = Repo.all(query)

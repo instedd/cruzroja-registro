@@ -13,7 +13,6 @@ defmodule Registro.Coherence.RegistrationController do
   use Coherence.Web, :controller
   require Logger
   alias Coherence.ControllerHelpers, as: Helpers
-  import Ecto.Query
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
@@ -79,50 +78,6 @@ defmodule Registro.Coherence.RegistrationController do
   end
   defp redirect_or_login(conn, user, params, _) do
     Helpers.login_user(conn, user, params)
-  end
-
-  @doc """
-  Show the registration page.
-  """
-  def show(conn, _) do
-    user = Coherence.current_user(conn)
-    render(conn, "show.html", user: user)
-  end
-
-  @doc """
-  Edit the registration.
-  """
-  def edit(conn, _) do
-    user = Coherence.current_user(conn)
-    changeset = Helpers.changeset(:registration, user.__struct__, user)
-    render(conn, "edit.html", user: user, changeset: changeset)
-  end
-
-  @doc """
-  Update the registration.
-  """
-  def update(conn, %{"registration" => user_params} = params) do
-    user_schema = Config.user_schema
-    user = Coherence.current_user(conn)
-    changeset = Helpers.changeset(:registration, user_schema, user, user_params)
-    case Config.repo.update(changeset) do
-      {:ok, user} ->
-        apply(Config.auth_module, Config.update_login, [conn, user, [id_key: Config.schema_key]])
-        |> put_flash(:info, "Account updated successfully.")
-        |> redirect_to(:registration_update, params, user)
-      {:error, changeset} ->
-        render(conn, "edit.html", user: user, changeset: changeset)
-    end
-  end
-
-  @doc """
-  Delete a registration.
-  """
-  def delete(conn, params) do
-    user = Coherence.current_user(conn)
-    conn = Coherence.SessionController.delete(conn)
-    Config.repo.delete! user
-    redirect_to(conn, :registration_delete, params)
   end
 
   @doc "

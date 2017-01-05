@@ -1,9 +1,9 @@
-<%= menu_item(@conn, "/profile", "Perfil") %>
+<%= menu_item(@conn, users_path(@conn, :profile), "Perfil") %>
 <%= if Registro.Role.is_admin?(@conn.assigns[:current_user].role) do %>
-  <%= menu_item(@conn, "/users", "Usuarios") %>
+  <%= menu_item(@conn, users_path(@conn, :index), "Usuarios") %>
 <% end %>
 <%= if Registro.Role.is_super_admin?(@conn.assigns[:current_user].role) do %>
-  <%= menu_item(@conn, "/branches", "Filiales") %>
+  <%= menu_item(@conn, branches_path(@conn, :index), "Filiales") %>
 <% end %>
 <li>
   <%= link "Salir", to: session_path(@conn, :delete), method: :delete %>

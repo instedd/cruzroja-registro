@@ -1,6 +1,5 @@
 defmodule Registro.Branch do
   use Registro.Web, :model
-  alias Registro.Pagination
 
   @derive {Poison.Encoder, only: [:name, :id]}
 

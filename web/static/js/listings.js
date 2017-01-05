@@ -59,7 +59,7 @@ var initPagination = (config) => {
 
 var bindItemClick = (config) => {
   if (config.onItemClick) {
-    $('.listing table tr').on("click", config.onItemClick)
+    $('.listing tbody tr').on("click", config.onItemClick)
   }
 }
 

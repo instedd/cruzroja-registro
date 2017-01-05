@@ -59,7 +59,7 @@ defmodule Registro.UsersController do
 
     conn
     |> put_layout(false)
-    |> render("table.html",
+    |> render("listing.html",
       users: users,
       page: page,
       page_count: Pagination.page_count(total_count),

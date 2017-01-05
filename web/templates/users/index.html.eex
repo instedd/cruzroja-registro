@@ -37,7 +37,7 @@
     </a>
   </div>
 
-  <%= render "table.html", conn: @conn, users: @users, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
+  <%= render "listing.html", conn: @conn, users: @users, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
 </div>
 
 

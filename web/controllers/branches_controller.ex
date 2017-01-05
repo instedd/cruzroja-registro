@@ -17,7 +17,7 @@ defmodule Registro.BranchesController do
                          { "index.html", conn }
 
                        _   ->
-                         { "table.html", put_layout(conn, false) }
+                         { "listing.html", put_layout(conn, false) }
                      end
 
     render(conn, template,

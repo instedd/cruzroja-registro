@@ -9,11 +9,14 @@ defmodule Registro.UsersController do
   plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter]
 
   def index(conn, params) do
-    users = Repo.all from u in Pagination.query(User, page_number: 1),
-                     order_by: u.name,
-                     preload: [:branch]
+    query = from u in Pagination.query(User, page_number: 1),
+            order_by: u.name,
+            preload: [:branch]
 
-    total_count = Repo.aggregate(User, :count, :id)
+    query = restrict_to_visible_users(query, conn)
+
+    users = Repo.all(query)
+    total_count = Repo.aggregate(query, :count, :id)
 
     conn
     |> assign(:branches, Branch.all)
@@ -51,8 +54,9 @@ defmodule Registro.UsersController do
   def filter(conn, params) do
     page = Pagination.requested_page(params)
 
-    query = from u in User, preload: [:branch]
-    query = apply_filters(query, params)
+    query = (from u in User, preload: [:branch])
+          |> apply_filters(params)
+          |> restrict_to_visible_users(conn)
 
     total_count = Repo.aggregate(query, :count, :id)
     users = Repo.all(query |> Pagination.restrict(page_number: page))
@@ -72,8 +76,11 @@ defmodule Registro.UsersController do
     query = from u in User,
               left_join: b in assoc(u, :branch),
               select: [u.name, u.email, u.role, u.status, b.name]
-    query = apply_filters(query, params)
-    users = Repo.all(query)
+
+    users = query
+          |> apply_filters(params)
+          |> restrict_to_visible_users(conn)
+          |> Repo.all
 
     users = set_labels(users)
     csv_content = [["Nombre", "Email", "Rol", "Estado", "Filial"]] ++ users
@@ -116,6 +123,15 @@ defmodule Registro.UsersController do
     from u in query, where: ilike(u.name, ^name) or ilike(u.email, ^name)
   end
 
+  defp restrict_to_visible_users(query, conn) do
+    user = conn.assigns[:current_user]
+    case user.role do
+      "super_admin" ->
+        query
+      "branch_admin"->
+        from u in query, where: u.branch_id == ^user.branch_id
+    end
+  end
 
   def nil_to_string(val) do
     if val == nil do

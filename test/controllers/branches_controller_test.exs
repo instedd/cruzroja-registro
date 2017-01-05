@@ -1,10 +1,9 @@
 defmodule Registro.BranchesControllerTest do
   use Registro.ConnCase
 
-  alias Registro.Branch
-  alias Registro.User
+  import Registro.ControllerTestHelpers
 
-  require IEx
+  alias Registro.Branch
 
   test "verifies that user is logged in", %{conn: conn} do
     conn = get conn, "/branches"
@@ -15,7 +14,7 @@ defmodule Registro.BranchesControllerTest do
     setup_db
 
     conn = conn
-    |> log_in("branch_admin")
+    |> log_in_with_role("branch_admin")
     |> get("/branches")
 
     assert html_response(conn, 302)
@@ -25,7 +24,7 @@ defmodule Registro.BranchesControllerTest do
     setup_db
 
     conn = conn
-    |> log_in("super_admin")
+    |> log_in_with_role("super_admin")
     |> get("/branches")
 
     assert html_response(conn, 200)
@@ -33,22 +32,13 @@ defmodule Registro.BranchesControllerTest do
   end
 
   def setup_db do
-    [
-      %{name: "Branch 1", address: "Foo"},
-      %{name: "Branch 2", address: "Bar"},
-    ] |> Enum.map (fn params -> Branch.changeset(%Branch{}, params) |> Repo.insert! end)
+    create_branch(name: "Branch 1")
+    create_branch(name: "Branch 2")
 
     branch_id = Repo.get_by!(Branch, name: "Branch 1").id
 
-    [
-      %{name: "Admin", email: "admin@instedd.org", password: "admin", password_confirmation: "admin", role: "super_admin"},
-      %{name: "Branch Admin", email: "branch@instedd.org", password: "admin", password_confirmation: "admin", role: "branch_admin", branch_id: branch_id},
-    ] |> Enum.map (fn params -> User.changeset(%User{}, params) |> Repo.insert! end)
-  end
-
-  def log_in(conn, role) do
-    user = Repo.get_by!(User, role: role)
-    Plug.Conn.assign(conn, :current_user, user)
+    create_user(email: "admin@instedd.org", role: "super_admin")
+    create_user(email: "branch@instedd.org", role: "branch_admin", branch_id: branch_id)
   end
 
 end

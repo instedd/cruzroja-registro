@@ -26,9 +26,13 @@ defmodule Registro.Router do
 
   scope "/", Registro do
     pipe_through [:browser, :set_user]
-    coherence_routes
 
     get "/", HomeController, :index
+
+    # our overrides go first
+    get "/registracion", Coherence.RegistrationController, :new
+    post "/registracion", Coherence.RegistrationController, :create
+    coherence_routes
   end
 
   scope "/", Registro do

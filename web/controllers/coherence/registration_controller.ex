@@ -13,6 +13,7 @@ defmodule Registro.Coherence.RegistrationController do
   use Coherence.Web, :controller
   require Logger
   alias Coherence.ControllerHelpers, as: Helpers
+  alias Registro.User
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
@@ -35,12 +36,11 @@ defmodule Registro.Coherence.RegistrationController do
     user_schema = Config.user_schema
     cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
 
-    branches = Registro.Branch.all
-             |> Enum.map(fn branch -> { branch.name, branch.id } end)
-
     conn
-    |> render(:new, email: "", branches: branches, changeset: cs)
+    |> load_registration_form_data
+    |> render(:new, email: "", changeset: cs)
   end
+
 
   @doc """
   Create the new user account.
@@ -50,9 +50,8 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def create(conn, %{"registration" => registration_params} = params) do
     user_schema = Config.user_schema
-    cs =  Helpers.changeset(:registration, user_schema, user_schema.__struct__, registration_params)
-            |> Ecto.Changeset.put_change(:status, "at_start")
-            |> check_role_premission
+    cs = User.changeset(:new_volunteer, %User{}, registration_params)
+
     case Config.repo.insert(cs) do
       {:ok, user} ->
         conn
@@ -61,15 +60,8 @@ defmodule Registro.Coherence.RegistrationController do
         |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
       {:error, changeset} ->
         conn
+        |> load_registration_form_data
         |> render("new.html", changeset: changeset)
-    end
-  end
-
-  defp check_role_premission(changeset) do
-    if Registro.Role.is_admin?(Ecto.Changeset.get_change(changeset, :role)) do
-      Ecto.Changeset.put_change(changeset, :role, "volunteer")
-    else
-      changeset
     end
   end
 
@@ -99,5 +91,10 @@ defmodule Registro.Coherence.RegistrationController do
         conn
         |> put_flash(:info, translation)
     end
+  end
+
+  defp load_registration_form_data(conn) do
+    conn
+    |> assign(:branches, Registro.Branch.all |> Enum.map(&{&1.name, &1.id }))
   end
 end

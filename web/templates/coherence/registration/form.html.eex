@@ -39,7 +39,7 @@
 
   <div class="row">
     <div class="input-field">
-      <%= select f, :branch_id, @branches, [class: "form-control"] ++ @required %>
+      <%= select f, :branch_id, @conn.assigns[:branches], [class: "form-control"] ++ @required %>
       <%= required_label f, :branch_id, "Filial", [] %>
       <%= error_tag f, :branch_id %>
     </div>

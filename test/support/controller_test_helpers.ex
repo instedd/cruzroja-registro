@@ -1,8 +1,7 @@
 defmodule Registro.ControllerTestHelpers do
 
   alias Registro.Repo
-  alias Registro.Branch
-  alias Registro.User
+  alias Registro.{Branch, User, Role}
 
   def log_in(conn, %User{} = user) do
     Plug.Conn.assign(conn, :current_user, user)
@@ -30,7 +29,8 @@ defmodule Registro.ControllerTestHelpers do
           password: "generated",
           password_confirmation: "generated",
           role: role,
-          branch_id: branch_id
+          branch_id: branch_id,
+          status: (if Role.is_admin?(role), do: nil, else: "approved")
     })
     Repo.insert! changeset
   end

@@ -5,7 +5,7 @@ defmodule Registro.UsersControllerTest do
   alias Registro.{User, Branch}
 
   test "verifies that user is logged in", %{conn: conn} do
-    conn = get conn, "/users"
+    conn = get conn, "/usuarios"
     assert html_response(conn, 302)
   end
 
@@ -14,7 +14,7 @@ defmodule Registro.UsersControllerTest do
 
     conn = conn
          |> log_in("volunteer@example.com")
-         |> get("/users")
+         |> get("/usuarios")
 
     assert html_response(conn, 302)
   end
@@ -24,7 +24,7 @@ defmodule Registro.UsersControllerTest do
 
     conn = conn
           |> log_in("admin@instedd.org")
-          |> get("/users")
+          |> get("/usuarios")
 
     assert html_response(conn, 200)
 
@@ -39,7 +39,7 @@ defmodule Registro.UsersControllerTest do
 
     conn = conn
     |> log_in("branch1@instedd.org")
-    |> get("/users")
+    |> get("/usuarios")
 
     assert html_response(conn, 200)
 

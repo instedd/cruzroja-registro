@@ -6,7 +6,7 @@ defmodule Registro.BranchesControllerTest do
   alias Registro.Branch
 
   test "verifies that user is logged in", %{conn: conn} do
-    conn = get conn, "/branches"
+    conn = get conn, "/filiales"
     assert html_response(conn, 302)
   end
 
@@ -15,7 +15,7 @@ defmodule Registro.BranchesControllerTest do
 
     conn = conn
     |> log_in_with_role("branch_admin")
-    |> get("/branches")
+    |> get("/filiales")
 
     assert html_response(conn, 302)
   end
@@ -25,7 +25,7 @@ defmodule Registro.BranchesControllerTest do
 
     conn = conn
     |> log_in_with_role("super_admin")
-    |> get("/branches")
+    |> get("/filiales")
 
     assert html_response(conn, 200)
     assert (Enum.count conn.assigns[:branches]) == 2

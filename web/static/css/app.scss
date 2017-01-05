@@ -7,21 +7,26 @@ body {
 }
 
 #cross {
-  background: red;
+  background: $brand-red;
   height: 41px;
   position: relative;
   left: 0px;
   top: 15px;
   width: 15px;
 }
+
 #cross:after {
-  background: red;
+  background: $brand-red;
   content: "";
   height: 15px;
   left: -13px;
   position: absolute;
   top: 13px;
   width: 41px;
+}
+
+.red {
+  background-color: $brand-red !important;
 }
 
 .content-main {
@@ -63,4 +68,5 @@ body {
 @import "_nav";
 @import "_landing";
 @import "_profile";
+@import "_users";
 @import "_pagination";

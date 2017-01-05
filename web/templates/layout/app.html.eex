@@ -14,10 +14,10 @@
 
   <body>
     <nav class="white" role="navigation">
-      <div class="nav-wrapper container">
-        <a id="logo-container" href="#" class="brand-logo"><div id="cross"></div></a>
+      <div class="nav-wrapper">
+        <a id="logo-container" class="brand-logo"><div id="cross"></div></a>
         <%= if assigns[:current_user] do %>
-          <ul class="right hide-on-med-and-down">
+          <ul class="hide-on-med-and-down">
             <%= render "_nav.html", conn: @conn %>
           </ul>
 

@@ -1,10 +1,23 @@
 $nav-height: 70px;
 
 nav {
-  margin-bottom: 30px;
+  max-width: 80%;
+  margin: 0px auto 30px auto;
   height: $nav-height;
+  box-shadow: none;
+
+  .nav-wrapper {
+    width: 100%;
+  }
+
+  #logo-container {
+    position: absolute;
+    padding-left: 30px;
+  }
 
   ul {
+    display: table;
+    margin: 0 auto;
     line-height: $nav-height;
 
     li {
@@ -18,7 +31,7 @@ nav {
       }
 
       &.active {
-        border-bottom: 5px solid red;
+        border-bottom: 5px solid $brand-red;
         background-color: transparent; // override materializes style
 
         a {

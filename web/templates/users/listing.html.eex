@@ -1,5 +1,5 @@
-<div id="replaceable" class="content-main table">
-    <table class="bordered responsive-table">
+<div id="replaceable" class="content-main table listing clickable">
+    <table class="bordered responsive-table highlight">
       <thead>
         <tr>
             <th data-field="name">Nombre</th>

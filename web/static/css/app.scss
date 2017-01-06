@@ -59,6 +59,9 @@ body {
 }
 
 .listing {
+  &.clickable tbody tr {
+    cursor: pointer;
+  }
   .autocomplete-content {
     position: absolute;
     width: 90%;

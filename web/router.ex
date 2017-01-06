@@ -41,8 +41,8 @@ defmodule Registro.Router do
 
     get "/filiales/", BranchesController, :index
     get "/usuarios/filter", UsersController, :filter
-    resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/usuarios/descargar", UsersController, :download_csv
+    resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/perfil", UsersController, :profile
   end
 end

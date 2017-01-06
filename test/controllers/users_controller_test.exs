@@ -4,47 +4,96 @@ defmodule Registro.UsersControllerTest do
 
   alias Registro.{User, Branch}
 
-  test "verifies that user is logged in", %{conn: conn} do
-    conn = get conn, "/usuarios"
-    assert html_response(conn, 302)
-  end
+  describe "listing" do
+    test "verifies that user is logged in", %{conn: conn} do
+      conn = get conn, "/usuarios"
+      assert html_response(conn, 302)
+    end
 
-  test "non admin users are not allowed", %{conn: conn} do
-    setup_db
+    test "non admin users are not allowed", %{conn: conn} do
+      setup_db
 
-    conn = conn
-         |> log_in("volunteer@example.com")
-         |> get("/usuarios")
-
-    assert html_response(conn, 302)
-  end
-
-  test "super_admin can see all users", %{conn: conn} do
-    setup_db
-
-    conn = conn
-          |> log_in("admin@instedd.org")
+      conn = conn
+          |> log_in("volunteer@example.com")
           |> get("/usuarios")
 
-    assert html_response(conn, 200)
+      assert html_response(conn, 302)
+    end
 
-    result_count = Enum.count conn.assigns[:users]
-    all_users_count = Repo.aggregate(User, :count, :id)
+    test "super_admin can see all users", %{conn: conn} do
+      setup_db
 
-    assert result_count == all_users_count
+      conn = conn
+            |> log_in("admin@instedd.org")
+            |> get("/usuarios")
+
+      assert html_response(conn, 200)
+
+      result_count = Enum.count conn.assigns[:users]
+      all_users_count = Repo.aggregate(User, :count, :id)
+
+      assert result_count == all_users_count
+    end
+
+    test "branch admin can only see users if the same branch", %{conn: conn} do
+      setup_db
+
+      conn = conn
+      |> log_in("branch1@instedd.org")
+      |> get("/usuarios")
+
+      assert html_response(conn, 200)
+
+      user_emails = Enum.map conn.assigns[:users], &(&1.email)
+      assert user_emails == ["branch1@instedd.org", "volunteer@example.com"]
+    end
   end
 
-  test "branch admin can only see users if the same branch", %{conn: conn} do
-    setup_db
+  describe "approval" do
+    test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
+      setup_db
 
-    conn = conn
-    |> log_in("branch1@instedd.org")
-    |> get("/usuarios")
+      {_conn, user} = try_approve(conn, "admin@instedd.org", "volunteer@example.com")
+      assert user.status == "approved"
+    end
 
-    assert html_response(conn, 200)
+    test "a branch admin is allowed to change the status of volunteers of the same branch", %{conn: conn} do
+      setup_db
 
-    user_emails = Enum.map conn.assigns[:users], &(&1.email)
-    assert user_emails == ["branch1@instedd.org", "volunteer@example.com"]
+      {_conn, user} = try_approve(conn, "branch1@instedd.org", "volunteer@example.com")
+      assert user.status == "approved"
+    end
+
+    test "a branch admin is not allowed to change the status of volunteers of other branches", %{conn: conn} do
+      setup_db
+
+      {conn, user} = try_approve(conn, "branch2@instedd.org", "volunteer@example.com")
+
+      assert html_response(conn, 302)
+      assert user.status == "at_start"
+    end
+
+    test "a volunteer is not allowed to change his status", %{conn: conn} do
+      setup_db
+
+      {conn, user} = try_approve(conn, "volunteer@example.com", "volunteer@example.com")
+
+      assert html_response(conn, 302)
+      assert user.status == "at_start"
+    end
+
+    def try_approve(conn, current_user_email, target_user_email) do
+      volunteer = Repo.get_by!(User, email: target_user_email)
+      assert volunteer.status == "at_start"
+
+      conn = conn
+      |> log_in(current_user_email)
+      |> patch(users_path(Registro.Endpoint, :update, volunteer), user: %{ status: "approved" })
+
+      volunteer = Repo.get_by!(User, email: target_user_email)
+
+      {conn, volunteer}
+    end
   end
 
   def setup_db do

@@ -30,7 +30,7 @@ defmodule Registro.ControllerTestHelpers do
           password_confirmation: "generated",
           role: role,
           branch_id: branch_id,
-          status: (if Role.is_admin?(role), do: nil, else: "approved")
+          status: (if Role.is_admin?(role), do: nil, else: "at_start")
     })
     Repo.insert! changeset
   end

@@ -22,7 +22,7 @@ defmodule Registro.User do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :email, :status, :branch_id, :role] ++ coherence_fields)
+    |> cast(params, [:name, :email, :status, :branch_id, :role, :status] ++ coherence_fields)
     |> validate_required([:name, :email])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email)

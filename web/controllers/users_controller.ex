@@ -1,12 +1,16 @@
 defmodule Registro.UsersController do
   use Registro.Web, :controller
 
+  alias __MODULE__
   alias Registro.Pagination
   alias Registro.User
   alias Registro.Role
   alias Registro.Branch
 
-  plug Registro.Authorization, [ check: &Role.is_admin?/1 ] when action in [:index, :filter, :update, :show]
+  import Ecto.Query
+
+  plug Registro.Authorization, [ check_role: &Role.is_admin?/1 ] when action in [:index, :filter, :show]
+  plug Registro.Authorization, [ check: &UsersController.authorize_update/2] when action in [:update]
 
   def index(conn, _params) do
     query = from u in Pagination.query(User, page_number: 1),
@@ -43,7 +47,7 @@ defmodule Registro.UsersController do
     case Repo.update(changeset) do
       {:ok, user} ->
         conn
-        |> put_flash(:info, "Account updated successfully.")
+        |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
         |> redirect(to: users_path(conn, :index))
       {:error, changeset} ->
         render(conn, "show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user)
@@ -156,5 +160,20 @@ defmodule Registro.UsersController do
   def set_labels(list) do
     res = Enum.map(list, fn(u) -> [Enum.at(u,0), Enum.at(u,1), User.role_label(Enum.at(u,2)), nil_to_string(User.status_label(Enum.at(u,3))), nil_to_string(Enum.at(u,4))] end)
     res
+  end
+
+
+  def authorize_update(current_user, params) do
+    case current_user.role do
+      "super_admin" ->
+        true
+      "branch_admin" ->
+        q = from u in User, select: [:branch_id]
+        target_user_branch_id = Repo.get(q, params["id"]).branch_id
+
+        target_user_branch_id == current_user.branch_id
+      _ ->
+        false
+    end
   end
 end

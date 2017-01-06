@@ -72,11 +72,8 @@ defmodule Registro.Coherence.RegistrationController do
     Helpers.login_user(conn, user, params)
   end
 
-  @doc "
-  Hack!
-  Coherence currently provides no way to customize flash messages defined in it's internal helpers.
-  "
   defp translate_flash(conn) do
+    # Hack! Coherence currently provides no way to customize flash messages defined in it's internal helpers.
     translations = %{
       "Registration created successfully." => "Registración exitosa."
     }

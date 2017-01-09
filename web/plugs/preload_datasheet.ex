@@ -1,7 +1,6 @@
 defmodule Registro.PreloadDatasheet do
   import Plug.Conn
 
-  alias Registro.Repo
   alias Registro.User
 
   def init(default), do: default

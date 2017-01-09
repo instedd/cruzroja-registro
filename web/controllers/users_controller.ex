@@ -110,12 +110,14 @@ defmodule Registro.UsersController do
   end
 
   def apply_filters(query, params) do
-    if params["branch"] do
-      branch_id = Repo.one from b in Branch,
+    branch_id = if params["branch"] do
+                  Repo.one from b in Branch,
                     where: b.name == ^params["branch"],
-                    select: b.id,
-                    limit: 1
-    end
+                    select: b.id
+                else
+                  nil
+                end
+
     query = query
       |> role_filter(params["role"])
       |> branch_filter(branch_id)

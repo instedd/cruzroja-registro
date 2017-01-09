@@ -29,7 +29,6 @@ defmodule Registro.Authorization do
   import Plug.Conn
   import Phoenix.Controller, only: [put_flash: 3, redirect: 2]
 
-  alias Registro.User
   alias Registro.Router.Helpers, as: Routes
 
   def init(default), do: default

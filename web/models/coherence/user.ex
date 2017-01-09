@@ -2,9 +2,7 @@ defmodule Registro.User do
   use Registro.Web, :model
   use Coherence.Schema
 
-  alias __MODULE__
   alias Registro.Repo
-  alias Registro.Role
 
   schema "users" do
     field :email, :string

@@ -1,8 +1,6 @@
 defmodule Registro.HomeController do
   use Registro.Web, :controller
 
-  alias Registro.User
-
   def index(conn, params) do
     case conn.assigns[:current_user] do
       nil ->

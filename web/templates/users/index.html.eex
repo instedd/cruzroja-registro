@@ -15,12 +15,12 @@
       <select id="status">
         <option value="" disabled selected>Estado</option>
         <option value="">Todos</option>
-        <option value="at_start"><%= Registro.User.status_label("at_start") %></option>
-        <option value="approved"><%= Registro.User.status_label("approved") %></option>
-        <option value="rejected"><%= Registro.User.status_label("rejected") %></option>
+        <option value="at_start"><%= Registro.Datasheet.status_label("at_start") %></option>
+        <option value="approved"><%= Registro.Datasheet.status_label("approved") %></option>
+        <option value="rejected"><%= Registro.Datasheet.status_label("rejected") %></option>
       </select>
     </div>
-    <%= if @conn.assigns[:current_user].role == "super_admin" do %>
+    <%= if @conn.assigns[:current_user].datasheet.role == "super_admin" do %>
     <div class="input-field col s3">
       <input type="text" id="branch" class="autocomplete">
       <label for="autocomplete-input">Filial</label>

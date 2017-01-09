@@ -17,11 +17,13 @@ defmodule Registro.Router do
   # Set current user if present for unprotected pages
   pipeline :set_user do
     plug Coherence.Authentication.Session
+    plug Registro.PreloadDatasheet
   end
 
   # Require authentication
   pipeline :check_authentication do
     plug Coherence.Authentication.Session, protected: true
+    plug Registro.PreloadDatasheet
   end
 
   scope "/", Registro do

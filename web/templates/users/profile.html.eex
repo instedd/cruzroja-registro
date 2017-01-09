@@ -1,11 +1,14 @@
 <div id="profile">
   <div class="content-main">
     <%= form_for @changeset, users_path(@conn, :update, @current_user), fn f -> %>
+
+      <%= inputs_for f, :datasheet, fn fd -> %>
       <div class="form-group">
-        <%= label f, :name, "Nombre", class: "control-label" %>
-        <%= text_input f, :name, class: "form-control", required: "", disabled: "" %>
-        <%= error_tag f, :name %>
+        <%= label fd, :name, "Nombre", class: "control-label" %>
+        <%= text_input fd, :name, class: "form-control", required: "", disabled: "" %>
+        <%= error_tag fd, :name %>
       </div>
+      <% end %>
 
       <div class="form-group">
         <%= label f, :email, class: "control-label" %>
@@ -17,9 +20,9 @@
         <%= submit "Actualizar", class: "btn btn-primary", disabled: "" %>
       </div>
 
-      <%= if Registro.User.pending_approval?(@current_user) do %>
+      <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
         <p class="user-status">
-          Actualmente tu trámite se encuentra en estado <b><%= Registro.User.status_label(@current_user.status) %></b> para ser voluntario de la filial <%= branch_label(@current_user) %>.
+          Actualmente tu trámite se encuentra en estado <b><%= Registro.Datasheet.status_label(@current_user.datasheet.status) %></b> para ser voluntario de la filial <%= branch_label(@current_user) %>.
         </p>
       <% end %>
 

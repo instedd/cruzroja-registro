@@ -23,8 +23,23 @@ defmodule Seed do
     end)
 
     users = [
-      %{name: "Admin", email: "admin@instedd.org", password: "admin", password_confirmation: "admin", role: "super_admin"},
-      %{name: "Branch Employee", email: "branch@instedd.org", password: "branch", password_confirmation: "branch", role: "branch_admin", branch_id: Repo.get_by!(Branch, name: "Saavedra").id},
+      %{email: "admin@instedd.org",
+        password: "admin",
+        password_confirmation: "admin",
+        datasheet: %{
+          name: "Admin",
+          role: "super_admin"
+        }
+       },
+      %{email: "branch@instedd.org",
+        password: "branch",
+        password_confirmation: "branch",
+        datasheet: %{
+          name: "Branch Employee",
+          role: "branch_admin",
+          branch_id: Repo.get_by!(Branch, name: "Saavedra").id
+        }
+      }
     ]
 
     Enum.map(users, &insert_user/1)

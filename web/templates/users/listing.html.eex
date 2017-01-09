@@ -7,7 +7,7 @@
             <th data-field="age">Edad</th>
             <th data-field="role">Rol</th>
             <th data-field="status">Estado</th>
-            <%= if @conn.assigns[:current_user].role == "super_admin" do %>
+            <%= if @conn.assigns[:current_user].datasheet.role == "super_admin" do %>
             <th data-field="branch">Filial</th>
             <% end %>
         </tr>
@@ -16,12 +16,12 @@
       <tbody>
         <%= for u <- @users do %>
           <tr data-href="<%= users_path(@conn, :show, u) %>">
-            <td><%= u.name %></td>
+            <td><%= u.datasheet.name %></td>
             <td><%= u.email %></td>
             <td></td>
-            <td><%= Registro.User.role_label(u.role) %></td>
-            <td><%= Registro.User.status_label(u.status) %></td>
-            <%= if @conn.assigns[:current_user].role == "super_admin" do %>
+            <td><%= Registro.User.role_label(u.datasheet.role) %></td>
+            <td><%= Registro.Datasheet.status_label(u.datasheet.status) %></td>
+            <%= if @conn.assigns[:current_user].datasheet.role == "super_admin" do %>
             <td><%= branch_label(u) %></td>
             <% end %>
           </tr>

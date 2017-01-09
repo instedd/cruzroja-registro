@@ -1,13 +1,16 @@
 defmodule Registro.HomeController do
   use Registro.Web, :controller
 
+  alias Registro.User
+
   def index(conn, params) do
     case conn.assigns[:current_user] do
       nil ->
         Registro.Coherence.SessionController.new(conn, params)
       _ ->
         user = conn.assigns[:current_user]
-        if Registro.Role.is_admin?(user.role) do
+
+        if Registro.Role.is_admin?(user.datasheet.role) do
           redirect(conn, to: users_path(conn, :index))
         else
           redirect(conn, to: users_path(conn, :profile))

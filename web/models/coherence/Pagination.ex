@@ -22,8 +22,7 @@ defmodule Registro.Pagination do
 
     from e in q,
       offset: ^offset,
-      limit: ^page_size,
-      order_by: :name
+      limit: ^page_size
   end
 
   def all(module, opts) do

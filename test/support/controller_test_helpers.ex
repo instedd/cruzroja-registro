@@ -12,25 +12,21 @@ defmodule Registro.ControllerTestHelpers do
     log_in(conn, user)
   end
 
-  def log_in_with_role(conn, role) do
-    user = Repo.get_by!(User, role: role)
-    log_in(conn, user)
-  end
-
-
   def create_user(email: email, role: role) do
     create_user(email: email, role: role, branch_id: nil)
   end
 
   def create_user(email: email, role: role, branch_id: branch_id) do
     changeset = User.changeset(%User{}, %{
-          name: "generated",
           email: email,
           password: "generated",
           password_confirmation: "generated",
-          role: role,
-          branch_id: branch_id,
-          status: (if Role.is_admin?(role), do: nil, else: "at_start")
+          datasheet: %{
+            name: "generated #{role}",
+            role: role,
+            branch_id: branch_id,
+            status: (if Role.is_admin?(role), do: nil, else: "at_start")
+          }
     })
     Repo.insert! changeset
   end

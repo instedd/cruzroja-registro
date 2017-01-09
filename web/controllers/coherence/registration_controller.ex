@@ -50,7 +50,12 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def create(conn, %{"registration" => registration_params} = params) do
     user_schema = Config.user_schema
-    cs = User.changeset(:new_volunteer, %User{}, registration_params)
+
+    registration_params = update_in(registration_params, ["datasheet"], fn(dp) ->
+      Dict.merge(dp, %{"status" => "at_start"})
+    end)
+
+    cs = User.changeset(%User{}, registration_params)
 
     case Config.repo.insert(cs) do
       {:ok, user} ->

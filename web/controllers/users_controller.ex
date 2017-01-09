@@ -6,6 +6,7 @@ defmodule Registro.UsersController do
   alias Registro.User
   alias Registro.Role
   alias Registro.Branch
+  alias Registro.Datasheet
 
   import Ecto.Query
 
@@ -13,11 +14,7 @@ defmodule Registro.UsersController do
   plug Registro.Authorization, [ check: &UsersController.authorize_update/2] when action in [:update]
 
   def index(conn, _params) do
-    query = from u in Pagination.query(User, page_number: 1),
-            order_by: u.name,
-            preload: [:branch]
-    query = restrict_to_visible_users(query, conn)
-
+    query = listing_page_query(conn, 1)
     users = Repo.all(query)
     total_count = Repo.aggregate(query, :count, :id)
 
@@ -37,13 +34,15 @@ defmodule Registro.UsersController do
     changeset = User.changeset(user)
 
     conn
-    |> assign(:current_user, Repo.preload(user, :branch))
     |> render("profile.html", changeset: changeset)
   end
 
   def update(conn, %{"user" => user_params} = params) do
     user = Repo.get(User, params["id"])
+         |> User.preload_datasheet
+
     changeset = User.changeset(user, user_params)
+
     case Repo.update(changeset) do
       {:ok, _user} ->
         conn
@@ -55,24 +54,22 @@ defmodule Registro.UsersController do
   end
 
   def show(conn, params) do
-    user = Repo.one(from u in User, where: u.id == ^params["id"], preload: [:branch])
+    user = Repo.one(from u in User.query_with_datasheet, where: u.id == ^params["id"])
     changeset = User.changeset(user)
-    if(user.branch) do
-      changeset = Ecto.Changeset.put_change(changeset, :branch_name, user.branch.name)
-    end
+    branch = user.datasheet.branch
+    branch_name = if branch, do: branch.name
 
     conn
     |> assign(:branches, Branch.all)
     |> assign(:roles, Role.all)
-    |> render("show.html", changeset: changeset, user: user)
+    |> render("show.html", changeset: changeset, user: user, branch_name: branch_name)
   end
 
   def filter(conn, params) do
     page = Pagination.requested_page(params)
 
-    query = (from u in User, preload: [:branch])
+    query = listing_page_query(conn, page)
           |> apply_filters(params)
-          |> restrict_to_visible_users(conn)
 
     total_count = Repo.aggregate(query, :count, :id)
     users = Repo.all(query |> Pagination.restrict(page_number: page))
@@ -90,19 +87,22 @@ defmodule Registro.UsersController do
 
   def download_csv(conn, params) do
     query = from u in User,
-              left_join: b in assoc(u, :branch),
-              select: [u.name, u.email, u.role, u.status, b.name]
+              left_join: d in assoc(u, :datasheet),
+              left_join: b in assoc(d, :branch),
+              select: [d.name, u.email, d.role, d.status, b.name],
+              order_by: d.name
 
     users = query
           |> apply_filters(params)
           |> restrict_to_visible_users(conn)
           |> Repo.all
+          |> Enum.map(&UsersController.format_csv_row/1)
 
-    users = set_labels(users)
-    csv_content = [["Nombre", "Email", "Rol", "Estado", "Filial"]] ++ users
-    |> CSV.encode
-    |> Enum.to_list
-    |> to_string
+    csv_content = [ ["Nombre", "Email", "Rol", "Estado", "Filial"] | users]
+                |> CSV.encode
+                |> Enum.to_list
+                |> to_string
+
     conn
     |> put_resp_content_type("text/csv")
     |> put_resp_header("content-disposition", "attachment; filename=\"usuarios.csv\"")
@@ -125,27 +125,31 @@ defmodule Registro.UsersController do
   end
 
   def role_filter(query, param) when is_nil(param), do: query
-  def role_filter(query, param), do: from u in query, where: u.role == ^param
+  def role_filter(query, param), do: from u in query, join: d in Datasheet, on: u.datasheet_id == d.id, where: d.role == ^param
 
   def branch_filter(query, param) when is_nil(param), do: query
-  def branch_filter(query, param), do: from u in query, where: u.branch_id == ^param
+  def branch_filter(query, param), do: from u in query, join: d in Datasheet, on: u.datasheet_id == d.id, where: d.branch_id == ^param
 
   def status_filter(query, param) when is_nil(param), do: query
-  def status_filter(query, param), do: from u in query, where: u.status == ^param
+  def status_filter(query, param), do: from u in query, join: d in Datasheet, on: u.datasheet_id == d.id, where: d.status == ^param
 
   def name_filter(query, param) when is_nil(param), do: query
   def name_filter(query, param) do
     name = "%" <> param <> "%"
-    from u in query, where: ilike(u.name, ^name) or ilike(u.email, ^name)
+    from u in query,
+      join: d in Datasheet, on: u.datasheet_id == d.id,
+      where: ilike(d.name, ^name) or ilike(u.email, ^name)
   end
 
   defp restrict_to_visible_users(query, conn) do
     user = conn.assigns[:current_user]
-    case user.role do
+    case user.datasheet.role do
       "super_admin" ->
         query
       "branch_admin"->
-        from u in query, where: u.branch_id == ^user.branch_id
+        from u in query,
+        join: d in Datasheet, on: d.id == u.datasheet_id,
+        where: d.branch_id == ^user.datasheet.branch_id
     end
   end
 
@@ -157,23 +161,31 @@ defmodule Registro.UsersController do
     end
   end
 
-  def set_labels(list) do
-    res = Enum.map(list, fn(u) -> [Enum.at(u,0), Enum.at(u,1), User.role_label(Enum.at(u,2)), nil_to_string(User.status_label(Enum.at(u,3))), nil_to_string(Enum.at(u,4))] end)
-    res
+  def format_csv_row([name, email, role, status, branch_name]) do
+    [name, email, User.role_label(role), nil_to_string(Datasheet.status_label(status)), nil_to_string(branch_name)]
   end
 
 
   def authorize_update(current_user, params) do
-    case current_user.role do
+    case current_user.datasheet.role do
       "super_admin" ->
         true
       "branch_admin" ->
-        q = from u in User, select: [:branch_id]
-        target_user_branch_id = Repo.get(q, params["id"]).branch_id
+        target_user = Repo.get User.query_with_datasheet, params["id"]
+        target_branch_id = target_user.datasheet.branch_id
 
-        target_user_branch_id == current_user.branch_id
+        target_branch_id == current_user.datasheet.branch_id
       _ ->
         false
     end
+  end
+
+  defp listing_page_query(conn, page_number) do
+    (from u in User,
+      join: d in Datasheet, on: d.id == u.datasheet_id,
+      order_by: d.name)
+      |> User.query_with_datasheet
+      |> Pagination.query(page_number: page_number)
+      |> restrict_to_visible_users(conn)
   end
 end

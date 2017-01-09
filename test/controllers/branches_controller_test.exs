@@ -14,7 +14,7 @@ defmodule Registro.BranchesControllerTest do
     setup_db
 
     conn = conn
-    |> log_in_with_role("branch_admin")
+    |> log_in("branch@instedd.org")
     |> get("/filiales")
 
     assert html_response(conn, 302)
@@ -24,7 +24,7 @@ defmodule Registro.BranchesControllerTest do
     setup_db
 
     conn = conn
-    |> log_in_with_role("super_admin")
+    |> log_in("admin@instedd.org")
     |> get("/filiales")
 
     assert html_response(conn, 200)

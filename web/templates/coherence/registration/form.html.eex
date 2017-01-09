@@ -5,13 +5,15 @@
     </div>
   <% end %>
 
-  <div class="row">
-    <div class="input-field">
-      <%= text_input f, :name, class: "form-control", required: "" %>
-      <%= required_label f, :name, "Nombre", [] %>
-      <%= error_tag f, :name %>
+  <%= inputs_for f, :datasheet, fn fd -> %>
+    <div class="row">
+      <div class="input-field">
+        <%= text_input fd, :name, class: "form-control", required: "" %>
+        <%= required_label fd, :name, "Nombre", [] %>
+        <%= error_tag fd, :name %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <div class="row">
     <div class="input-field">
@@ -37,27 +39,29 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="input-field">
-      <%= select f, :branch_id, @conn.assigns[:branches], [class: "form-control"] ++ @required %>
-      <%= required_label f, :branch_id, "Filial", [] %>
-      <%= error_tag f, :branch_id %>
+  <%= inputs_for f, :datasheet, fn fd -> %>
+    <div class="row">
+      <div class="input-field">
+        <%= select fd, :branch_id, @conn.assigns[:branches], [class: "form-control"] ++ @required %>
+        <%= required_label fd, :branch_id, "Filial", [] %>
+        <%= error_tag fd, :branch_id %>
+      </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="input-field">
-      Me quiero anotar como:
-      <p>
-        <%= radio_button f, :role, "volunteer", checked: "checked", id: "registration_volunteer", class: "with-gap" %>
-        <%= label f, "volunteer", "Voluntario" %>
-      </p>
-      <p>
-        <%= radio_button f, :role, "associate", id: "registration_associate", class: "with-gap" %>
-        <%= label f, "associate", "Asociado" %>
-      </p>
+    <div class="row">
+      <div class="input-field">
+        Me quiero anotar como:
+        <p>
+          <%= radio_button fd, :role, "volunteer", checked: "checked", id: "registration_datasheet_volunteer", class: "with-gap" %>
+          <%= label fd, "volunteer", "Voluntario" %>
+        </p>
+        <p>
+          <%= radio_button fd, :role, "associate", id: "registration_datasheet_associate", class: "with-gap" %>
+          <%= label fd, "associate", "Asociado" %>
+        </p>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <div class="form-group actions">
     <%= submit "Aceptar", class: "btn btn-primary" %>

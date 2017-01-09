@@ -9,6 +9,8 @@ defmodule Registro.BranchesController do
   plug Registro.Authorization, check_role: &Role.is_super_admin?/1
 
   def index(conn, params) do
+    import Ecto.Query
+
     page = Pagination.requested_page(params)
     total_count = Repo.aggregate(Branch, :count, :id)
     page_count = Pagination.page_count(total_count)
@@ -21,8 +23,10 @@ defmodule Registro.BranchesController do
                          { "listing.html", put_layout(conn, false) }
                      end
 
+    branches = Pagination.all((from b in Branch, order_by: :name), page_number: page)
+
     render(conn, template,
-      branches: Pagination.all(Branch, page_number: page),
+      branches: branches,
       page: page,
       page_count: page_count,
       page_size: Pagination.default_page_size,

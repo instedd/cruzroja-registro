@@ -41,7 +41,7 @@ defmodule Registro.Authorization do
                nil ->
                  opts[:check].(current_user, conn.params)
                check_fn ->
-                 check_fn.(current_user.role)
+                 check_fn.(current_user.datasheet.role)
              end
 
 

@@ -4,7 +4,7 @@ defmodule Registro.UsersView do
   import Registro.ListingsHelpers
 
   def branch_label(user) do
-    case user.branch do
+    case user.datasheet.branch do
       nil -> ""
       b -> b.name
     end

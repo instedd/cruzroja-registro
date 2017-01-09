@@ -1,5 +1,5 @@
 <div id="replaceable">
-  <table class="bordered responsive-table">
+  <table class="bordered responsive-table highlight">
     <thead>
       <tr>
         <th data-field="name">Nombre</th>

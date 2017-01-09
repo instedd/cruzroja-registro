@@ -1,21 +1,9 @@
 <div id="profile">
   <h2 class="name"><%= @changeset.data.name %></h2>
   <div class="content-main">
-    <div class="row">
-      <div class="col pe-6">
-        Este <b><%= Registro.User.role_label(@changeset.data.role) %></b> está <%= Registro.User.status_label(@changeset.data.status) %>
-        <%= if Registro.User.pending_approval?(@changeset.data) do %>
-          :
-          <a href="#" class="btn green">Aprobar</a>
-          <a href="#" class="btn red">Rechazar</a>
-        <%= else %>
-          .
-        <% end %>
-      </div>
-    </div>
     <%= form_for @changeset, users_path(@conn, :update, @user), fn f -> %>
       <div class="row">
-        <div class="input-field">
+        <div class="input-field col s12">
           <%= label f, :email, class: "control-label" %>
           <%= text_input f, :email, class: "form-control", required: "" %>
           <%= error_tag f, :email %>
@@ -23,7 +11,7 @@
       </div>
 
       <div class="row">
-        <div class="input-field">
+        <div class="input-field col s12">
           <%= label f, :name, "Nombre", class: "control-label" %>
           <%= text_input f, :name, class: "form-control", required: "" %>
           <%= error_tag f, :name %>
@@ -31,7 +19,7 @@
       </div>
 
       <div class="row">
-        <div class="input-field">
+        <div class="input-field col s12">
           <%= label f, :branch_name, "Filial", class: "control-label active" %>
           <%= text_input f, :branch_name, class: "autocomplete form-control" %>
           <%= error_tag f, :branch_name %>
@@ -39,15 +27,28 @@
       </div>
 
       <div class="row">
-        <div class="input-field">
+      <%= if Registro.User.pending_approval?(@changeset.data) do %>
+        <div class="input-field col s12">
           <%= label f, :role, "Rol", class: "control-label active" %>
-          <%= select f, :role, @roles, class: "form-control", required: "" %>
-          <%= error_tag f, :role %>
+          <input class="form-control" name="" type="text" value="Voluntario (pendiente de aprobación)" disabled />
+          <%= hidden_input f, :role, class: "form-control", disabled: "" %>
         </div>
+      <% else %>
+          <div class="input-field col s12">
+            <%= label f, :role, "Rol", class: "control-label active" %>
+            <%= select f, :role, @roles, class: "form-control", required: "" %>
+            <%= error_tag f, :role %>
+          </div>
+      <% end %>
       </div>
 
       <div class="form-group actions">
-        <%= submit "Actualizar", class: "btn btn-primary" %>
+      <%= if Registro.User.pending_approval?(@changeset.data) do %>
+        <button class="btn" type="submit" name="user[status]" value="approved">Aprobar</button>
+        <button class="btn red" type="submit" name="user[status]" value="rejected">Rechazar</button>
+      <% else %>
+        <%= submit "Actualizar", class: "btn btn-large btn-primary" %>
+      <% end %>
       </div>
     <% end %>
   </div>

@@ -18,8 +18,8 @@ defmodule Seed do
   def run do
     File.stream!("priv/data/branches.csv")
     |> Enum.map(&parse_branch_line/1)
-    |> Enum.each(fn [branch_name, address] ->
-      Branch.changeset(%Branch{}, %{name: branch_name, address: address}) |> Repo.insert!
+    |> Enum.each(fn [branch_name, address, president, authorities, phone, cell, email] ->
+      Branch.changeset(%Branch{}, %{name: branch_name, address: address, president: president, authorities: authorities, phone_number: phone, cell_phone_number: cell, email: email}) |> Repo.insert!
     end)
 
     users = [

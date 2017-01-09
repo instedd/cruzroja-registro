@@ -42,7 +42,7 @@ defmodule Registro.BranchesController do
     branch = Repo.get(Branch, params["id"])
     changeset = Branch.changeset(branch, branch_params)
     case Repo.update(changeset) do
-      {:ok, branch} ->
+      {:ok, _branch} ->
         conn
         |> put_flash(:info, "Los cambios en la filial fueron efectuados.")
         |> redirect(to: branches_path(conn, :index))
@@ -57,10 +57,10 @@ defmodule Registro.BranchesController do
     |> render("new.html", changeset: changeset)
   end
 
-  def create(conn, %{"branch" => branch_params} = params) do
+  def create(conn, %{"branch" => branch_params} = _params) do
     changeset = Branch.changeset(%Branch{}, branch_params)
     case Repo.insert(changeset) do
-      {:ok, branch} ->
+      {:ok, _branch} ->
         conn
         |> put_flash(:info, "Nueva filial agregada")
         |> redirect(to: branches_path(conn, :index))

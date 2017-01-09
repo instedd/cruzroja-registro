@@ -9,7 +9,7 @@
 
     <tbody>
       <%= for b <- @branches do %>
-        <tr>
+        <tr data-href="<%= branches_path(@conn, :show, b) %>">
           <td><%= b.name %></td>
           <td><%= b.address %></td>
         </tr>

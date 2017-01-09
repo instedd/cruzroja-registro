@@ -1,0 +1,19 @@
+<%= form_for @changeset, @action, fn f -> %>
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :name, "Nombre", class: "control-label" %>
+      <%= text_input f, :name, class: "form-control", required: "" %>
+      <%= error_tag f, :name %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :address, "Dirección", class: "control-label active" %>
+      <%= text_input f, :address, class: "form-control" %>
+      <%= error_tag f, :address %>
+    </div>
+  </div>
+
+  <%= submit "Actualizar", class: "btn btn-large btn-primary" %>
+<% end %>

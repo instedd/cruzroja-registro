@@ -30,6 +30,45 @@ defmodule Registro.BranchesController do
     )
   end
 
+  def show(conn, params) do
+    branch = Repo.one(from u in Branch, where: u.id == ^params["id"])
+    changeset = Branch.changeset(branch)
+
+    conn
+    |> render("show.html", changeset: changeset, branch: branch)
+  end
+
+  def update(conn, %{"branch" => branch_params} = params) do
+    branch = Repo.get(Branch, params["id"])
+    changeset = Branch.changeset(branch, branch_params)
+    case Repo.update(changeset) do
+      {:ok, branch} ->
+        conn
+        |> put_flash(:info, "Los cambios en la filial fueron efectuados.")
+        |> redirect(to: branches_path(conn, :index))
+      {:error, changeset} ->
+        render(conn, "show.html", changeset: changeset)
+    end
+  end
+
+  def new(conn, _params) do
+    changeset = Branch.changeset(%Branch{})
+    conn
+    |> render("new.html", changeset: changeset)
+  end
+
+  def create(conn, %{"branch" => branch_params} = params) do
+    changeset = Branch.changeset(%Branch{}, branch_params)
+    case Repo.insert(changeset) do
+      {:ok, branch} ->
+        conn
+        |> put_flash(:info, "Nueva filial agregada")
+        |> redirect(to: branches_path(conn, :index))
+      {:error, changeset} ->
+        render(conn, "new.html", changeset: changeset)
+    end
+  end
+
   def authorize_request(role) do
     case role do
       "super_admin" ->

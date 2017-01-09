@@ -1,3 +1,10 @@
 <div id="branches" class="content-main table listing">
-  <%= render "listing.html", branches: @branches, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
+  <div class="floating-action">
+    <a class="btn-floating btn-large waves-effect waves-light red" href="<%= branches_path(@conn, :new) %>">
+      <i class="material-icons">add</i>
+    </a>
+  </div>
+
+
+  <%= render "listing.html", conn: @conn, branches: @branches, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
 </div>

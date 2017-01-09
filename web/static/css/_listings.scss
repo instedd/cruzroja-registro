@@ -1,0 +1,21 @@
+#users, #branches {
+  .floating-action {
+    position: relative;
+  }
+
+  a.btn-floating {
+    position: absolute;
+    right: -80px;
+    top: 15px;
+  }
+}
+
+.listing {
+  &.clickable tbody tr {
+    cursor: pointer;
+  }
+  .autocomplete-content {
+    position: absolute;
+    width: 90%;
+  }
+}

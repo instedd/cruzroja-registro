@@ -1,0 +1,6 @@
+<div id="branch-details">
+  <h2 class="name">Nueva filial</h2>
+  <div class="content-main">
+    <%= render "form.html", conn: @conn, changeset: @changeset, action: branches_path(@conn, :create) %>
+  </div>
+</div>

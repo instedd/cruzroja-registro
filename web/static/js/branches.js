@@ -8,7 +8,10 @@ export var Branches = {
       Listings.init({
         endpoint: "/filiales/",
         pagination: true,
-        filters: []
+        filters: [],
+        onItemClick: (e) => {
+          document.location.href = $(e.target).closest("tr").data("href")
+        }
       });
     }
   }

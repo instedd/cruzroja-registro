@@ -22,7 +22,7 @@ defmodule Seed do
     insert_branches
 
     branch1 = Repo.get_by!(Branch, name: "Saavedra")
-    branch2 = Repo.get_by!(Branch, name: "Mercedes")
+    branch2 = Repo.get_by!(Branch, name: "Clorinda")
 
     branch1_admin_email = "amartinez@cruzroja.org.ar"
     branch2_admin_email = "rmarquez@cruzroja.org.ar"

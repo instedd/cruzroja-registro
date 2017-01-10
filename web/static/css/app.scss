@@ -64,6 +64,13 @@ body {
   }
 }
 
+h3 {
+  font-size: 16px;
+  text-transform: uppercase;
+  color: $secondary-gray;
+  font-weight: 700;
+}
+
 @import "_nav";
 @import "_landing";
 @import "_edit_forms";

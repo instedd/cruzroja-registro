@@ -1,5 +1,9 @@
 <div id="branch-details">
-  <h2 class="name"><%= @changeset.data.name %></h2>
+  <div class="row">
+    <div class="col">
+      <h2 class="name"><%= @changeset.data.name %></h2>
+    </div>
+  </div>
   <div class="content-main">
     <%= render "form.html", conn: @conn, changeset: @changeset, action: branches_path(@conn, :update, @branch) %>
   </div>

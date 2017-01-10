@@ -5,6 +5,12 @@
 
   h2.name {
     font-size: 20px;
-    margin: 50px 0;
+  }
+
+  ul.history {
+    li {
+      color: $secondary-gray;
+      margin: 20px 0;
+    }
   }
 }

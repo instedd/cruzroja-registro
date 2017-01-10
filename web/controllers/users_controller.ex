@@ -7,6 +7,7 @@ defmodule Registro.UsersController do
   alias Registro.Role
   alias Registro.Branch
   alias Registro.Datasheet
+  alias Registro.UserAuditLogEntry
 
   import Ecto.Query
 
@@ -32,6 +33,7 @@ defmodule Registro.UsersController do
   def profile(conn, _params) do
     user = Coherence.current_user(conn)
     changeset = User.changeset(user)
+    UserAuditLogEntry.add(changeset, Coherence.current_user(conn), :update)
 
     conn
     |> render("profile.html", changeset: changeset)
@@ -45,6 +47,7 @@ defmodule Registro.UsersController do
 
     case Repo.update(changeset) do
       {:ok, _user} ->
+        UserAuditLogEntry.add(changeset, Coherence.current_user(conn), :update)
         conn
         |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
         |> redirect(to: users_path(conn, :index))
@@ -62,6 +65,7 @@ defmodule Registro.UsersController do
     conn
     |> assign(:branches, Branch.all)
     |> assign(:roles, Role.all)
+    |> assign(:history, UserAuditLogEntry.for(user))
     |> render("show.html", changeset: changeset, user: user, branch_name: branch_name)
   end
 

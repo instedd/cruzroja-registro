@@ -62,11 +62,11 @@ defmodule Registro.UserAuditLogEntry do
           actor <> " actualizó sus datos" <> date
         end
       2 ->
-        actor <> " lo aprobó" <> date
+        actor <> " aprobó su solicitud" <> date
       3 ->
-        actor <> " lo rechazó" <> date
+        actor <> " rechazó su solicitud" <> date
       100 ->
-        "Actualización sin código registrada"
+        "Actualización sin detalle registrada"
     end
   end
 

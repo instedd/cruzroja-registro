@@ -33,7 +33,6 @@ defmodule Registro.UsersController do
   def profile(conn, _params) do
     user = Coherence.current_user(conn)
     changeset = User.changeset(user)
-    UserAuditLogEntry.add(changeset, Coherence.current_user(conn), :update)
 
     conn
     |> render("profile.html", changeset: changeset)
@@ -47,12 +46,15 @@ defmodule Registro.UsersController do
 
     case Repo.update(changeset) do
       {:ok, _user} ->
-        UserAuditLogEntry.add(changeset, Coherence.current_user(conn), :update)
+        UserAuditLogEntry.add(changeset, Coherence.current_user(conn), action_for(changeset))
         conn
         |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
         |> redirect(to: users_path(conn, :index))
       {:error, changeset} ->
-        render(conn, "show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user)
+        branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
+        conn
+        |> assign(:history, UserAuditLogEntry.for(user))
+        |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
     end
   end
 
@@ -193,5 +195,18 @@ defmodule Registro.UsersController do
       |> User.query_with_datasheet
       |> Pagination.query(page_number: page_number)
       |> restrict_to_visible_users(conn)
+  end
+
+  defp action_for(changeset) do
+    ds = changeset.changes[:datasheet]
+    if ds do
+      case ds.changes[:status] do
+        "approved" -> :approve
+        "rejected" -> :reject
+        _ -> :update
+      end
+    else
+      :update
+    end
   end
 end

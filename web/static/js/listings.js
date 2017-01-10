@@ -5,7 +5,8 @@ var navigatePage = (page, config) => {
     var params = filterParams(config.filters);
 
     if (config.pagination) {
-      var paginationData = $(".pager").data();
+      var paginationData = config.container.find(".pager").data();
+
       var targetPage = paginationData[page] || 1;
 
       if (targetPage) {
@@ -32,7 +33,7 @@ var fetch = (config, params) => {
     url: buildUri(config.endpoint, params),
     type: "get",
     success: function (data) {
-      $('#replaceable').html(data)
+      config.container.find('#replaceable').html(data)
 
       initPagination(config)
       bindItemClick(config)
@@ -51,20 +52,34 @@ var filterParams = (filters) => {
 
 var initPagination = (config) => {
   if (config.pagination) {
-    var pager = $(".pager")
-    pager.find(".pager-left").on("click", navigatePage("previousPage", config))
-    pager.find(".pager-right").on("click", navigatePage("nextPage", config))
+    var pager = config.container.find(".pager")
+
+    pager.find(".pager-left")
+         .on("click", navigatePage("previousPage", config))
+
+    pager.find(".pager-right")
+         .on("click", navigatePage("nextPage", config))
+
+    pager.find(".disabled")
+         .on("click", (e) => e.preventDefault())
   }
 }
 
 var bindItemClick = (config) => {
   if (config.onItemClick) {
-    $('.listing tbody tr').on("click", config.onItemClick)
+    config.container.find('tbody tr').on("click", config.onItemClick)
   }
 }
 
 export var Listings = {
   init : (config) => {
+    var container = $(config.selector);
+    if (container.length) {
+      config.container = container;
+    } else {
+      return;
+    }
+
     var applyFilters = navigatePage("initial", config);
 
     initPagination(config)
@@ -75,13 +90,13 @@ export var Listings = {
     });
 
     if(config.downloadEndpoint) {
-      $("#download").on("click", () => {
+      config.container.find("#download").on("click", () => {
         document.location.href = buildUri(config.downloadEndpoint, filterParams(config.filters))
       })
     }
   },
 
-  jQueryFilter: (name, selector, changeEvent) => {
+  onEventFilter: (name, selector, changeEvent) => {
     return {
       name: name,
       getValue: () => { return $(selector).val() },

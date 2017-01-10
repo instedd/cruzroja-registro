@@ -1,8 +1,12 @@
 <div id="branches" class="content-main table listing">
-  <div class="floating-action">
-    <a class="btn-floating btn-large waves-effect waves-light red" href="<%= branches_path(@conn, :new) %>">
-      <i class="material-icons">add</i>
-    </a>
+  <div class="floating-actions">
+    <ul>
+      <li>
+        <a class="btn-floating btn-large waves-effect waves-light red" href="<%= branches_path(@conn, :new) %>">
+          <i class="material-icons">add</i>
+        </a>
+      </li>
+    </ul>
   </div>
 
 

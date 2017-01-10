@@ -53,7 +53,7 @@ defmodule Seed do
 
 
   def insert_user(params) do
-    User.changeset(%User{}, params) |> Repo.insert!
+    User.changeset(:create_with_datasheet, params) |> Repo.insert!
   end
 end
 

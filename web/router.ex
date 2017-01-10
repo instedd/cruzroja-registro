@@ -31,14 +31,19 @@ defmodule Registro.Router do
 
     get "/", HomeController, :index
 
-    # our overrides go first
-    get "/registracion", Coherence.RegistrationController, :new
+    get "/registracion",  Coherence.RegistrationController, :new
     post "/registracion", Coherence.RegistrationController, :create
-    coherence_routes
+    get  "/registracion/invitado/:id",         Coherence.InvitationController, :edit
+    post "/registracion/invitado/confirmar",   Coherence.InvitationController, :create_user
+    coherence_routes :public
   end
 
   scope "/", Registro do
     pipe_through [:browser, :check_authentication]
+
+    get  "/usuarios/alta",              Coherence.InvitationController, :new
+    post "/usuarios/alta",                Coherence.InvitationController, :create
+    get  "/usuarios/alta/:id/reenviar", Coherence.InvitationController, :resend
     coherence_routes :protected
 
     resources "/filiales/", BranchesController

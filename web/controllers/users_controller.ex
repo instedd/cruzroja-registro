@@ -32,7 +32,7 @@ defmodule Registro.UsersController do
 
   def profile(conn, _params) do
     user = Coherence.current_user(conn)
-    changeset = User.changeset(user)
+    changeset = Ecto.Changeset.change(user)
 
     conn
     |> render("profile.html", changeset: changeset)
@@ -42,7 +42,7 @@ defmodule Registro.UsersController do
     user = Repo.get(User, params["id"])
          |> User.preload_datasheet
 
-    changeset = User.changeset(user, user_params)
+    changeset = User.changeset(user, :update, user_params)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
@@ -60,7 +60,7 @@ defmodule Registro.UsersController do
 
   def show(conn, params) do
     user = Repo.one(from u in User.query_with_datasheet, where: u.id == ^params["id"])
-    changeset = User.changeset(user)
+    changeset = Ecto.Changeset.change(user)
     branch = user.datasheet.branch
     branch_name = if branch, do: branch.name
 

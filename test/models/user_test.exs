@@ -5,10 +5,6 @@ defmodule Registro.UserTest do
 
   @valid_user_attrs %{email: "john@example.com", password: "fooo", password_confirmation: "fooo"}
 
-  test "a user can be created without a datasheet" do
-    assert User.changeset(%User{}, @valid_user_attrs).valid?
-  end
-
   test "a user can be created with a datasheet" do
     params = Map.put(@valid_user_attrs, :datasheet, %{
       name: "John",
@@ -17,7 +13,7 @@ defmodule Registro.UserTest do
       status: "approved"
     })
 
-    changeset = User.changeset(%User{}, params)
+    changeset = User.changeset(:create_with_datasheet, params)
 
     assert changeset.valid?
 
@@ -37,6 +33,6 @@ defmodule Registro.UserTest do
           status: "approved"
     })
 
-    refute User.changeset(%User{}, params).valid?
+    refute User.changeset(:create_with_datasheet, params).valid?
   end
 end

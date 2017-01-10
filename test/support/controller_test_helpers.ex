@@ -17,7 +17,7 @@ defmodule Registro.ControllerTestHelpers do
   end
 
   def create_user(email: email, role: role, branch_id: branch_id) do
-    changeset = User.changeset(%User{}, %{
+    changeset = User.changeset(:create_with_datasheet, %{
           email: email,
           password: "generated",
           password_confirmation: "generated",

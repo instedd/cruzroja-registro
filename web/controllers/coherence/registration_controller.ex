@@ -34,7 +34,7 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def new(conn, _params) do
     user_schema = Config.user_schema
-    cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
+    cs = User.changeset(:create_with_datasheet, %{})
 
     conn
     |> load_registration_form_data
@@ -55,7 +55,7 @@ defmodule Registro.Coherence.RegistrationController do
       Dict.merge(dp, %{"status" => "at_start"})
     end)
 
-    cs = User.changeset(%User{}, registration_params)
+    cs = User.changeset(:create_with_datasheet, registration_params)
 
     case Config.repo.insert(cs) do
       {:ok, user} ->

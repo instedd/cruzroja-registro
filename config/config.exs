@@ -31,7 +31,8 @@ config :coherence,
   email_from_name: "Cruz Roja Argentina",
   email_from_email: "noreply@instedd.org",
   allow_unconfirmed_access_for: true,
-  opts: [:authenticatable, :recoverable, :trackable, :rememberable, registerable: [:new, :create]]
+  changeset: {Registro.User, :coherence_changeset},
+  opts: [:authenticatable, :recoverable, :trackable, :rememberable, invitable: [], registerable: []]
 
 config :coherence, Registro.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local

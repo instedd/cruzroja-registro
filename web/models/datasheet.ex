@@ -9,6 +9,7 @@ defmodule Registro.Datasheet do
     field :role, :string
 
     belongs_to :branch, Registro.Branch
+    has_one :user, Registro.User
   end
 
 

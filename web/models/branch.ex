@@ -6,6 +6,9 @@ defmodule Registro.Branch do
   schema "branches" do
     field :name, :string
     field :address, :string
+
+    many_to_many :admins, Registro.Datasheet, join_through: "branches_admins"
+
     timestamps
   end
 

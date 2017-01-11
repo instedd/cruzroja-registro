@@ -8,8 +8,13 @@ defmodule Registro.Datasheet do
     field :status, :string
     field :role, :string
 
-    belongs_to :branch, Registro.Branch
     has_one :user, Registro.User
+
+    # the branch to which the person acts as a volunteer or associate
+    belongs_to :branch, Registro.Branch
+
+    # the branches in which the person acts as an administrator
+    many_to_many :admin_branches, Registro.Branch, join_through: "branches_admins"
   end
 
 

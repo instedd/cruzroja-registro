@@ -65,6 +65,8 @@ defmodule Registro.Coherence.InvitationController do
         case Config.repo.insert cs do
           {:ok, invitation} ->
             send_user_email :invitation, invitation, url
+            Registro.UserAuditLogEntry.add(invitation.datasheet_id, Coherence.current_user(conn), :invite_send)
+
             conn
             |> put_flash(:info, "Invitación enviada.")
             |> redirect_to(:invitation_create, params)
@@ -136,6 +138,8 @@ defmodule Registro.Coherence.InvitationController do
         case Repo.insert changeset do
           {:ok, user} ->
             Repo.delete invite
+            Registro.UserAuditLogEntry.add(user.datasheet_id, user, :invite_confirm)
+
             conn
             |> send_confirmation(user, user_schema)
             |> translate_flash

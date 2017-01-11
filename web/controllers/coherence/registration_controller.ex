@@ -59,7 +59,7 @@ defmodule Registro.Coherence.RegistrationController do
 
     case Config.repo.insert(cs) do
       {:ok, user} ->
-        Registro.UserAuditLogEntry.add(Ecto.Changeset.change(user), user, :create)
+        Registro.UserAuditLogEntry.add(user.datasheet_id, user, :create)
         conn
         |> send_confirmation(user, user_schema)
         |> translate_flash

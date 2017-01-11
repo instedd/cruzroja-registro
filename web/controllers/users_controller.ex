@@ -46,7 +46,7 @@ defmodule Registro.UsersController do
 
     case Repo.update(changeset) do
       {:ok, _user} ->
-        UserAuditLogEntry.add(changeset, Coherence.current_user(conn), action_for(changeset))
+        UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
         conn
         |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
         |> redirect(to: users_path(conn, :index))

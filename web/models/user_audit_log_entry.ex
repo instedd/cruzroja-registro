@@ -17,9 +17,9 @@ defmodule Registro.UserAuditLogEntry do
     |> validate_required([:user_id, :actor_id, :action_id])
   end
 
-  def add(changeset, actor, action) do
+  def add(datasheet_id, actor, action) do
     code = UserAuditLogEntry.action_to_code(action)
-    changeset = changeset(%UserAuditLogEntry{}, %{actor_id: actor.datasheet_id, user_id: changeset.data.datasheet_id, action_id: code})
+    changeset = changeset(%UserAuditLogEntry{}, %{actor_id: actor.datasheet_id, user_id: datasheet_id, action_id: code})
     case Repo.insert(changeset) do
       {:ok, _entry} ->
         :ok
@@ -40,6 +40,8 @@ defmodule Registro.UserAuditLogEntry do
       :update -> 1
       :approve -> 2
       :reject -> 3
+      :invite_send -> 4
+      :invite_confirm -> 5
       _ -> 100
     end
   end
@@ -65,6 +67,10 @@ defmodule Registro.UserAuditLogEntry do
         actor <> " aprobó su solicitud" <> date
       3 ->
         actor <> " rechazó su solicitud" <> date
+      4 ->
+        actor <> " le envió una invitación a registrarse " <> date
+      5 ->
+        "Se registró " <> date
       100 ->
         "Actualización sin detalle registrada"
     end

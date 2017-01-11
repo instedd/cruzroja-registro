@@ -62,7 +62,7 @@ defmodule Registro.InvitationsControllerTest do
            "email" => "john@example.com",
            "datasheet" => %{
              "role" => "volunteer",
-             "branch_id" => branch_id
+             "branch_id" => "#{branch_id}"
            }
          }
       }
@@ -75,7 +75,7 @@ defmodule Registro.InvitationsControllerTest do
       assert datasheet.name == params["invitation"]["name"]
       assert datasheet.status == "at_start"
       assert datasheet.role == "volunteer"
-      assert datasheet.branch_id == params["invitation"]["datasheet"]["branch_id"]
+      assert datasheet.branch_id == String.to_integer(params["invitation"]["datasheet"]["branch_id"])
     end
   end
 

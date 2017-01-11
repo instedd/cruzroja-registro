@@ -191,7 +191,8 @@ defmodule Registro.Coherence.InvitationController do
           true
 
         {:create, "branch_admin"} ->
-          branch_id == conn.params["invitation"]["datasheet"]["branch_id"]
+          target_branch_id = String.to_integer(conn.params["invitation"]["datasheet"]["branch_id"])
+          branch_id == target_branch_id
       end
     else
       true

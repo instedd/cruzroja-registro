@@ -18,11 +18,17 @@
     </div>
 
     <%= inputs_for f, :datasheet, fn fd -> %>
-      <div class="form-group">
-        <%= select fd, :branch_id, @conn.assigns[:branches], [class: "form-control", required: ""] %>
-        <%= required_label fd, :branch_id, "Filial", [] %>
-        <%= error_tag fd, :branch_id %>
-      </div>
+      <% datasheet = @conn.assigns[:current_user].datasheet %>
+
+      <%= if Registro.Role.is_super_admin?(datasheet.role) do %>
+        <div class="form-group">
+          <%= select fd, :branch_id, @conn.assigns[:branches], [class: "form-control", required: ""] %>
+          <%= required_label fd, :branch_id, "Filial", [] %>
+          <%= error_tag fd, :branch_id %>
+        </div>
+      <% else %>
+        <%= hidden_input fd, :branch_id , value: datasheet.branch_id%>
+      <% end %>
 
       <br/>
       <div class="form-group">

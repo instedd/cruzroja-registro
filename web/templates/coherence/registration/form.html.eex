@@ -8,7 +8,7 @@
   <%= inputs_for f, :datasheet, fn fd -> %>
     <div class="row">
       <div class="input-field">
-        <%= text_input fd, :name, class: "form-control", required: "" %>
+        <%= text_input fd, :name, class: "form-control", required: "", autofocus: "" %>
         <%= required_label fd, :name, "Nombre", [] %>
         <%= error_tag fd, :name %>
       </div>

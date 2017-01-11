@@ -12,15 +12,18 @@ defmodule Registro.Coherence.InvitationController do
   """
   use Coherence.Web, :controller
   use Timex
+  alias __MODULE__
   alias Coherence.{Config}
   alias Coherence.ControllerHelpers, as: Helpers
-  alias Registro.{Invitation, User, Repo}
+  alias Registro.{Invitation, User, Repo, Role, Datasheet}
   import Ecto.Changeset
   require Logger
 
   plug Coherence.ValidateOption, :invitable
   plug :scrub_params, "user" when action in [:create_user]
   plug :layout_view
+
+  plug Registro.Authorization, check: &InvitationController.check_authorization/2
 
   @doc false
   def layout_view(conn, _) do
@@ -171,5 +174,27 @@ defmodule Registro.Coherence.InvitationController do
 
     invitation_params
     |> update_in(["datasheet"], fn(dp) -> Dict.merge(dp, defaults) end)
+  end
+
+  def check_authorization(conn, current_user) do
+    action = action_name(conn)
+    is_protected_action = Enum.member?([:new, :create, :resend], action)
+
+    if is_protected_action do
+      %Datasheet{ role: role, branch_id: branch_id } = current_user.datasheet
+
+      case {action, role} do
+        {:new, _} ->
+          Role.is_admin?(role)
+
+        {:create, "super_admin"} ->
+          true
+
+        {:create, "branch_admin"} ->
+          branch_id == conn.params["invitation"]["datasheet"]["branch_id"]
+      end
+    else
+      true
+    end
   end
 end

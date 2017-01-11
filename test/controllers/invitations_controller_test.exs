@@ -5,34 +5,80 @@ defmodule Registro.InvitationsControllerTest do
 
   alias Registro.{Invitation, Datasheet}
 
-  test "invitation creation with associated datasheet", %{conn: conn} do
-    branch = create_branch(name: "Branch")
-    admin = create_user(email: "admin@instedd.org", role: "super_admin")
+  describe "sending invitatioins" do
+    test "invitation creation with associated datasheet", %{conn: conn} do
+      branch = create_branch(name: "Branch")
+      admin = create_user(email: "admin@instedd.org", role: "super_admin")
 
-    params = %{ "invitation" =>
-                %{ "name" => "John",
-                   "email" => "john@example.com",
-                   "datasheet" => %{
-                     "role" => "volunteer",
-                     "branch_id" => branch.id
-                   }
-                 }
-              }
+      params = invitation_params(branch.id)
 
-    conn = conn
-         |> log_in(admin)
-         |> post("/usuarios/alta", params)
+      conn = conn
+      |> log_in(admin)
+      |> post("/usuarios/alta", params)
 
-    assert html_response(conn, 302)
+      assert html_response(conn, 302)
 
-    %Invitation{datasheet: datasheet} = Repo.get_by!(Invitation, email: "john@example.com")
-                                      |> Repo.preload([:datasheet])
+      verify_invitation(params)
+    end
 
-    assert datasheet.name == "John"
-    assert datasheet.status == "at_start"
-    assert datasheet.role == "volunteer"
-    assert datasheet.branch_id == branch.id
+    test "branch admin can send invitations for the same branch", %{conn: conn} do
+      branch = create_branch(name: "Branch")
+      branch_admin = create_user(email: "branch1@instedd.org", role: "branch_admin", branch_id: branch.id)
+
+      params = invitation_params(branch.id)
+
+      conn = conn
+      |> log_in(branch_admin)
+      |> post("/usuarios/alta", params)
+
+      assert html_response(conn, 302)
+
+      verify_invitation(params)
+    end
+
+    test "branch admin can not send invitations for other branches", %{conn: conn} do
+      branch1 = create_branch(name: "Branch 1")
+      branch2 = create_branch(name: "Branch 2")
+
+      branch1_admin = create_user(email: "branch1@instedd.org", role: "branch_admin", branch_id: branch1.id)
+
+      params = invitation_params(branch2.id)
+
+      conn = conn
+      |> log_in(branch1_admin)
+      |> post("/usuarios/alta", params)
+
+      assert html_response(conn, 302)
+
+      assert Invitation.count == 0
+    end
+
+    test "volunteers can not send invitations" do
+    end
+
+    defp invitation_params(branch_id) do
+      %{ "invitation" =>
+        %{ "name" => "John",
+           "email" => "john@example.com",
+           "datasheet" => %{
+             "role" => "volunteer",
+             "branch_id" => branch_id
+           }
+         }
+      }
+    end
+
+    defp verify_invitation(params) do
+      %Invitation{datasheet: datasheet} = Repo.get_by!(Invitation, email: params["invitation"]["email"])
+      |> Repo.preload([:datasheet])
+
+      assert datasheet.name == params["invitation"]["name"]
+      assert datasheet.status == "at_start"
+      assert datasheet.role == "volunteer"
+      assert datasheet.branch_id == params["invitation"]["datasheet"]["branch_id"]
+    end
   end
+
 
   test "invitation confirmation", %{conn: conn} do
     branch = create_branch(name: "Branch")

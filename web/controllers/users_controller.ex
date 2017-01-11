@@ -174,12 +174,12 @@ defmodule Registro.UsersController do
   end
 
 
-  def authorize_update(current_user, params) do
+  def authorize_update(conn, current_user) do
     case current_user.datasheet.role do
       "super_admin" ->
         true
       "branch_admin" ->
-        target_user = Repo.get User.query_with_datasheet, params["id"]
+        target_user = Repo.get User.query_with_datasheet, conn.params["id"]
         target_branch_id = target_user.datasheet.branch_id
 
         target_branch_id == current_user.datasheet.branch_id

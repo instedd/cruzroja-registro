@@ -130,9 +130,7 @@ defmodule Registro.Coherence.InvitationController do
         |> put_flash(:error, "Invalid Invitation. Please contact the site administrator.")
         |> redirect(to: logged_out_url(conn))
       _ ->
-        user_params = Dict.merge(params["user"], %{"email" => invite.email, "datasheet_id" => invite.datasheet.id})
-
-        changeset = User.changeset(:create_from_invitation, user_params)
+        changeset = User.changeset(:create_from_invitation, invite, params["user"])
 
         case Repo.insert changeset do
           {:ok, user} ->

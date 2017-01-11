@@ -17,7 +17,9 @@ defmodule Registro.User do
   Changeset for user creation that is to be associated with a preexisting
   datasheet.
   """
-  def changeset(:create_from_invitation, params) do
+  def changeset(:create_from_invitation, invite, params) do
+    params = Dict.merge(params, %{"email" => invite.email,
+                                  "datasheet_id" => invite.datasheet.id})
     %User{}
     |> basic_changeset(params)
     |> cast(params, [:datasheet_id])

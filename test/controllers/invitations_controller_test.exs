@@ -3,7 +3,7 @@ defmodule Registro.InvitationsControllerTest do
 
   import Registro.ControllerTestHelpers
 
-  alias Registro.{Invitation, Datasheet}
+  alias Registro.{Invitation, Datasheet, User}
 
   describe "sending invitatioins" do
     test "invitation creation with associated datasheet", %{conn: conn} do
@@ -80,40 +80,69 @@ defmodule Registro.InvitationsControllerTest do
   end
 
 
-  test "invitation confirmation", %{conn: conn} do
-    branch = create_branch(name: "Branch")
+  describe "invitation confirmation" do
+    test "creates a new user and deletes invitation", %{conn: conn} do
+      token = setup_invitation("john@example.com")
 
-    datasheet_params = %{ "name" => "John",
-                          "status" => "at_start",
-                          "role" => "volunteer",
-                          "branch_id" => branch.id }
+      confirmation_params = %{ "token" => token,
+                              "user" => %{ "password" => "foobar",
+                                            "password_confirmation" => "foobar" }}
 
-    datasheet = Datasheet.changeset(%Datasheet{}, datasheet_params)
-              |> Repo.insert!
+      conn
+      |> post("/registracion/invitado/confirmar", confirmation_params)
+      |> html_response(302)
 
 
-    invitation_params = %{ "name" => "John",
-                           "email" => "john@example.com",
-                           "token" => "thetoken" }
+      verify_invitation_accepted("john@example.com")
+    end
 
-    invitation = Invitation.changeset(%Invitation{}, invitation_params)
-                |> Ecto.Changeset.put_assoc(:datasheet, datasheet)
-                |> Repo.insert!
+    test "does not allow to change email", %{conn: conn} do
+      token = setup_invitation("john@example.com")
 
-    confirmation_params = %{ "token" => invitation.token,
-                             "user" => %{ "password" => "foobar",
-                                          "password_confirmation" => "foobar" }}
+      confirmation_params = %{ "token" => token,
+                               "user" => %{ "email" => "changed@example.com",
+                                            "password" => "foobar",
+                                            "password_confirmation" => "foobar" }}
 
-    conn
-    |> post("/registracion/invitado/confirmar", confirmation_params)
-    |> html_response(302)
+      conn
+      |> post("/registracion/invitado/confirmar", confirmation_params)
+      |> html_response(302)
 
-    assert Invitation.count == 0
+      verify_invitation_accepted("john@example.com")
+    end
 
-    %Datasheet{ user: user } = Repo.preload datasheet, [:user]
+    defp setup_invitation(email) do
+      token = "thetoken"
 
-    assert user.email == "john@example.com"
-    assert user.datasheet_id == datasheet.id
+      branch = create_branch(name: "Branch")
+
+      datasheet_params = %{ "name" => "John",
+                            "status" => "at_start",
+                            "role" => "volunteer",
+                            "branch_id" => branch.id }
+
+      datasheet = Datasheet.changeset(%Datasheet{}, datasheet_params)
+      |> Repo.insert!
+
+      invitation_params = %{ "name" => "John",
+                             "email" => email,
+                             "token" => token }
+
+      Invitation.changeset(%Invitation{}, invitation_params)
+      |> Ecto.Changeset.put_assoc(:datasheet, datasheet)
+      |> Repo.insert!
+
+      token
+    end
+
+    defp verify_invitation_accepted(email) do
+      assert Invitation.count == 0
+
+      user = Repo.get_by!(User, email: email)
+           |> Repo.preload([:datasheet])
+
+      assert user.datasheet.name == "John"
+    end
   end
 
 end

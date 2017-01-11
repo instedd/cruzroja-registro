@@ -13,6 +13,7 @@ defmodule Registro.Coherence.RegistrationController do
   use Coherence.Web, :controller
   require Logger
   alias Coherence.ControllerHelpers, as: Helpers
+  import Registro.Coherence.ControllerHelpers
   alias Registro.User
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
@@ -76,24 +77,6 @@ defmodule Registro.Coherence.RegistrationController do
   end
   defp redirect_or_login(conn, user, params, _) do
     Helpers.login_user(conn, user, params)
-  end
-
-  defp translate_flash(conn) do
-    # Hack! Coherence currently provides no way to customize flash messages defined in it's internal helpers.
-    translations = %{
-      "Registration created successfully." => "Registración exitosa."
-    }
-
-    info_flash = get_flash(conn, :info)
-
-    case translations[info_flash] do
-      nil ->
-        conn
-
-      translation ->
-        conn
-        |> put_flash(:info, translation)
-    end
   end
 
   defp load_registration_form_data(conn) do

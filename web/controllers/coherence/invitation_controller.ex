@@ -17,6 +17,7 @@ defmodule Registro.Coherence.InvitationController do
   alias Coherence.ControllerHelpers, as: Helpers
   alias Registro.{Invitation, User, Repo, Role, Datasheet}
   import Ecto.Changeset
+  import Registro.Coherence.ControllerHelpers
   require Logger
 
   plug Coherence.ValidateOption, :invitable
@@ -65,7 +66,7 @@ defmodule Registro.Coherence.InvitationController do
           {:ok, invitation} ->
             send_user_email :invitation, invitation, url
             conn
-            |> put_flash(:info, "Invitation sent.")
+            |> put_flash(:info, "Invitación enviada.")
             |> redirect_to(:invitation_create, params)
           {:error, changeset} ->
             {conn, changeset} = case repo.one from i in Invitation, where: i.email == ^email do
@@ -100,7 +101,7 @@ defmodule Registro.Coherence.InvitationController do
     |> case do
       nil ->
         conn
-        |> put_flash(:error, "Invalid invitation token.")
+        |> put_flash(:error, "Invitación inválida.")
         |> redirect(to: logged_out_url(conn))
       invite ->
         user_schema = Config.user_schema
@@ -127,7 +128,7 @@ defmodule Registro.Coherence.InvitationController do
     case invite do
       nil ->
         conn
-        |> put_flash(:error, "Invalid Invitation. Please contact the site administrator.")
+        |> put_flash(:error, "Invitación inválida. Por favor contactar al personal de la filial.")
         |> redirect(to: logged_out_url(conn))
       _ ->
         changeset = User.changeset(:create_from_invitation, invite, params["user"])
@@ -137,6 +138,7 @@ defmodule Registro.Coherence.InvitationController do
             Repo.delete invite
             conn
             |> send_confirmation(user, user_schema)
+            |> translate_flash
             |> redirect(to: logged_out_url(conn))
           {:error, changeset} ->
             render conn, "edit.html", changeset: changeset, token: token
@@ -153,11 +155,11 @@ defmodule Registro.Coherence.InvitationController do
     case Config.repo.get(Invitation, id) do
       nil ->
         conn
-        |> put_flash(:error, "Can't find that token")
+        |> put_flash(:error, "No se pudo encontrar la invitación.")
       invitation ->
         send_user_email :invitation, invitation,
           router_helpers.invitation_url(conn, :edit, invitation.token)
-        put_flash conn, :info, "Invitation sent."
+        put_flash conn, :info, "Invitación enviada."
     end
     |> redirect(to: logged_out_url(conn))
   end

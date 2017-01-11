@@ -22,7 +22,10 @@
 
       <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
         <p class="user-status">
-          Actualmente tu trámite se encuentra en estado <b><%= Registro.Datasheet.status_label(@current_user.datasheet.status) %></b> para ser voluntario de la filial <%= branch_label(@current_user) %>.
+          Actualmente tu trámite se encuentra en estado
+          <b><%= String.upcase Registro.Datasheet.status_label(@current_user.datasheet.status) %></b>
+          para ser <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
+          de la filial <%= branch_label(@current_user) %>.
         </p>
       <% end %>
 

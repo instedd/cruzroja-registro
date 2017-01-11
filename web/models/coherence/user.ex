@@ -63,10 +63,6 @@ defmodule Registro.User do
     |> validate_coherence(params)
   end
 
-  def role_label(role) do
-    Registro.Role.label(role)
-  end
-
   def preload_datasheet(user) do
     Repo.preload(user, [datasheet: [:branch]])
   end

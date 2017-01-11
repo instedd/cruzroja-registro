@@ -149,7 +149,7 @@ defmodule Registro.UsersControllerTest do
 
       assert response =~ user.email
       assert response =~ user.datasheet.name
-      assert response =~ Datasheet.status_label(user.datasheet.status)
+      assert response =~ String.upcase Datasheet.status_label(user.datasheet.status)
       assert response =~ user.datasheet.branch.name
     end
   end

@@ -52,7 +52,10 @@
             <%= if pending_approval do %>
               <div class="input-field col s12">
                 <%= label fd, :role, "Rol", class: "control-label active" %>
-                <input class="form-control" name="" type="text" value="Voluntario (pendiente de aprobación)" disabled />
+                <%= tag(:input,
+                        class: "form-control", name: "", type: "text", disabled: "",
+                        value: "#{Registro.Role.label(@user.datasheet.role)} (pendiente de aprobación)",
+                        ) %>
                 <%= hidden_input fd, :role, class: "form-control", disabled: "" %>
               </div>
             <% else %>

@@ -170,7 +170,7 @@ defmodule Registro.UsersController do
   end
 
   def format_csv_row([name, email, role, status, branch_name]) do
-    [name, email, User.role_label(role), nil_to_string(Datasheet.status_label(status)), nil_to_string(branch_name)]
+    [name, email, Role.label(role), nil_to_string(Datasheet.status_label(status)), nil_to_string(branch_name)]
   end
 
 

@@ -15,7 +15,7 @@ defmodule Registro.Coherence.InvitationController do
   alias __MODULE__
   alias Coherence.{Config}
   alias Coherence.ControllerHelpers, as: Helpers
-  alias Registro.{Invitation, User, Repo, Role, Datasheet}
+  alias Registro.{Invitation, User, Repo, Datasheet}
   import Ecto.Changeset
   import Registro.Coherence.ControllerHelpers
   require Logger
@@ -184,18 +184,24 @@ defmodule Registro.Coherence.InvitationController do
       %Datasheet{ role: role, branch_id: branch_id } = current_user.datasheet
 
       case {action, role} do
-        {:new, _} ->
-          Role.is_admin?(role)
+        {_, "super_admin"} ->
+          true
 
-        {:create, "super_admin"} ->
+        {:new, "branch_admin"} ->
           true
 
         {:create, "branch_admin"} ->
-          target_branch_id = String.to_integer(conn.params["invitation"]["datasheet"]["branch_id"])
-          branch_id == target_branch_id
+          branch_id == target_branch_id(conn.params)
+
+        {:resend, "branch_admin"} ->
+          branch_id == target_branch_id(conn.params)
       end
     else
       true
     end
+  end
+
+  defp target_branch_id(params) do
+    String.to_integer(params["invitation"]["datasheet"]["branch_id"])
   end
 end

@@ -34,7 +34,6 @@ defmodule Registro.Coherence.RegistrationController do
   Render the new user form.
   """
   def new(conn, _params) do
-    user_schema = Config.user_schema
     cs = User.changeset(:create_with_datasheet, %{})
 
     conn

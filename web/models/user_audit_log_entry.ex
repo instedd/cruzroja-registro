@@ -21,17 +21,17 @@ defmodule Registro.UserAuditLogEntry do
     code = UserAuditLogEntry.action_to_code(action)
     changeset = changeset(%UserAuditLogEntry{}, %{actor_id: actor.datasheet_id, user_id: changeset.data.datasheet_id, action_id: code})
     case Repo.insert(changeset) do
-      {:ok, entry} ->
+      {:ok, _entry} ->
         :ok
-      {:error, changeset} ->
+      {:error, _changeset} ->
         :error
     end
   end
 
   def for(user) do
     id = user.datasheet_id
-    entries = Repo.all from e in UserAuditLogEntry,
-                where: e.user_id == ^id
+    Repo.all from e in UserAuditLogEntry,
+            where: e.user_id == ^id
   end
 
   def action_to_code(action) do

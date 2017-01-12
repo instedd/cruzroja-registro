@@ -1,6 +1,7 @@
 defmodule Registro.InvitationsControllerTest do
   use Registro.ConnCase
 
+  import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
 
   alias Registro.{Invitation, Datasheet, User}
@@ -8,7 +9,7 @@ defmodule Registro.InvitationsControllerTest do
   describe "sending invitatioins" do
     test "invitation creation with associated datasheet", %{conn: conn} do
       branch = create_branch(name: "Branch")
-      admin = create_user(email: "admin@instedd.org", role: "super_admin")
+      admin = create_super_admin(email: "admin@instedd.org")
 
       params = invitation_params(branch.id)
 
@@ -23,7 +24,7 @@ defmodule Registro.InvitationsControllerTest do
 
     test "branch admin can send invitations for the same branch", %{conn: conn} do
       branch = create_branch(name: "Branch")
-      branch_admin = create_user(email: "branch1@instedd.org", role: "branch_admin", branch_id: branch.id)
+      branch_admin = create_branch_admin(email: "branch1@instedd.org", branch: branch)
 
       params = invitation_params(branch.id)
 
@@ -40,7 +41,7 @@ defmodule Registro.InvitationsControllerTest do
       branch1 = create_branch(name: "Branch 1")
       branch2 = create_branch(name: "Branch 2")
 
-      branch1_admin = create_user(email: "branch1@instedd.org", role: "branch_admin", branch_id: branch1.id)
+      branch1_admin = create_branch_admin(email: "branch1@instedd.org", branch: branch1)
 
       params = invitation_params(branch2.id)
 

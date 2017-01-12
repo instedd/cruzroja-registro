@@ -11,7 +11,7 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Registro.Authorization, [ check_role: &Role.is_admin?/1 ] when action in [:index, :filter, :show]
+  plug Registro.Authorization, [ check: &UsersController.authorize_view/2 ] when action in [:index, :filter, :show]
   plug Registro.Authorization, [ check: &UsersController.authorize_update/2] when action in [:update]
 
   def index(conn, _params) do
@@ -92,19 +92,29 @@ defmodule Registro.UsersController do
   end
 
   def download_csv(conn, params) do
-    query = from u in User,
-              left_join: d in assoc(u, :datasheet),
-              left_join: b in assoc(d, :branch),
-              select: [d.name, u.email, d.role, d.status, b.name],
-              order_by: d.name
+    header = ["Nombre", "Email", "Filial", "Rol", "Estado"]
+
+    format = fn(%User{ email: email, datasheet: d }) ->
+      [
+        d.name,
+        email,
+        if(d.branch == nil, do: "", else: d.branch.name),
+        if(d.role == nil, do: "", else: Datasheet.role_label(d)),
+        Datasheet.status_label(d.status)
+      ]
+    end
+
+    query = from u in User.query_with_datasheet,
+      join: d in assoc(u, :datasheet),
+      order_by: d.name
 
     users = query
           |> apply_filters(params)
           |> restrict_to_visible_users(conn)
           |> Repo.all
-          |> Enum.map(&UsersController.format_csv_row/1)
+          |> Enum.map(format)
 
-    csv_content = [ ["Nombre", "Email", "Rol", "Estado", "Filial"] | users]
+    csv_content = [ header | users]
                 |> CSV.encode
                 |> Enum.to_list
                 |> to_string
@@ -151,13 +161,19 @@ defmodule Registro.UsersController do
 
   defp restrict_to_visible_users(query, conn) do
     user = conn.assigns[:current_user]
-    case user.datasheet.role do
-      "super_admin" ->
+    datasheet = user.datasheet
+
+    cond do
+      datasheet.is_super_admin ->
         query
-      "branch_admin"->
+      Datasheet.is_branch_admin?(datasheet) ->
+        administrated_branch_ids = Enum.map(datasheet.admin_branches, &(&1.id))
+
         from u in query,
-        join: d in Datasheet, on: d.id == u.datasheet_id,
-        where: d.branch_id == ^user.datasheet.branch_id
+        join: d in Datasheet, on: u.datasheet_id == d.id,
+        left_join: b in assoc(d, :admin_branches),
+        where: ((d.branch_id in ^administrated_branch_ids) or (b.id in ^administrated_branch_ids)),
+        distinct: u.id # distinct here is used to avoid yielding a copy of a user for every branch administrated
     end
   end
 
@@ -169,21 +185,26 @@ defmodule Registro.UsersController do
     end
   end
 
-  def format_csv_row([name, email, role, status, branch_name]) do
-    [name, email, Role.label(role), nil_to_string(Datasheet.status_label(status)), nil_to_string(branch_name)]
+  def authorize_view(_conn, current_user) do
+    datasheet = current_user.datasheet
+
+    datasheet.is_super_admin || Datasheet.is_branch_admin?(datasheet)
   end
 
-
   def authorize_update(conn, current_user) do
-    case current_user.datasheet.role do
-      "super_admin" ->
+    datasheet = current_user.datasheet
+
+    cond do
+      datasheet.is_super_admin ->
         true
-      "branch_admin" ->
+
+      Datasheet.is_branch_admin?(datasheet) ->
         target_user = Repo.get User.query_with_datasheet, conn.params["id"]
         target_branch_id = target_user.datasheet.branch_id
 
-        target_branch_id == current_user.datasheet.branch_id
-      _ ->
+        Datasheet.is_admin_of?(datasheet, target_branch_id)
+
+      true ->
         false
     end
   end

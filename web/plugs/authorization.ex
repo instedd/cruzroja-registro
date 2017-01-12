@@ -35,14 +35,7 @@ defmodule Registro.Authorization do
 
   def call(conn, opts) do
     current_user = conn.assigns[:current_user]
-
-    result = case opts[:check_role] do
-               nil ->
-                 opts[:check].(conn, current_user)
-               check_fn ->
-                 check_fn.(current_user.datasheet.role)
-             end
-
+    result = opts[:check].(conn, current_user)
 
     case result do
       true ->

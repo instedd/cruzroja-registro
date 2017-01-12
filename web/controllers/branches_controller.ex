@@ -1,12 +1,13 @@
 defmodule Registro.BranchesController do
   use Registro.Web, :controller
 
+  alias __MODULE__
   alias Registro.Repo
   alias Registro.Branch
   alias Registro.Pagination
   alias Registro.Role
 
-  plug Registro.Authorization, check_role: &Role.is_super_admin?/1
+  plug Registro.Authorization, check: &BranchesController.authorize_request/2
 
   def index(conn, params) do
     import Ecto.Query
@@ -73,14 +74,7 @@ defmodule Registro.BranchesController do
     end
   end
 
-  def authorize_request(role) do
-    case role do
-      "super_admin" ->
-        true
-      "branch_admin" ->
-        true
-      _ ->
-        false
-    end
+  def authorize_request(_conn, current_user) do
+    current_user.datasheet.is_super_admin
   end
 end

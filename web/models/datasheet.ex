@@ -1,12 +1,14 @@
 defmodule Registro.Datasheet do
   use Registro.Web, :model
 
-  alias Registro.Role
+  alias __MODULE__
+  alias Registro.{Branch, Role}
 
   schema "datasheets" do
     field :name, :string
     field :status, :string
     field :role, :string
+    field :is_super_admin, :boolean
 
     has_one :user, Registro.User
 
@@ -20,7 +22,8 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :status, :branch_id, :role])
+    |> cast(params, [:name, :status, :branch_id, :role, :is_super_admin])
+    |> cast_assoc(:admin_branches, required: false)
     |> validate_required([:name])
     |> validate_volunteer_fields
   end
@@ -38,13 +41,64 @@ defmodule Registro.Datasheet do
     end
   end
 
+  def role_label(datasheet) do
+    datasheet = Registro.Repo.preload(datasheet, :admin_branches)
+
+    cond do
+      datasheet.is_super_admin -> "Administrador de Sede Central"
+      Datasheet.is_branch_admin?(datasheet) -> "Administrador de Filial"
+      Datasheet.is_volunteer?(datasheet) -> "Voluntario"
+      Datasheet.is_associate(datasheet) -> "Asociado"
+    end
+  end
+
+  def is_volunteer?(datasheet) do
+    datasheet.role == "volunteer"
+  end
+
+  def is_associate(datasheet) do
+    datasheet.role == "associate"
+  end
+
+  def is_admin?(datasheet) do
+    datasheet.is_super_admin || is_branch_admin?(datasheet)
+  end
+
+  def is_branch_admin?(datasheet) do
+    # load association if it hasn't been already loaded
+    datasheet = Registro.Repo.preload(datasheet, :admin_branches)
+
+    !Enum.empty?(datasheet.admin_branches)
+  end
+
+  def is_admin_of?(datasheet, %Branch{ id: branch_id }) do
+    is_admin_of?(datasheet, branch_id)
+  end
+  def is_admin_of?(datasheet, branch_id) do
+    # load association if it hasn't been already loaded
+    datasheet = Registro.Repo.preload(datasheet, :admin_branches)
+
+    datasheet.admin_branches
+    |> Enum.any?(&(&1.id == branch_id))
+  end
+
   defp validate_volunteer_fields(changeset) do
     role = Ecto.Changeset.get_field(changeset, :role)
 
-    if !Role.is_admin?(role) do
+    if role != nil do
       changeset
+      |> validate_role
       |> validate_required([:branch_id, :status])
       |> validate_status
+    else
+      changeset
+    end
+  end
+
+  defp validate_role(changeset) do
+    role = Ecto.Changeset.get_field(changeset, :role)
+    if !Role.is_valid?(role) do
+      changeset |> Ecto.Changeset.add_error(:role, "is invalid")
     else
       changeset
     end

@@ -1,8 +1,8 @@
 <%= menu_item(@conn, users_path(@conn, :profile), "Perfil") %>
-<%= if Registro.Role.is_admin?(@conn.assigns[:current_user].datasheet.role) do %>
+<%= if Registro.Datasheet.is_admin?(@conn.assigns[:current_user].datasheet) do %>
   <%= menu_item(@conn, users_path(@conn, :index), "Usuarios") %>
 <% end %>
-<%= if Registro.Role.is_super_admin?(@conn.assigns[:current_user].datasheet.role) do %>
+<%= if @conn.assigns[:current_user].datasheet.is_super_admin do %>
   <%= menu_item(@conn, branches_path(@conn, :index), "Filiales") %>
 <% end %>
 <li>

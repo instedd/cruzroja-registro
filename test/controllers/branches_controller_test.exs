@@ -1,12 +1,21 @@
 defmodule Registro.BranchesControllerTest do
   use Registro.ConnCase
 
+  import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
-
-  alias Registro.Branch
 
   test "verifies that user is logged in", %{conn: conn} do
     conn = get conn, "/filiales"
+    assert html_response(conn, 302)
+  end
+
+  test "does not allow non-admin users", %{conn: conn} do
+    setup_db
+
+    conn = conn
+    |> log_in("john@example.com")
+    |> get("/filiales")
+
     assert html_response(conn, 302)
   end
 
@@ -32,13 +41,12 @@ defmodule Registro.BranchesControllerTest do
   end
 
   def setup_db do
-    create_branch(name: "Branch 1")
-    create_branch(name: "Branch 2")
+    branch1 = create_branch(name: "Branch 1")
+    _branch2 = create_branch(name: "Branch 2")
 
-    branch_id = Repo.get_by!(Branch, name: "Branch 1").id
-
-    create_user(email: "admin@instedd.org", role: "super_admin")
-    create_user(email: "branch@instedd.org", role: "branch_admin", branch_id: branch_id)
+    create_user(email: "john@example.com", role: "volunteer", branch_id: branch1.id)
+    create_super_admin(email: "admin@instedd.org")
+    create_branch_admin(email: "branch@instedd.org", branch: branch1)
   end
 
 end

@@ -1,9 +1,9 @@
 defmodule Registro.UsersControllerTest do
   use Registro.ConnCase
+  import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
-  import Ecto.Query
 
-  alias Registro.{User, Branch, Datasheet}
+  alias Registro.{User, Datasheet}
 
   describe "listing" do
     test "verifies that user is logged in", %{conn: conn} do
@@ -15,7 +15,7 @@ defmodule Registro.UsersControllerTest do
       setup_db
 
       conn = conn
-          |> log_in("volunteer@example.com")
+          |> log_in("volunteer1@example.com")
           |> get("/usuarios")
 
       assert html_response(conn, 302)
@@ -36,17 +36,18 @@ defmodule Registro.UsersControllerTest do
       assert result_count == all_users_count
     end
 
-    test "branch admin can only see users if the same branch", %{conn: conn} do
+    test "branch admin can only see users of his administrated branches", %{conn: conn} do
       setup_db
 
       conn = conn
-      |> log_in("branch1@instedd.org")
+      |> log_in("branch_admin1@instedd.org")
       |> get("/usuarios")
 
       assert html_response(conn, 200)
 
       user_emails = Enum.map conn.assigns[:users], &(&1.email)
-      assert user_emails == ["branch1@instedd.org", "volunteer@example.com"]
+
+      assert user_emails == ["branch_admin1@instedd.org", "volunteer1@example.com", "volunteer3@example.com"]
     end
   end
 
@@ -54,21 +55,21 @@ defmodule Registro.UsersControllerTest do
     test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
       setup_db
 
-      {_conn, user} = try_approve(conn, "admin@instedd.org", "volunteer@example.com")
+      {_conn, user} = try_approve(conn, "admin@instedd.org", "volunteer1@example.com")
       assert user.datasheet.status == "approved"
     end
 
-    test "a branch admin is allowed to change the status of volunteers of the same branch", %{conn: conn} do
+    test "a branch admin is allowed to change the status of volunteers of his administrated branches", %{conn: conn} do
       setup_db
 
-      {_conn, user} = try_approve(conn, "branch1@instedd.org", "volunteer@example.com")
+      {_conn, user} = try_approve(conn, "branch_admin1@instedd.org", "volunteer1@example.com")
       assert user.datasheet.status == "approved"
     end
 
-    test "a branch admin is not allowed to change the status of volunteers of other branches", %{conn: conn} do
+    test "a branch admin is not allowed to change the status of volunteers of branches he doesn't adminstrate", %{conn: conn} do
       setup_db
 
-      {conn, user} = try_approve(conn, "branch2@instedd.org", "volunteer@example.com")
+      {conn, user} = try_approve(conn, "branch_admin2@instedd.org", "volunteer1@example.com")
 
       assert html_response(conn, 302)
       assert user.datasheet.status == "at_start"
@@ -77,7 +78,7 @@ defmodule Registro.UsersControllerTest do
     test "a volunteer is not allowed to change his status", %{conn: conn} do
       setup_db
 
-      {conn, user} = try_approve(conn, "volunteer@example.com", "volunteer@example.com")
+      {conn, user} = try_approve(conn, "volunteer1@example.com", "volunteer1@example.com")
 
       assert html_response(conn, 302)
       assert user.datasheet.status == "at_start"
@@ -108,7 +109,7 @@ defmodule Registro.UsersControllerTest do
     test "renders user detail", %{conn: conn} do
       setup_db
 
-      volunteer = get_user_by_email("volunteer@example.com")
+      volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
       |> log_in("admin@instedd.org")
@@ -139,7 +140,7 @@ defmodule Registro.UsersControllerTest do
     test "renders volunteer own profile", %{conn: conn} do
       setup_db
 
-      user = get_user_by_email("volunteer@example.com")
+      user = get_user_by_email("volunteer1@example.com")
 
       conn = conn
       |> log_in(user)
@@ -165,11 +166,13 @@ defmodule Registro.UsersControllerTest do
       response = response(conn, 200)
 
       assert response == """
-      Nombre,Email,Rol,Estado,Filial\r
-      generated branch_admin,branch1@instedd.org,Administrador de Filial,,Branch 1\r
-      generated branch_admin,branch2@instedd.org,Administrador de Filial,,Branch 2\r
-      generated super_admin,admin@instedd.org,Administrador de Sede Central,,\r
-      generated volunteer,volunteer@example.com,Voluntario,Pendiente,Branch 1\r
+      Nombre,Email,Filial,Rol,Estado\r
+      generated branch admin,branch_admin1@instedd.org,,,\r
+      generated branch admin,branch_admin2@instedd.org,,,\r
+      generated super_admin,admin@instedd.org,,,\r
+      generated volunteer,volunteer1@example.com,Branch 1,Voluntario,Pendiente\r
+      generated volunteer,volunteer2@example.com,Branch 2,Voluntario,Pendiente\r
+      generated volunteer,volunteer3@example.com,Branch 3,Voluntario,Pendiente\r
       """
     end
   end
@@ -179,16 +182,16 @@ defmodule Registro.UsersControllerTest do
   end
 
   def setup_db do
-    create_branch(name: "Branch 1")
-    create_branch(name: "Branch 2")
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+    branch3 = create_branch(name: "Branch 3")
 
-    [branch1, branch2] = Repo.all(from b in Branch, select: [:name, :id])
+    create_super_admin(email: "admin@instedd.org")
+    create_branch_admin(email: "branch_admin1@instedd.org", branches: [branch1, branch3])
+    create_branch_admin(email: "branch_admin2@instedd.org", branch: branch2)
 
-
-    create_user(email: "admin@instedd.org", role: "super_admin")
-    create_user(email: "branch1@instedd.org", role: "branch_admin", branch_id: branch1.id)
-    create_user(email: "branch2@instedd.org", role: "branch_admin", branch_id: branch2.id)
-
-    create_user(email: "volunteer@example.com", role: "volunteer", branch_id: branch1.id)
+    create_user(email: "volunteer1@example.com", role: "volunteer", branch_id: branch1.id)
+    create_user(email: "volunteer2@example.com", role: "volunteer", branch_id: branch2.id)
+    create_user(email: "volunteer3@example.com", role: "volunteer", branch_id: branch3.id)
   end
 end

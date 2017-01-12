@@ -8,9 +8,10 @@ defmodule Registro.UserTest do
   test "a user can be created with a datasheet" do
     params = Map.put(@valid_user_attrs, :datasheet, %{
       name: "John",
-      role: "super_admin",
+      role: nil,
       branch_id: nil,
-      status: "approved"
+      status: nil,
+      is_super_admin: true
     })
 
     changeset = User.changeset(:create_with_datasheet, params)
@@ -20,17 +21,19 @@ defmodule Registro.UserTest do
     %User{ datasheet: datasheet } = Registro.Repo.insert!(changeset)
 
     assert datasheet.name == "John"
-    assert datasheet.role == "super_admin"
+    assert datasheet.role == nil
     assert datasheet.branch_id == nil
-    assert datasheet.status == "approved"
+    assert datasheet.status == nil
+    assert datasheet.is_super_admin
   end
 
   test "a user cannot be created with an invalid datasheet" do
     params = Map.put(@valid_user_attrs, :datasheet, %{
           name: nil,
-          role: "super_admin",
+          role: nil,
           branch_id: nil,
-          status: "approved"
+          status: nil,
+          is_super_admin: true
     })
 
     refute User.changeset(:create_with_datasheet, params).valid?

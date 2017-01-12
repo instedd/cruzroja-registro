@@ -4,22 +4,17 @@ defmodule Registro.Authorization do
   as well as a conveniente plug for hooking authorization tests into
   controller actions.
 
-  The plug can be check functions that return one of the following:
+  The plug is configured with check functions that receive the connection and
+  the current user and return one of the following:
+
     - true, which means the request is authorized
     - {true, abilities}, which means the request is authorized and
       the user is allowed the specified abilities on the accessed resource
     - any other result means the request is not authorized
 
-  In the simplest case, a check function receives only the role of the current
-  user. Example:
+  Example usage:
   ```
-  plug Registro.Authorization, check_role: &Role.is_super_admin?/1
-  ```
-
-  If more information is needed, use `check` instead of `check_role` to supply a
-  function that received the current user and the request params. Example:
-  ```
-  plug Registro.Authorization, check: &complex_check/2
+  plug Registro.Authorization, check: &MyController.authorize_request/2
   ```
 
   To handle authorization errors without using the plug, use the

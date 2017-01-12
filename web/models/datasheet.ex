@@ -28,6 +28,13 @@ defmodule Registro.Datasheet do
     |> validate_volunteer_fields
   end
 
+  def make_admin_changeset(datasheet, branches) do
+    datasheet
+    |> Registro.Repo.preload(:admin_branches)
+    |> Ecto.Changeset.change
+    |> Ecto.Changeset.put_assoc(:admin_branches, branches)
+  end
+
   def pending_approval?(datasheet) do
     datasheet.status == "at_start"
   end
@@ -75,9 +82,9 @@ defmodule Registro.Datasheet do
     !Enum.empty?(datasheet.admin_branches)
   end
 
-  def is_admin_of?(datasheet, %Branch{ id: branch_id }) do
-    is_admin_of?(datasheet, branch_id)
-  end
+  def is_admin_of?(datasheet, %Branch{ id: branch_id }),
+    do: is_admin_of?(datasheet, branch_id)
+
   def is_admin_of?(datasheet, branch_id) do
     # load association if it hasn't been already loaded
     datasheet = Registro.Repo.preload(datasheet, :admin_branches)

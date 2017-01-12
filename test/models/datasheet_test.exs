@@ -66,9 +66,7 @@ defmodule Registro.DatasheetTest do
     datasheet = create_datasheet(%{"name" => "John", "role" => nil, "branch_id" => nil, "status" => nil})
 
     datasheet = datasheet
-    |> Repo.preload(:admin_branches)
-    |> change
-    |> put_assoc(:admin_branches, [branch1, branch2])
+    |> Datasheet.make_admin_changeset([branch1, branch2])
     |> Repo.update!
 
     assert Enum.count(datasheet.admin_branches) == 2

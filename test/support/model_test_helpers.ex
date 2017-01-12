@@ -34,9 +34,7 @@ defmodule Registro.ModelTestHelpers do
     user = Repo.insert! changeset
 
     user.datasheet
-    |> Repo.preload(:admin_branches)
-    |> Ecto.Changeset.change
-    |> Ecto.Changeset.put_assoc(:admin_branches, branches)
+    |> Datasheet.make_admin_changeset(branches)
     |> Repo.update!
 
     user

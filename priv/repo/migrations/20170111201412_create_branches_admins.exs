@@ -13,7 +13,7 @@ defmodule Registro.Repo.Migrations.CreateBranchesAdmins do
 
   defp super_admins_up do
     alter table(:datasheets) do
-      add :is_super_admin, :boolean
+      add :is_super_admin, :boolean, null: false, default: false
     end
 
     flush

@@ -47,7 +47,11 @@ defmodule Registro.UsersControllerTest do
 
       user_emails = Enum.map conn.assigns[:users], &(&1.email)
 
-      assert user_emails == ["branch_admin1@instedd.org", "volunteer1@example.com", "volunteer3@example.com"]
+      assert user_emails == ["branch_admin1@instedd.org", # self
+                             "branch_admin3@instedd.org", # other admin of an administrated branch
+                             "volunteer1@example.com",    # volunteer in an administrated branch
+                             "volunteer3@example.com"     # ditto
+                            ]
     end
   end
 
@@ -106,7 +110,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "detail" do
-    test "renders user detail", %{conn: conn} do
+    test "an admin can access any users detail", %{conn: conn} do
       setup_db
 
       volunteer = get_user_by_email("volunteer1@example.com")
@@ -118,7 +122,41 @@ defmodule Registro.UsersControllerTest do
       assert html_response(conn, 200)
     end
 
-    # TODO: authorization tests
+    test "a branch admin can access details of colaborators of administrated branches", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      conn = conn
+      |> log_in("branch_admin1@instedd.org")
+      |> get(users_path(Registro.Endpoint, :show, volunteer))
+
+      assert html_response(conn, 200)
+    end
+
+    test "a branch admin can access details of other admins of administrated branches", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("branch_admin3@instedd.org")
+
+      conn = conn
+      |> log_in("branch_admin1@instedd.org")
+      |> get(users_path(Registro.Endpoint, :show, volunteer))
+
+      assert html_response(conn, 200)
+    end
+
+    test "a branch admin can not access details of colaborators of branches he doesn't administrate", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("volunteer2@example.com")
+
+      conn = conn
+      |> log_in("branch_admin1@instedd.org")
+      |> get(users_path(Registro.Endpoint, :show, volunteer))
+
+      assert html_response(conn, 302)
+    end
   end
 
   describe "own profile" do
@@ -167,12 +205,13 @@ defmodule Registro.UsersControllerTest do
 
       assert response == """
       Nombre,Email,Filial,Rol,Estado\r
-      generated branch admin,branch_admin1@instedd.org,,,\r
-      generated branch admin,branch_admin2@instedd.org,,,\r
-      generated super_admin,admin@instedd.org,,,\r
-      generated volunteer,volunteer1@example.com,Branch 1,Voluntario,Pendiente\r
-      generated volunteer,volunteer2@example.com,Branch 2,Voluntario,Pendiente\r
-      generated volunteer,volunteer3@example.com,Branch 3,Voluntario,Pendiente\r
+      admin,admin@instedd.org,,,\r
+      branch_admin1,branch_admin1@instedd.org,,,\r
+      branch_admin2,branch_admin2@instedd.org,,,\r
+      branch_admin3,branch_admin3@instedd.org,,,\r
+      volunteer1,volunteer1@example.com,Branch 1,Voluntario,Pendiente\r
+      volunteer2,volunteer2@example.com,Branch 2,Voluntario,Pendiente\r
+      volunteer3,volunteer3@example.com,Branch 3,Voluntario,Pendiente\r
       """
     end
   end
@@ -189,6 +228,7 @@ defmodule Registro.UsersControllerTest do
     create_super_admin(email: "admin@instedd.org")
     create_branch_admin(email: "branch_admin1@instedd.org", branches: [branch1, branch3])
     create_branch_admin(email: "branch_admin2@instedd.org", branch: branch2)
+    create_branch_admin(email: "branch_admin3@instedd.org", branch: branch3)
 
     create_user(email: "volunteer1@example.com", role: "volunteer", branch_id: branch1.id)
     create_user(email: "volunteer2@example.com", role: "volunteer", branch_id: branch2.id)

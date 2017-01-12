@@ -48,7 +48,7 @@ defmodule Registro.Datasheet do
       datasheet.is_super_admin -> "Administrador de Sede Central"
       Datasheet.is_branch_admin?(datasheet) -> "Administrador de Filial"
       Datasheet.is_volunteer?(datasheet) -> "Voluntario"
-      Datasheet.is_associate(datasheet) -> "Asociado"
+      Datasheet.is_associate?(datasheet) -> "Asociado"
     end
   end
 
@@ -56,8 +56,12 @@ defmodule Registro.Datasheet do
     datasheet.role == "volunteer"
   end
 
-  def is_associate(datasheet) do
+  def is_associate?(datasheet) do
     datasheet.role == "associate"
+  end
+
+  def is_colaborator?(datasheet) do
+    is_volunteer?(datasheet) or is_associate?(datasheet)
   end
 
   def is_admin?(datasheet) do

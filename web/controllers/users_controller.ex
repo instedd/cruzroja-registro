@@ -11,8 +11,8 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Registro.Authorization, [ check: &UsersController.authorize_view/2 ] when action in [:index, :filter, :show]
-  plug Registro.Authorization, [ check: &UsersController.authorize_update/2] when action in [:update]
+  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index, :filter]
+  plug Registro.Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
 
   def index(conn, _params) do
     query = listing_page_query(conn, 1)
@@ -185,26 +185,27 @@ defmodule Registro.UsersController do
     end
   end
 
-  def authorize_view(_conn, current_user) do
+  def authorize_listing(_conn, current_user) do
     datasheet = current_user.datasheet
 
     datasheet.is_super_admin || Datasheet.is_branch_admin?(datasheet)
   end
 
-  def authorize_update(conn, current_user) do
-    datasheet = current_user.datasheet
-
+  def authorize_detail(conn, %User{datasheet: datasheet}) do
     cond do
       datasheet.is_super_admin ->
         true
 
       Datasheet.is_branch_admin?(datasheet) ->
-        target_user = Repo.get User.query_with_datasheet, conn.params["id"]
-        target_branch_id = target_user.datasheet.branch_id
+        user_id = String.to_integer(conn.params["id"])
 
-        Datasheet.is_admin_of?(datasheet, target_branch_id)
+        id_or_nil = (from u in User, where: u.id == ^user_id, select: 1)
+                  |> restrict_to_visible_users(conn)
+                  |> Repo.one
 
-      true ->
+        id_or_nil != nil
+
+      Datasheet.is_colaborator?(datasheet) ->
         false
     end
   end

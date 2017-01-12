@@ -12,7 +12,7 @@ defmodule Registro.ModelTestHelpers do
           email: email,
           password: "generated", password_confirmation: "generated",
           datasheet: %{
-            name: "generated #{role}",
+            name: name(email),
             role: role,
             branch_id: branch_id,
             status: "at_start"
@@ -28,7 +28,7 @@ defmodule Registro.ModelTestHelpers do
           email: email,
           password: "generated", password_confirmation: "generated",
           datasheet: %{
-            name: "generated branch admin",
+            name: name(email),
             role: nil, branch_id: nil, status: nil}})
 
     user = Repo.insert! changeset
@@ -47,7 +47,7 @@ defmodule Registro.ModelTestHelpers do
           email: email,
           password: "generated", password_confirmation: "generated",
           datasheet: %{
-            name: "generated super_admin",
+            name: name(email),
             role: nil,
             branch_id: nil,
             status: nil,
@@ -68,5 +68,9 @@ defmodule Registro.ModelTestHelpers do
           address: "generated"
     })
     Repo.insert! changeset
+  end
+
+  defp name(email) do
+    String.replace(email, ~r/@.*/, "")
   end
 end

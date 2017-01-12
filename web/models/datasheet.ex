@@ -2,7 +2,7 @@ defmodule Registro.Datasheet do
   use Registro.Web, :model
 
   alias __MODULE__
-  alias Registro.{Branch, Role}
+  alias Registro.Branch
 
   schema "datasheets" do
     field :name, :string
@@ -101,10 +101,11 @@ defmodule Registro.Datasheet do
 
   defp validate_role(changeset) do
     role = Ecto.Changeset.get_field(changeset, :role)
-    if !Role.is_valid?(role) do
-      changeset |> Ecto.Changeset.add_error(:role, "is invalid")
-    else
+
+    if role == "volunteer" || role == "associate" do
       changeset
+    else
+      changeset |> Ecto.Changeset.add_error(:role, "is invalid")
     end
   end
 

@@ -5,7 +5,6 @@ defmodule Registro.BranchesController do
   alias Registro.Repo
   alias Registro.Branch
   alias Registro.Pagination
-  alias Registro.Role
 
   plug Registro.Authorization, check: &BranchesController.authorize_request/2
 

@@ -6,7 +6,17 @@ defmodule Registro.InvitationsControllerTest do
 
   alias Registro.{Invitation, Datasheet, User}
 
-  describe "sending invitatioins" do
+  test "renders invitation form", %{conn: conn} do
+    admin = create_super_admin(email: "admin@instedd.org")
+
+    conn = conn
+    |> log_in(admin)
+    |> get("/usuarios/alta")
+
+    assert html_response(conn, 200)
+  end
+
+  describe "sending invitations" do
     test "invitation creation with associated datasheet", %{conn: conn} do
       branch = create_branch(name: "Branch")
       admin = create_super_admin(email: "admin@instedd.org")

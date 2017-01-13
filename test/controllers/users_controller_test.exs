@@ -55,7 +55,54 @@ defmodule Registro.UsersControllerTest do
     end
   end
 
-  describe "approval" do
+  describe "update" do
+    test "a super_admin can update a user's branch", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      assert volunteer.datasheet.role == "volunteer"
+      assert volunteer.datasheet.branch.name == "Branch 1"
+
+      update_params = %{
+        branch_name: "Branch 2",
+        user: %{
+          datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
+        }}
+
+      conn
+      |> log_in("admin@instedd.org")
+      |> patch(users_path(Registro.Endpoint, :update, volunteer), update_params)
+
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      assert volunteer.datasheet.role == "associate"
+      assert volunteer.datasheet.branch.name == "Branch 2"
+    end
+
+    test "a branch admin cannot update a user's branch", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      assert volunteer.datasheet.role == "volunteer"
+      assert volunteer.datasheet.branch.name == "Branch 1"
+
+      update_params = %{
+        branch_name: "Branch 2",
+        user: %{
+          datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
+        }}
+
+      conn
+      |> log_in("branch_admin1@instedd.org")
+      |> patch(users_path(Registro.Endpoint, :update, volunteer), update_params)
+
+      updated_volunteer = get_user_by_email("volunteer1@example.com")
+
+      assert volunteer == updated_volunteer
+    end
+
     test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
       setup_db
 

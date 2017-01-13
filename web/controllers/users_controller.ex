@@ -38,23 +38,31 @@ defmodule Registro.UsersController do
     |> render("profile.html", changeset: changeset)
   end
 
-  def update(conn, %{"user" => user_params} = params) do
-    user = Repo.get(User, params["id"])
+  def update(conn, params) do
+    %{"id" => id, "user" => user_params} = set_branch_id_from_branch_name(params)
+
+    current_user = Coherence.current_user(conn)
+
+    user = Repo.get(User, id)
          |> User.preload_datasheet
 
-    changeset = User.changeset(user, :update, user_params)
+    if !current_user.datasheet.is_super_admin && branch_updated(user_params, current_user) do
+      Registro.Authorization.handle_unauthorized(conn)
+    else
+      changeset = User.changeset(user, :update, user_params)
 
-    case Repo.update(changeset) do
-      {:ok, _user} ->
-        UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
-        conn
-        |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
-        |> redirect(to: users_path(conn, :index))
-      {:error, changeset} ->
-        branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
-        conn
-        |> assign(:history, UserAuditLogEntry.for(user))
-        |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
+      case Repo.update(changeset) do
+        {:ok, _user} ->
+          UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
+          conn
+          |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
+          |> redirect(to: users_path(conn, :index))
+        {:error, changeset} ->
+          branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
+          conn
+          |> assign(:history, UserAuditLogEntry.for(user))
+          |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
+      end
     end
   end
 
@@ -229,6 +237,30 @@ defmodule Registro.UsersController do
       end
     else
       :update
+    end
+  end
+
+  defp set_branch_id_from_branch_name(params) do
+    case params["branch_name"] do
+      nil ->
+        params
+      "" ->
+        params
+      branch_name ->
+        [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
+
+        update_in(params, ["user", "datasheet"], fn(dp) ->
+          Map.put(dp, "branch_id", branch_id)
+        end)
+    end
+  end
+
+  defp branch_updated(%{"datasheet" => datasheet_params}, current_user) do
+    case Map.fetch(datasheet_params, "branch_id") do
+      {:ok, new_branch_id} ->
+        new_branch_id != current_user.datasheet.branch_id
+      _ ->
+        false
     end
   end
 end

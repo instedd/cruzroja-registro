@@ -25,7 +25,7 @@ defmodule Registro.Datasheet do
     |> cast(params, [:name, :status, :branch_id, :role, :is_super_admin])
     |> cast_assoc(:admin_branches, required: false)
     |> validate_required([:name])
-    |> validate_volunteer_fields
+    |> validate_colaboration
   end
 
   def make_admin_changeset(datasheet, branches) do
@@ -93,16 +93,20 @@ defmodule Registro.Datasheet do
     |> Enum.any?(&(&1.id == branch_id))
   end
 
-  defp validate_volunteer_fields(changeset) do
+  defp validate_colaboration(changeset) do
+    # if a user participates as colaborator of branch, these three fields must be present
     role = Ecto.Changeset.get_field(changeset, :role)
+    branch_id = Ecto.Changeset.get_field(changeset, :branch_id)
+    status = Ecto.Changeset.get_field(changeset, :status)
 
-    if role != nil do
-      changeset
-      |> validate_role
-      |> validate_required([:branch_id, :status])
-      |> validate_status
-    else
-      changeset
+    case {role, branch_id, status} do
+      {nil, nil, nil} ->
+        changeset
+      _ ->
+        changeset
+        |> validate_required([:role, :branch_id, :status])
+        |> validate_role
+        |> validate_status
     end
   end
 

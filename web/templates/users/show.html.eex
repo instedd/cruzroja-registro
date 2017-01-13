@@ -74,7 +74,7 @@
               <% else %>
                 <div class="input-field col s3">
                   <%= label fd, :role, "Rol", class: "control-label active" %>
-                  <%= select fd, :role, @roles, class: "form-control", required: "" %>
+                  <%= role_selector("user[datasheet][role]", datasheet.role) %>
                   <%= error_tag fd, :role %>
                 </div>
                 <div class="input-field col s3">

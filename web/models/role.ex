@@ -8,7 +8,7 @@ defmodule Registro.Role do
   end
 
   def all do
-    %{label("associate") => "associate",
-      label("volunteer") => "volunteer"}
+    ["associate", "volunteer"]
   end
+
 end

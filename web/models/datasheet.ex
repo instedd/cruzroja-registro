@@ -44,7 +44,7 @@ defmodule Registro.Datasheet do
       "at_start" -> "Pendiente"
       "approved" -> "Aprobado"
       "rejected" -> "Rechazado"
-      _ -> ""
+      nil        -> ""
     end
   end
 

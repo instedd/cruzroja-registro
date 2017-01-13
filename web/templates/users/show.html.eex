@@ -36,7 +36,7 @@
               </div>
             </div>
 
-            <div class="colaboration">
+            <div class="section">
               <h3>Colaboración en filial</h3>
               <div class="row">
                 <div class="input-field col s6">
@@ -58,6 +58,10 @@
                 </div>
 
                 <%= if pending_approval do %>
+                  <%#
+                  display the role selected when registering, without allowing changes.
+                  this field can be modified later by an administrator, once the user is approved.
+                  %>
                   <div class="input-field col s3">
                     <%= label fd, :role, "Rol", class: "control-label" %>
                     <%= tag(:input,
@@ -66,6 +70,10 @@
                             ) %>
                     <%= hidden_input fd, :role, class: "form-control", disabled: "" %>
                   </div>
+                  <%#
+                  if pending approval, the status will be set depending on which
+                  button is pressed. (see form actions below).
+                  %>
                   <div class="input-field col s3">
                     <%= label fd, :status, "Estado", class: "control-label" %>
                     <%= tag(:input,
@@ -79,13 +87,23 @@
                     <%= role_selector("user[datasheet][role]", datasheet.role) %>
                     <%= error_tag fd, :role %>
                   </div>
-                  <div class="input-field col s3">
-                    <%= label fd, :status, "Estado", class: "control-label" %>
-                    <%= tag(:input,
-                            class: "form-control", name: "", type: "text", disabled: "",
-                            value: Registro.Datasheet.status_label(@user.datasheet.status),
-                            ) %>
-                  </div>
+                    <%= if @user.datasheet.status do %>
+                      <%#
+                      display the user status without allowing changes.
+
+                      if a user doesn't have status then any change to {branch_id, role}
+                      will automatically mark the status as "approved", so the user is not
+                      required to select the status when marking a user as a colaborator
+                      of a branch.
+                      %>
+                      <div class="input-field col s3">
+                        <%= label fd, :status, "Estado", class: "control-label" %>
+                        <%= tag(:input,
+                                class: "form-control", name: "", type: "text", disabled: "",
+                                value: Registro.Datasheet.status_label(@user.datasheet.status),
+                                ) %>
+                      </div>
+                    <%= end %>
                 <% end %>
               </div>
             </div>

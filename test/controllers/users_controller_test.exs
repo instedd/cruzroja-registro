@@ -94,6 +94,49 @@ defmodule Registro.UsersControllerTest do
     end
   end
 
+  describe "role changes" do
+    test "a branch admin can only change role of colaborations of the same branch", %{conn: conn} do
+      setup_db
+
+      u1 = get_user_by_email("branch_admin1@instedd.org")
+      u2 = get_user_by_email("branch_admin3@instedd.org")
+
+      common_branch = Repo.get_by!(Branch, name: "Branch 3")
+
+      assert Datasheet.is_admin_of?(u1.datasheet, common_branch)
+      assert Datasheet.is_admin_of?(u2.datasheet, common_branch)
+
+      other_branch = Repo.get_by!(Branch, name: "Branch 2")
+
+      u2 = mark_as_volunteer(u2, other_branch)
+
+      params = %{ user:
+                  %{ :datasheet => %{
+                        branch_id: other_branch.id,
+                        role: "associate",
+                        status: "approved" }}}
+
+      {_conn, updated_u2} = update_user(conn, u1, u2, params)
+
+      assert u2 == updated_u2
+    end
+
+    defp mark_as_volunteer(user, branch) do
+      params = %{:datasheet =>
+                  %{ id: user.datasheet.id,
+                     branch_id: branch.id,
+                     role: "volunteer",
+                     status: "approved" }}
+
+      user
+      |> User.changeset(:update, params)
+      |> Repo.update!
+
+      # return a fresh copy to make sure all associations are reloaded
+      Repo.get(User.query_with_datasheet, user.id)
+    end
+  end
+
   describe "status changes" do
     test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
       setup_db

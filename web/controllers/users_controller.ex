@@ -47,7 +47,10 @@ defmodule Registro.UsersController do
 
     current_user = Coherence.current_user(conn)
 
-    if !current_user.datasheet.is_super_admin && branch_updated(user_params, current_user) do
+    forbidden = !current_user.datasheet.is_super_admin &&
+                  (branch_updated(user_params, user) || colaboration_updated(user_params, user))
+
+    if forbidden do
       Registro.Authorization.handle_unauthorized(conn)
     else
       changeset = User.changeset(user, :update, user_params)
@@ -280,10 +283,19 @@ defmodule Registro.UsersController do
     end
   end
 
-  defp branch_updated(%{"datasheet" => datasheet_params}, current_user) do
+  def branch_updated(%{"datasheet" => datasheet_params}, target_user) do
     case Map.fetch(datasheet_params, "branch_id") do
       {:ok, new_branch_id} ->
-        new_branch_id != current_user.datasheet.branch_id
+        new_branch_id != target_user.datasheet.branch_id
+      _ ->
+        false
+    end
+  end
+
+  def colaboration_updated(%{"datasheet" => datasheet_params}, target_user) do
+    case Map.fetch(datasheet_params, "role") do
+      {:ok, new_role} ->
+        new_role != target_user.datasheet.role
       _ ->
         false
     end

@@ -61,20 +61,15 @@ defmodule Registro.UsersControllerTest do
 
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      assert volunteer.datasheet.role == "volunteer"
-      assert volunteer.datasheet.branch.name == "Branch 1"
+      {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
-      update_params = %{
+      params = %{
         branch_name: "Branch 2",
         user: %{
           datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
         }}
 
-      conn
-      |> log_in("admin@instedd.org")
-      |> patch(users_path(Registro.Endpoint, :update, volunteer), update_params)
-
-      volunteer = get_user_by_email("volunteer1@example.com")
+      {_conn, volunteer} = update_user(conn, "admin@instedd.org", volunteer, params)
 
       assert volunteer.datasheet.role == "associate"
       assert volunteer.datasheet.branch.name == "Branch 2"
@@ -85,20 +80,15 @@ defmodule Registro.UsersControllerTest do
 
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      assert volunteer.datasheet.role == "volunteer"
-      assert volunteer.datasheet.branch.name == "Branch 1"
+      {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
-      update_params = %{
+      params = %{
         branch_name: "Branch 2",
         user: %{
           datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
         }}
 
-      conn
-      |> log_in("branch_admin1@instedd.org")
-      |> patch(users_path(Registro.Endpoint, :update, volunteer), update_params)
-
-      updated_volunteer = get_user_by_email("volunteer1@example.com")
+      {_conn, updated_volunteer} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
 
       assert volunteer == updated_volunteer
     end
@@ -139,20 +129,17 @@ defmodule Registro.UsersControllerTest do
 
     def try_approve(conn, current_user_email, target_user_email) do
       volunteer = get_user_by_email(target_user_email)
+
       assert volunteer.datasheet.status == "at_start"
 
-      update_params = %{
+      params = %{
         user: %{
           datasheet: %{
             id: volunteer.datasheet.id,
             status: "approved"
           }}}
 
-      conn = conn
-      |> log_in(current_user_email)
-      |> patch(users_path(Registro.Endpoint, :update, volunteer), update_params)
-
-      volunteer = get_user_by_email(target_user_email)
+      {conn, volunteer} = update_user(conn, current_user_email, volunteer, params)
 
       {conn, volunteer}
     end
@@ -170,20 +157,16 @@ defmodule Registro.UsersControllerTest do
 
       {nil, nil, nil} = {datasheet.branch_id, datasheet.role, datasheet.status}
 
-      update_params = %{
+      params = %{
         user: %{
           datasheet: %{ id: user.datasheet.id, branch_id: branch2.id, role: "volunteer" }
         }}
 
-      conn
-      |> log_in("admin@instedd.org")
-      |> patch(users_path(Registro.Endpoint, :update, user), update_params)
+      {_conn, user} = update_user(conn, "admin@instedd.org", user, params)
 
-      other_admin = get_user_by_email("branch_admin1@instedd.org")
-
-      assert other_admin.datasheet.branch_id == branch2.id
-      assert other_admin.datasheet.role == "volunteer"
-      assert other_admin.datasheet.status == "approved"
+      assert user.datasheet.branch_id == branch2.id
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.status == "approved"
     end
   end
 
@@ -296,6 +279,17 @@ defmodule Registro.UsersControllerTest do
 
   def get_user_by_email(email) do
     User.query_with_datasheet |> Repo.get_by!(email: email)
+  end
+
+  def update_user(conn, %User{} = current_user, target_user, params) do
+    conn = conn
+    |> log_in(current_user)
+    |> patch(users_path(Registro.Endpoint, :update, target_user), params)
+
+    {conn, Repo.get(User.query_with_datasheet, target_user.id)}
+  end
+  def update_user(conn, current_user_email, target_user, params) do
+    update_user(conn, get_user_by_email(current_user_email), target_user, params)
   end
 
   def setup_db do

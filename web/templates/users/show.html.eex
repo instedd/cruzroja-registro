@@ -38,14 +38,21 @@
 
             <div class="row">
               <div class="input-field col s6">
-                <label class="control-label active" for="user_datasheet_branch_name">Filial</label>
-                <%= tag(:input,
-                  type: "text",
-                  id: "user_datasheet_branch_name",
-                  name: "branch_name",
-                  class: "autocomplete form-control",
-                  value: @branch_name) %>
-                <%= error_tag fd, :branch_name %>
+                <label class="control-label" for="user_datasheet_branch_name">Filial</label>
+                <%= if current_user.datasheet.is_super_admin do %>
+                  <%= tag(:input,
+                    type: "text",
+                    id: "user_datasheet_branch_name",
+                    name: "branch_name",
+                    class: "autocomplete form-control",
+                    value: @branch_name) %>
+                  <%= error_tag fd, :branch_name %>
+                <% else %>
+                  <%= tag(:input,
+                          class: "form-control", name: "", type: "text", disabled: "",
+                          value: @branch_name
+                          ) %>
+                <% end %>
               </div>
 
               <%= if pending_approval do %>

@@ -3,7 +3,7 @@ defmodule Registro.UsersControllerTest do
   import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
 
-  alias Registro.{User, Datasheet}
+  alias Registro.{User, Datasheet, Branch}
 
   describe "listing" do
     test "verifies that user is logged in", %{conn: conn} do
@@ -55,7 +55,7 @@ defmodule Registro.UsersControllerTest do
     end
   end
 
-  describe "update" do
+  describe "update to user's branch" do
     test "a super_admin can update a user's branch", %{conn: conn} do
       setup_db
 
@@ -102,7 +102,9 @@ defmodule Registro.UsersControllerTest do
 
       assert volunteer == updated_volunteer
     end
+  end
 
+  describe "status changes" do
     test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
       setup_db
 
@@ -153,6 +155,35 @@ defmodule Registro.UsersControllerTest do
       volunteer = get_user_by_email(target_user_email)
 
       {conn, volunteer}
+    end
+  end
+
+  # A super admin should be allowed to mark a user with no previous branch
+  # colaboration (ie. other admins) as a colaborator of any branch.
+  describe "marking users as colaborators of a branch after registration" do
+    test "the colaboration is assumed approved when set by a super_admin", %{conn: conn} do
+      setup_db
+
+      %{datasheet: datasheet} = user = get_user_by_email("branch_admin1@instedd.org")
+
+      branch2 = Repo.get_by(Branch, name: "Branch 2")
+
+      {nil, nil, nil} = {datasheet.branch_id, datasheet.role, datasheet.status}
+
+      update_params = %{
+        user: %{
+          datasheet: %{ id: user.datasheet.id, branch_id: branch2.id, role: "volunteer" }
+        }}
+
+      conn
+      |> log_in("admin@instedd.org")
+      |> patch(users_path(Registro.Endpoint, :update, user), update_params)
+
+      other_admin = get_user_by_email("branch_admin1@instedd.org")
+
+      assert other_admin.datasheet.branch_id == branch2.id
+      assert other_admin.datasheet.role == "volunteer"
+      assert other_admin.datasheet.status == "approved"
     end
   end
 

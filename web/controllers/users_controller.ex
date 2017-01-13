@@ -39,12 +39,13 @@ defmodule Registro.UsersController do
   end
 
   def update(conn, params) do
-    %{"id" => id, "user" => user_params} = set_branch_id_from_branch_name(params)
+    user = Repo.get(User, params["id"]) |> User.preload_datasheet
+
+    %{"user" => user_params} = params
+                             |> set_branch_id_from_branch_name
+                             |> set_status_if_creating_colaboration(user)
 
     current_user = Coherence.current_user(conn)
-
-    user = Repo.get(User, id)
-         |> User.preload_datasheet
 
     if !current_user.datasheet.is_super_admin && branch_updated(user_params, current_user) do
       Registro.Authorization.handle_unauthorized(conn)
@@ -252,6 +253,30 @@ defmodule Registro.UsersController do
         update_in(params, ["user", "datasheet"], fn(dp) ->
           Map.put(dp, "branch_id", branch_id)
         end)
+    end
+  end
+
+  defp set_status_if_creating_colaboration(params, user) do
+    # if the user doesn't have a current colaboration in a branch
+    # and both brach_id and role are set, this means that a superadmin
+    # is assigning a user to a branch as a colaborator. the change is
+    # assumed to be approved.
+
+    %{"datasheet" => datasheet_params} = params["user"]
+
+    if !Datasheet.is_colaborator?(user.datasheet) do
+      case {datasheet_params["branch_id"], datasheet_params["role"]} do
+        {nil, _} ->
+          params
+        {_, nil} ->
+          params
+        _ ->
+          update_in(params, ["user", "datasheet"], fn(dp) ->
+            Map.put(dp, "status", "approved")
+          end)
+      end
+    else
+      params
     end
   end
 

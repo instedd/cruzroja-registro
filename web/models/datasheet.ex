@@ -56,6 +56,7 @@ defmodule Registro.Datasheet do
       Datasheet.is_branch_admin?(datasheet) -> "Administrador de Filial"
       Datasheet.is_volunteer?(datasheet) -> "Voluntario"
       Datasheet.is_associate?(datasheet) -> "Asociado"
+      true -> ""
     end
   end
 

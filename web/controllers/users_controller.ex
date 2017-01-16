@@ -47,7 +47,12 @@ defmodule Registro.UsersController do
 
     current_user = Coherence.current_user(conn)
 
-    forbidden = !current_user.datasheet.is_super_admin && branch_updated(user_params, user)
+    forbidden = if current_user.datasheet.is_super_admin do
+                  #don't allow a super user to revoke his own permissions
+                  (user.id == current_user.id) && super_admin_changed(user_params, user)
+                else
+                  branch_updated(user_params, user) || super_admin_changed(user_params, user)
+                end
 
     if forbidden do
       Registro.Authorization.handle_unauthorized(conn)
@@ -59,7 +64,7 @@ defmodule Registro.UsersController do
           UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
-          |> redirect(to: users_path(conn, :index))
+          |> redirect(to: users_path(conn, :show, user))
         {:error, changeset} ->
           branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
           conn
@@ -284,10 +289,10 @@ defmodule Registro.UsersController do
     end
   end
 
-  def colaboration_updated(%{"datasheet" => datasheet_params}, target_user) do
-    case Map.fetch(datasheet_params, "role") do
-      {:ok, new_role} ->
-        new_role != target_user.datasheet.role
+  def super_admin_changed(%{"datasheet" => datasheet_params}, target_user) do
+    case Map.fetch(datasheet_params, "is_super_admin") do
+      {:ok, new_value} ->
+        new_value != target_user.datasheet.is_super_admin
       _ ->
         false
     end

@@ -207,6 +207,55 @@ defmodule Registro.UsersControllerTest do
     end
   end
 
+  describe "granting super_admin permissions" do
+    test "a super_admin can grant super_admin permissions to other users", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      {_conn, user} = update_user(conn, "admin@instedd.org", volunteer, user: %{
+                                                                          datasheet: %{
+                                                                            id: volunteer.datasheet.id,
+                                                                            is_super_admin: true } } )
+
+      assert user.datasheet.is_super_admin
+    end
+
+    test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
+      setup_db
+      other_admin = create_super_admin(email: "admin2@instedd.org")
+
+      {_conn, other_admin} = update_user(conn, "admin@instedd.org", other_admin, user: %{
+                                                                                  datasheet: %{
+                                                                                    id: other_admin.datasheet.id,
+                                                                                    is_super_admin: false } } )
+
+      refute other_admin.datasheet.is_super_admin
+    end
+
+    test "a super_admin cannot revoke his own super_admin permissions", %{conn: conn} do
+      setup_db
+      admin = get_user_by_email("admin@instedd.org")
+
+      {_conn, admin} = update_user(conn, admin, admin, user: %{ datasheet: %{
+                                                                  id: admin.datasheet.id,
+                                                                  is_super_admin: false } })
+
+      assert admin.datasheet.is_super_admin
+    end
+
+    test "a branch admin cannot grant super_admin permission", %{conn: conn} do
+      setup_db
+
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      params = %{ user: %{ datasheet: %{ id: volunteer.datasheet.id, is_super_admin: true } } }
+      {_conn, user} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
+
+      refute user.datasheet.is_super_admin
+    end
+  end
+
   describe "detail" do
     test "an admin can access any users detail", %{conn: conn} do
       setup_db

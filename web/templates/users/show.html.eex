@@ -107,6 +107,20 @@
                 <% end %>
               </div>
             </div>
+
+            <%= if current_user.datasheet.is_super_admin do %>
+              <div class="section">
+                <h3>Permisos de administración</h3>
+                <div class="row">
+                  <div class="input_field col s12">
+                    <%= checkbox fd, :is_super_admin, class: "form-control" %>
+                    <%= label fd, :is_super_admin, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
+                  </div>
+                </div>
+              </div>
+            <% else %>
+              <%= hidden_input fd, :is_super_admin, disabled: "" %>
+            <% end %>
           <% end %>
 
           <div class="form-group actions">

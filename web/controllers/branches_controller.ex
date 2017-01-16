@@ -45,23 +45,32 @@ defmodule Registro.BranchesController do
   end
 
   def show(conn, params) do
-    branch = Repo.one(from u in Branch, where: u.id == ^params["id"])
+    branch = Repo.one(from u in Branch, where: u.id == ^params["id"], preload: [admins: :user])
     changeset = Branch.changeset(branch)
 
     conn
     |> render("show.html", changeset: changeset, branch: branch)
   end
 
-  def update(conn, %{"branch" => branch_params} = params) do
-    branch = Repo.get(Branch, params["id"])
-    changeset = Branch.changeset(branch, branch_params)
+  def update(conn, %{"branch" => branch_params, "admin_emails" => encoded_admin_emails} = params) do
+    branch = Repo.one!(from b in Branch, where: b.id == ^params["id"], preload: [admins: :user])
+
+    admin_emails = String.split(encoded_admin_emails, "|")
+
+    changeset = branch
+              |> Branch.changeset(branch_params)
+              |> Branch.update_admins(admin_emails)
+              |> validate_admin_not_removing_himself(Coherence.current_user(conn).email)
+
     case Repo.update(changeset) do
       {:ok, _branch} ->
         conn
         |> put_flash(:info, "Los cambios en la filial fueron efectuados.")
-        |> redirect(to: branches_path(conn, :index))
+        |> redirect(to: branches_path(conn, :show, branch))
       {:error, changeset} ->
-        render(conn, "show.html", changeset: changeset)
+        conn
+        |> put_flash(:error, "Error al actualizar los datos de la filial")
+        |> render("show.html", changeset: changeset, branch: branch)
     end
   end
 
@@ -91,5 +100,17 @@ defmodule Registro.BranchesController do
     branch_id = String.to_integer(conn.params["id"])
 
     datasheet.is_super_admin || Datasheet.is_admin_of?(datasheet, branch_id)
+  end
+
+  defp validate_admin_not_removing_himself(changeset, current_email) do
+    admin_emails = Ecto.Changeset.get_field(changeset, :admins)
+                |> Enum.map(&(&1.user.email))
+
+    if Enum.member?(admin_emails, current_email) do
+      changeset
+    else
+      msg = "No es posible removerse a uno mismo como administrador de la filial"
+      changeset |> Ecto.Changeset.add_error(:datasheet, msg)
+    end
   end
 end

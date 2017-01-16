@@ -6,7 +6,7 @@ defmodule Registro.BranchesControllerTest do
 
   test "verifies that user is logged in", %{conn: conn} do
     conn = get conn, "/filiales"
-    assert html_response(conn, 302)
+    assert redirected_to(conn) == "/"
   end
 
   test "does not allow non-admin users", %{conn: conn} do
@@ -16,7 +16,7 @@ defmodule Registro.BranchesControllerTest do
     |> log_in("john@example.com")
     |> get("/filiales")
 
-    assert html_response(conn, 302)
+    assert_unauthorized(conn)
   end
 
   test "does not allow branch_admin", %{conn: conn} do
@@ -26,7 +26,7 @@ defmodule Registro.BranchesControllerTest do
     |> log_in("branch@instedd.org")
     |> get("/filiales")
 
-    assert html_response(conn, 302)
+    assert_unauthorized(conn)
   end
 
   test "displays all branches to super_admin user", %{conn: conn} do

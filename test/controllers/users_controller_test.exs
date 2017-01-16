@@ -8,7 +8,8 @@ defmodule Registro.UsersControllerTest do
   describe "listing" do
     test "verifies that user is logged in", %{conn: conn} do
       conn = get conn, "/usuarios"
-      assert html_response(conn, 302)
+
+      assert redirected_to(conn) == "/"
     end
 
     test "non admin users are not allowed", %{conn: conn} do
@@ -18,7 +19,7 @@ defmodule Registro.UsersControllerTest do
           |> log_in("volunteer1@example.com")
           |> get("/usuarios")
 
-      assert html_response(conn, 302)
+      assert_unauthorized(conn)
     end
 
     test "super_admin can see all users", %{conn: conn} do
@@ -36,7 +37,7 @@ defmodule Registro.UsersControllerTest do
       assert result_count == all_users_count
     end
 
-    test "branch admin can only see users of his administrated branches", %{conn: conn} do
+    test "branch admin can only see colaborators of his administrated branches", %{conn: conn} do
       setup_db
 
       conn = conn
@@ -47,15 +48,13 @@ defmodule Registro.UsersControllerTest do
 
       user_emails = Enum.map conn.assigns[:users], &(&1.email)
 
-      assert user_emails == ["branch_admin1@instedd.org", # self
-                             "branch_admin3@instedd.org", # other admin of an administrated branch
-                             "volunteer1@example.com",    # volunteer in an administrated branch
-                             "volunteer3@example.com"     # ditto
+      assert user_emails == ["volunteer1@example.com",
+                             "volunteer3@example.com"
                             ]
     end
   end
 
-  describe "update to user's branch" do
+  describe "update" do
     test "a super_admin can update a user's branch", %{conn: conn} do
       setup_db
 
@@ -92,48 +91,43 @@ defmodule Registro.UsersControllerTest do
 
       assert volunteer == updated_volunteer
     end
-  end
 
-  describe "role changes" do
-    test "a branch admin can only change role of colaborations of the same branch", %{conn: conn} do
+    test "a branch admin can change role of colaborations of the same branch", %{conn: conn} do
       setup_db
 
       u1 = get_user_by_email("branch_admin1@instedd.org")
-      u2 = get_user_by_email("branch_admin3@instedd.org")
+      u2 = get_user_by_email("volunteer1@example.com")
 
-      common_branch = Repo.get_by!(Branch, name: "Branch 3")
-
-      assert Datasheet.is_admin_of?(u1.datasheet, common_branch)
-      assert Datasheet.is_admin_of?(u2.datasheet, common_branch)
-
-      other_branch = Repo.get_by!(Branch, name: "Branch 2")
-
-      u2 = mark_as_volunteer(u2, other_branch)
+      assert u2.datasheet.role == "volunteer"
 
       params = %{ user:
                   %{ :datasheet => %{
-                        branch_id: other_branch.id,
-                        role: "associate",
-                        status: "approved" }}}
+                  id: u2.datasheet.id,
+                  role: "associate",
+                  status: u2.datasheet.status }}}
 
-      {_conn, updated_u2} = update_user(conn, u1, u2, params)
+      {_conn, u2} = update_user(conn, u1, u2, params)
 
-      assert u2 == updated_u2
+      assert u2.datasheet.role == "associate"
     end
 
-    defp mark_as_volunteer(user, branch) do
-      params = %{:datasheet =>
-                  %{ id: user.datasheet.id,
-                     branch_id: branch.id,
-                     role: "volunteer",
-                     status: "approved" }}
+    test "a branch admin can't change role of colaborations of other branches", %{conn: conn} do
+      setup_db
 
-      user
-      |> User.changeset(:update, params)
-      |> Repo.update!
+      u1 = get_user_by_email("branch_admin1@instedd.org")
+      u2 = get_user_by_email("volunteer2@example.com")
 
-      # return a fresh copy to make sure all associations are reloaded
-      Repo.get(User.query_with_datasheet, user.id)
+      assert u2.datasheet.role == "volunteer"
+
+      params = %{ user:
+                  %{ :datasheet => %{
+                  id: u2.datasheet.id,
+                  role: "associate",
+                  status: u2.datasheet.status }}}
+
+      {conn, _u2} = update_user(conn, u1, u2, params)
+
+      assert_unauthorized(conn)
     end
   end
 
@@ -157,7 +151,7 @@ defmodule Registro.UsersControllerTest do
 
       {conn, user} = try_approve(conn, "branch_admin2@instedd.org", "volunteer1@example.com")
 
-      assert html_response(conn, 302)
+      assert_unauthorized(conn)
       assert user.datasheet.status == "at_start"
     end
 
@@ -166,7 +160,7 @@ defmodule Registro.UsersControllerTest do
 
       {conn, user} = try_approve(conn, "volunteer1@example.com", "volunteer1@example.com")
 
-      assert html_response(conn, 302)
+      assert_unauthorized(conn)
       assert user.datasheet.status == "at_start"
     end
 
@@ -238,7 +232,7 @@ defmodule Registro.UsersControllerTest do
       assert html_response(conn, 200)
     end
 
-    test "a branch admin can access details of other admins of administrated branches", %{conn: conn} do
+    test "a branch admin can not access details of other admins of administrated branches", %{conn: conn} do
       setup_db
 
       volunteer = get_user_by_email("branch_admin3@instedd.org")
@@ -247,7 +241,7 @@ defmodule Registro.UsersControllerTest do
       |> log_in("branch_admin1@instedd.org")
       |> get(users_path(Registro.Endpoint, :show, volunteer))
 
-      assert html_response(conn, 200)
+      assert_unauthorized(conn)
     end
 
     test "a branch admin can not access details of colaborators of branches he doesn't administrate", %{conn: conn} do
@@ -259,7 +253,7 @@ defmodule Registro.UsersControllerTest do
       |> log_in("branch_admin1@instedd.org")
       |> get(users_path(Registro.Endpoint, :show, volunteer))
 
-      assert html_response(conn, 302)
+      assert_unauthorized(conn)
     end
   end
 

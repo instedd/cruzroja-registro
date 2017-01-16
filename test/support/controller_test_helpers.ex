@@ -12,4 +12,10 @@ defmodule Registro.ControllerTestHelpers do
     log_in(conn, user)
   end
 
+  defmacro assert_unauthorized(conn) do
+    quote do
+      assert redirected_to(unquote(conn)) == "/"
+      assert get_flash(unquote(conn), :info) == "Página no accesible"
+    end
+  end
 end

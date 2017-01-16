@@ -47,8 +47,7 @@ defmodule Registro.UsersController do
 
     current_user = Coherence.current_user(conn)
 
-    forbidden = !current_user.datasheet.is_super_admin &&
-                  (branch_updated(user_params, user) || colaboration_updated(user_params, user))
+    forbidden = !current_user.datasheet.is_super_admin && branch_updated(user_params, user)
 
     if forbidden do
       Registro.Authorization.handle_unauthorized(conn)
@@ -183,9 +182,7 @@ defmodule Registro.UsersController do
 
         from u in query,
         join: d in Datasheet, on: u.datasheet_id == d.id,
-        left_join: b in assoc(d, :admin_branches),
-        where: ((d.branch_id in ^administrated_branch_ids) or (b.id in ^administrated_branch_ids)),
-        distinct: u.id # distinct here is used to avoid yielding a copy of a user for every branch administrated
+        where: d.branch_id in ^administrated_branch_ids
     end
   end
 
@@ -204,21 +201,16 @@ defmodule Registro.UsersController do
   end
 
   def authorize_detail(conn, %User{datasheet: datasheet}) do
-    cond do
-      datasheet.is_super_admin ->
-        true
+    if Datasheet.is_admin?(datasheet) do
+      user_id = String.to_integer(conn.params["id"])
 
-      Datasheet.is_branch_admin?(datasheet) ->
-        user_id = String.to_integer(conn.params["id"])
+      id_or_nil = (from u in User, where: u.id == ^user_id, select: 1)
+      |> restrict_to_visible_users(conn)
+      |> Repo.one
 
-        id_or_nil = (from u in User, where: u.id == ^user_id, select: 1)
-                  |> restrict_to_visible_users(conn)
-                  |> Repo.one
-
-        id_or_nil != nil
-
-      Datasheet.is_colaborator?(datasheet) ->
-        false
+      id_or_nil != nil
+    else
+      false
     end
   end
 

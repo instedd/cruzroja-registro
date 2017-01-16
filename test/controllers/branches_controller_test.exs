@@ -5,6 +5,9 @@ defmodule Registro.BranchesControllerTest do
   import Registro.ControllerTestHelpers
 
   alias Registro.Branch
+  alias Registro.User
+  alias Registro.Invitation
+  alias Registro.Datasheet
 
   describe "listing" do
     test "verifies that user is logged in", %{conn: conn} do
@@ -91,7 +94,9 @@ defmodule Registro.BranchesControllerTest do
 
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", desired_admins)
 
-      assert updated_admins == desired_admins
+      assert updated_admins == [{:added, "branch_admin1@instedd.org"},
+                                {:added, "branch_admin2@instedd.org"},
+                                {:added, "mary@example.com"}]
     end
 
     test "allows to remove other admins", %{conn: conn} do
@@ -99,10 +104,19 @@ defmodule Registro.BranchesControllerTest do
 
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin1@instedd.org"])
 
-      assert updated_admins == ["branch_admin1@instedd.org"]
+      assert updated_admins == [{:added, "branch_admin1@instedd.org"}]
 
       # assert that deleting the association does not delete the user
       Repo.get_by!(Registro.User, email: "branch_admin2@instedd.org")
+    end
+
+    test "allows to remove all admins", %{conn: conn} do
+      # test encoding/decoding of empty list
+      setup_db
+
+      {_conn, updated_admins} = admins_update(conn, "admin@instedd.org", "Branch 1", [])
+
+      assert updated_admins == []
     end
 
     test "fails if user is trying to remove himself as branch admin", %{conn: conn} do
@@ -110,17 +124,27 @@ defmodule Registro.BranchesControllerTest do
 
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin2@instedd.org"])
 
-      assert updated_admins == ["branch_admin1@instedd.org", "branch_admin2@instedd.org"]
+      assert updated_admins == [{:added, "branch_admin1@instedd.org"},
+                                {:added, "branch_admin2@instedd.org"}]
     end
 
-    test "fails if an invalid admin email is provided", %{conn: conn} do
+    test "sends an invitation to unknown emails", %{conn: conn} do
       setup_db
+
+      branch = Repo.get_by!(Branch, name: "Branch 1")
 
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin1@instedd.org",
                                                                                               "branch_admin2@instedd.org",
                                                                                               "unknown@example.com"])
 
-      assert updated_admins == ["branch_admin1@instedd.org", "branch_admin2@instedd.org"]
+      assert updated_admins == [{:added, "branch_admin1@instedd.org"},
+                                {:added, "branch_admin2@instedd.org"},
+                                {:invited, "unknown@example.com"}]
+
+      invitation = Repo.get_by!(Registro.Invitation, email: "unknown@example.com")
+                 |> Repo.preload(:datasheet)
+
+      assert Datasheet.is_admin_of?(invitation.datasheet, branch)
     end
 
     defp admins_update(conn, user_email, branch_name, emails) do
@@ -134,10 +158,18 @@ defmodule Registro.BranchesControllerTest do
       |> patch(branches_path(conn, :update, branch), params)
 
       branch = Repo.get!(Branch, branch.id)
-             |> Repo.preload([admins: :user])
+             |> Repo.preload([admins: [:user, :invitation]])
 
-      updated_admins = Enum.map(branch.admins, &(&1.user.email)) |> Enum.sort
-      {conn, updated_admins}
+      updated_admins = Enum.map(branch.admins, fn(datasheet) ->
+        case datasheet do
+          %Datasheet{ user: %User{ email: email } } ->
+            { :added, email }
+          %Datasheet{ invitation: %Invitation{ email: email }} ->
+            { :invited, email }
+        end
+      end)
+
+      {conn, Enum.sort(updated_admins)}
     end
   end
 

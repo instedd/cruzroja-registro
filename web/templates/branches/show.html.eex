@@ -5,6 +5,6 @@
     </div>
   </div>
   <div class="content-main">
-    <%= render "form.html", conn: @conn, changeset: @changeset, action: branches_path(@conn, :update, @branch) %>
+    <%= render "form.html", conn: @conn, changeset: @changeset, admin_emails: @admin_emails, action: branches_path(@conn, :update, @branch) %>
   </div>
 </div>

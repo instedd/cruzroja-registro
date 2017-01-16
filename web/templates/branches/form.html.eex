@@ -18,8 +18,7 @@
   <div class="section">
     <h3>Administradores</h3>
     <script>
-     <% admin_emails = @changeset |> Ecto.Changeset.get_field(:admins) |> Enum.map(&(&1.user.email)) %>
-     var branchAdmins = <%= raw Poison.encode!(admin_emails) %>;
+     var branchAdmins = <%= raw Poison.encode!(@admin_emails) %>;
     </script>
     <input name="admin_emails" type="hidden" value="admin1@instedd.org|admin2@instedd.org"/>
     <div class="input-field">

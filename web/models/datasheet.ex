@@ -2,7 +2,9 @@ defmodule Registro.Datasheet do
   use Registro.Web, :model
 
   alias __MODULE__
+  alias Registro.User
   alias Registro.Branch
+  alias Registro.Invitation
 
   schema "datasheets" do
     field :name, :string
@@ -11,6 +13,7 @@ defmodule Registro.Datasheet do
     field :is_super_admin, :boolean
 
     has_one :user, Registro.User
+    has_one :invitation, Registro.Invitation
 
     # the branch to which the person acts as a volunteer or associate
     belongs_to :branch, Registro.Branch
@@ -92,6 +95,18 @@ defmodule Registro.Datasheet do
 
     datasheet.admin_branches
     |> Enum.any?(&(&1.id == branch_id))
+  end
+
+  def email(datasheet) do
+    datasheet = Registro.Repo.preload(datasheet, [:user, :invitation])
+
+    case datasheet do
+      %Datasheet{ user: %User{email: email} } ->
+        email
+
+      %Datasheet{ invitation: %Invitation{ email: email } } ->
+        email
+    end
   end
 
   defp validate_colaboration(changeset) do

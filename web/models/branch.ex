@@ -6,13 +6,18 @@ defmodule Registro.Branch do
   schema "branches" do
     field :name, :string
     field :address, :string
+    field :phone_number, :string
+    field :cell_phone_number, :string
+    field :email, :string
+    field :president, :string
+    field :authorities, :string
     timestamps
   end
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :address])
-    |> validate_required([:name, :address])
+    |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities])
+    |> validate_required([:name])
     |> unique_constraint(:name)
   end
 

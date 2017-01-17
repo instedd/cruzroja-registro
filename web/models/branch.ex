@@ -22,7 +22,7 @@ defmodule Registro.Branch do
     model
     |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities])
     |> validate_required([:name])
-    |> unique_constraint(:name)
+    |> unique_constraint(:name, message: "ya pertenece a otra filial")
   end
 
   def update_admins(changeset, admin_datasheets) do

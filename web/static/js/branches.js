@@ -25,6 +25,7 @@ var initAdminSelector = () => {
   }
 
   chipContainer.material_chip({
+    secondaryPlaceholder: '+Email',
     placeholder: ' +Email',
     data: initialData
   });

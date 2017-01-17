@@ -7,14 +7,6 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="input-field col s12">
-      <%= label f, :address, "Dirección", class: "control-label active" %>
-      <%= text_input f, :address, class: "form-control" %>
-      <%= error_tag f, :address %>
-    </div>
-  </div>
-
   <div class="section">
     <h3>Administradores</h3>
     <script>
@@ -24,45 +16,57 @@
     <div class="input-field">
       <div class="admin-chips"></div>
     </div>
+    <div class="input-instructions">Agregar emails y presionar Enter. Se enviará una invitación a las direcciones que no tengan una cuenta asociada.</div>
   </div>
 
-  <div class="row">
-    <div class="input-field col s12">
-      <%= label f, :phone_number, "Teléfono", class: "control-label active" %>
-      <%= text_input f, :phone_number, class: "form-control" %>
-      <%= error_tag f, :phone_number %>
+  <div class="section">
+    <h3>Datos de contacto</h3>
+    <div class="row">
+      <div class="input-field col s12">
+        <%= label f, :address, "Dirección", class: "control-label active" %>
+        <%= text_input f, :address, class: "form-control" %>
+        <%= error_tag f, :address %>
+      </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="input-field col s12">
-      <%= label f, :cell_phone_number, "Celular", class: "control-label active" %>
-      <%= text_input f, :cell_phone_number, class: "form-control" %>
-      <%= error_tag f, :cell_phone_number %>
+    <div class="row">
+      <div class="input-field col s12">
+        <%= label f, :phone_number, "Teléfono", class: "control-label active" %>
+        <%= text_input f, :phone_number, class: "form-control" %>
+        <%= error_tag f, :phone_number %>
+      </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="input-field col s12">
-      <%= label f, :email, "Email", class: "control-label active" %>
-      <%= text_input f, :email, class: "form-control" %>
-      <%= error_tag f, :email %>
+    <div class="row">
+      <div class="input-field col s12">
+        <%= label f, :cell_phone_number, "Celular", class: "control-label active" %>
+        <%= text_input f, :cell_phone_number, class: "form-control" %>
+        <%= error_tag f, :cell_phone_number %>
+      </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="input-field col s12">
-      <%= label f, :president, "Presidente", class: "control-label active" %>
-      <%= text_input f, :president, class: "form-control" %>
-      <%= error_tag f, :president %>
+    <div class="row">
+      <div class="input-field col s12">
+        <%= label f, :email, "Email", class: "control-label active" %>
+        <%= text_input f, :email, class: "form-control" %>
+        <%= error_tag f, :email %>
+      </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="input-field col s12">
-      <%= label f, :authorities, "Interventores", class: "control-label active" %>
-      <%= text_input f, :authorities, class: "form-control" %>
-      <%= error_tag f, :authorities %>
+    <div class="row">
+      <div class="input-field col s12">
+        <%= label f, :president, "Presidente", class: "control-label active" %>
+        <%= text_input f, :president, class: "form-control" %>
+        <%= error_tag f, :president %>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="input-field col s12">
+        <%= label f, :authorities, "Interventores", class: "control-label active" %>
+        <%= text_input f, :authorities, class: "form-control" %>
+        <%= error_tag f, :authorities %>
+      </div>
     </div>
   </div>
 

@@ -19,7 +19,7 @@
             <td><%= u.datasheet.name %></td>
             <td><%= u.email %></td>
             <td></td>
-            <td><%= Registro.Role.label(u.datasheet.role) %></td>
+            <td><%= Registro.Datasheet.role_label(u.datasheet) %></td>
             <td><%= Registro.Datasheet.status_label(u.datasheet.status) %></td>
             <%= if @conn.assigns[:current_user].datasheet.role == "super_admin" do %>
             <td><%= branch_label(u) %></td>

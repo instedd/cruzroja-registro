@@ -1,9 +1,18 @@
+<% datasheet = @conn.assigns[:current_user].datasheet %>
+
 <%= menu_item(@conn, users_path(@conn, :profile), "Perfil") %>
-<%= if Registro.Role.is_admin?(@conn.assigns[:current_user].datasheet.role) do %>
+<%= if Registro.Datasheet.is_admin?(datasheet) do %>
   <%= menu_item(@conn, users_path(@conn, :index), "Usuarios") %>
-<% end %>
-<%= if Registro.Role.is_super_admin?(@conn.assigns[:current_user].datasheet.role) do %>
-  <%= menu_item(@conn, branches_path(@conn, :index), "Filiales") %>
+
+  <%= if datasheet.is_super_admin do %>
+    <%= menu_item(@conn, branches_path(@conn, :index), "Filiales") %>
+  <% else %>
+    <%= if length(datasheet.admin_branches) == 1 do %>
+      <%= menu_item(@conn, branches_path(@conn, :show, hd(datasheet.admin_branches)), "Mi filial") %>
+    <% else %>
+      <%= menu_item(@conn, branches_path(@conn, :index), "Mis filiales") %>
+    <% end %>
+  <% end %>
 <% end %>
 <li>
   <%= link "Salir", to: session_path(@conn, :delete), method: :delete %>

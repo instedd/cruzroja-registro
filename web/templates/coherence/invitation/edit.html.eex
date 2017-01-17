@@ -12,7 +12,7 @@
 
     <div class="input-field">
       <%= required_label f, :name, "Nombre", class: "control-label" %>
-      <%= text_input f, :name, class: "form-control", required: "" %>
+      <%= text_input f, :name, class: "form-control", required: "", autofocus: "" %>
       <%= error_tag f, :name %>
     </div>
 

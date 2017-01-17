@@ -59,12 +59,10 @@ defmodule Registro.Coherence.InvitationController do
 
     case repo.one from u in user_schema, where: u.email == ^email do
       nil ->
-        token = random_string 48
-        url = router_helpers.invitation_url(conn, :edit, token)
-        cs = put_change(cs, :token, token)
+        cs = Invitation.generate_token(cs)
         case Config.repo.insert cs do
           {:ok, invitation} ->
-            send_user_email :invitation, invitation, url
+            send_user_email :invitation, invitation, Invitation.accept_url(invitation)
             Registro.UserAuditLogEntry.add(invitation.datasheet_id, Coherence.current_user(conn), :invite_send)
 
             conn
@@ -185,20 +183,17 @@ defmodule Registro.Coherence.InvitationController do
     is_protected_action = Enum.member?([:new, :create, :resend], action)
 
     if is_protected_action do
-      %Datasheet{ role: role, branch_id: branch_id } = current_user.datasheet
+      datasheet = current_user.datasheet
 
-      case {action, role} do
-        {_, "super_admin"} ->
-          true
-
-        {:new, "branch_admin"} ->
-          true
-
-        {:create, "branch_admin"} ->
-          branch_id == target_branch_id(conn.params)
-
-        {:resend, "branch_admin"} ->
-          branch_id == target_branch_id(conn.params)
+      cond do
+        datasheet.is_super_admin -> true
+        Datasheet.is_branch_admin?(datasheet) ->
+          case action do
+            :new ->
+              true
+            _ ->
+              Datasheet.is_admin_of?(datasheet, target_branch_id(conn.params))
+          end
       end
     else
       true

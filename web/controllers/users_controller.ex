@@ -11,8 +11,8 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Registro.Authorization, [ check_role: &Role.is_admin?/1 ] when action in [:index, :filter, :show]
-  plug Registro.Authorization, [ check: &UsersController.authorize_update/2] when action in [:update]
+  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index, :filter]
+  plug Registro.Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
 
   def index(conn, _params) do
     query = listing_page_query(conn, 1)
@@ -38,23 +38,39 @@ defmodule Registro.UsersController do
     |> render("profile.html", changeset: changeset)
   end
 
-  def update(conn, %{"user" => user_params} = params) do
-    user = Repo.get(User, params["id"])
-         |> User.preload_datasheet
+  def update(conn, params) do
+    user = Repo.get(User, params["id"]) |> User.preload_datasheet
 
-    changeset = User.changeset(user, :update, user_params)
+    %{"user" => user_params} = params
+                             |> set_branch_id_from_branch_name
+                             |> set_status_if_creating_colaboration(user)
 
-    case Repo.update(changeset) do
-      {:ok, _user} ->
-        UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
-        conn
-        |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
-        |> redirect(to: users_path(conn, :index))
-      {:error, changeset} ->
-        branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
-        conn
-        |> assign(:history, UserAuditLogEntry.for(user))
-        |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
+    current_user = Coherence.current_user(conn)
+
+    forbidden = if current_user.datasheet.is_super_admin do
+                  #don't allow a super user to revoke his own permissions
+                  (user.id == current_user.id) && super_admin_changed(user_params, user)
+                else
+                  branch_updated(user_params, user) || super_admin_changed(user_params, user)
+                end
+
+    if forbidden do
+      Registro.Authorization.handle_unauthorized(conn)
+    else
+      changeset = User.changeset(user, :update, user_params)
+
+      case Repo.update(changeset) do
+        {:ok, _user} ->
+          UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
+          conn
+          |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
+          |> redirect(to: users_path(conn, :show, user))
+        {:error, changeset} ->
+          branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
+          conn
+          |> assign(:history, UserAuditLogEntry.for(user))
+          |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
+      end
     end
   end
 
@@ -92,19 +108,29 @@ defmodule Registro.UsersController do
   end
 
   def download_csv(conn, params) do
-    query = from u in User,
-              left_join: d in assoc(u, :datasheet),
-              left_join: b in assoc(d, :branch),
-              select: [d.name, u.email, d.role, d.status, b.name],
-              order_by: d.name
+    header = ["Nombre", "Email", "Filial", "Rol", "Estado"]
+
+    format = fn(%User{ email: email, datasheet: d }) ->
+      [
+        d.name,
+        email,
+        if(d.branch == nil, do: "", else: d.branch.name),
+        if(d.role == nil, do: "", else: Datasheet.role_label(d)),
+        Datasheet.status_label(d.status)
+      ]
+    end
+
+    query = from u in User.query_with_datasheet,
+      join: d in assoc(u, :datasheet),
+      order_by: d.name
 
     users = query
           |> apply_filters(params)
           |> restrict_to_visible_users(conn)
           |> Repo.all
-          |> Enum.map(&UsersController.format_csv_row/1)
+          |> Enum.map(format)
 
-    csv_content = [ ["Nombre", "Email", "Rol", "Estado", "Filial"] | users]
+    csv_content = [ header | users]
                 |> CSV.encode
                 |> Enum.to_list
                 |> to_string
@@ -151,13 +177,17 @@ defmodule Registro.UsersController do
 
   defp restrict_to_visible_users(query, conn) do
     user = conn.assigns[:current_user]
-    case user.datasheet.role do
-      "super_admin" ->
+    datasheet = user.datasheet
+
+    cond do
+      datasheet.is_super_admin ->
         query
-      "branch_admin"->
+      Datasheet.is_branch_admin?(datasheet) ->
+        administrated_branch_ids = Enum.map(datasheet.admin_branches, &(&1.id))
+
         from u in query,
-        join: d in Datasheet, on: d.id == u.datasheet_id,
-        where: d.branch_id == ^user.datasheet.branch_id
+        join: d in Datasheet, on: u.datasheet_id == d.id,
+        where: d.branch_id in ^administrated_branch_ids
     end
   end
 
@@ -169,22 +199,23 @@ defmodule Registro.UsersController do
     end
   end
 
-  def format_csv_row([name, email, role, status, branch_name]) do
-    [name, email, Role.label(role), nil_to_string(Datasheet.status_label(status)), nil_to_string(branch_name)]
+  def authorize_listing(_conn, current_user) do
+    datasheet = current_user.datasheet
+
+    datasheet.is_super_admin || Datasheet.is_branch_admin?(datasheet)
   end
 
+  def authorize_detail(conn, %User{datasheet: datasheet}) do
+    if Datasheet.is_admin?(datasheet) do
+      user_id = String.to_integer(conn.params["id"])
 
-  def authorize_update(conn, current_user) do
-    case current_user.datasheet.role do
-      "super_admin" ->
-        true
-      "branch_admin" ->
-        target_user = Repo.get User.query_with_datasheet, conn.params["id"]
-        target_branch_id = target_user.datasheet.branch_id
+      id_or_nil = (from u in User, where: u.id == ^user_id, select: 1)
+      |> restrict_to_visible_users(conn)
+      |> Repo.one
 
-        target_branch_id == current_user.datasheet.branch_id
-      _ ->
-        false
+      id_or_nil != nil
+    else
+      false
     end
   end
 
@@ -207,6 +238,63 @@ defmodule Registro.UsersController do
       end
     else
       :update
+    end
+  end
+
+  defp set_branch_id_from_branch_name(params) do
+    case params["branch_name"] do
+      nil ->
+        params
+      "" ->
+        params
+      branch_name ->
+        [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
+
+        update_in(params, ["user", "datasheet"], fn(dp) ->
+          Map.put(dp, "branch_id", branch_id)
+        end)
+    end
+  end
+
+  defp set_status_if_creating_colaboration(params, user) do
+    # if the user doesn't have a current colaboration in a branch
+    # and both brach_id and role are set, this means that a superadmin
+    # is assigning a user to a branch as a colaborator. the change is
+    # assumed to be approved.
+
+    %{"datasheet" => datasheet_params} = params["user"]
+
+    if !Datasheet.is_colaborator?(user.datasheet) do
+      case {datasheet_params["branch_id"], datasheet_params["role"]} do
+        {nil, _} ->
+          params
+        {_, nil} ->
+          params
+        _ ->
+          update_in(params, ["user", "datasheet"], fn(dp) ->
+            Map.put(dp, "status", "approved")
+          end)
+      end
+    else
+      params
+    end
+  end
+
+  def branch_updated(%{"datasheet" => datasheet_params}, target_user) do
+    case Map.fetch(datasheet_params, "branch_id") do
+      {:ok, new_branch_id} ->
+        new_branch_id != target_user.datasheet.branch_id
+      _ ->
+        false
+    end
+  end
+
+  def super_admin_changed(%{"datasheet" => datasheet_params}, target_user) do
+    case Map.fetch(datasheet_params, "is_super_admin") do
+      {:ok, new_value} ->
+        new_value != target_user.datasheet.is_super_admin
+      _ ->
+        false
     end
   end
 end

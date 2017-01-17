@@ -1,5 +1,4 @@
 <div>
-  <p>Hello <%= @name %>!<p>
   <p>
     You have been invited to create an Account. Use the link below to create
     an account.

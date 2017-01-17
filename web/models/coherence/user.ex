@@ -64,7 +64,7 @@ defmodule Registro.User do
   end
 
   def preload_datasheet(user) do
-    Repo.preload(user, [datasheet: [:branch]])
+    Repo.preload(user, [datasheet: [:branch, :admin_branches]])
   end
 
   def query_with_datasheet do
@@ -73,6 +73,6 @@ defmodule Registro.User do
 
   def query_with_datasheet(q) do
     import Ecto.Query
-    from u in q, preload: [datasheet: [:branch]]
+    from u in q, preload: [datasheet: [:branch, :admin_branches]]
   end
 end

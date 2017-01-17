@@ -71,6 +71,12 @@ h3 {
   font-weight: 700;
 }
 
+.autocomplete-content {
+  // make autocomplete appear as floating over the rest of the content
+  position: absolute;
+  width: 90%;
+}
+
 @import "_nav";
 @import "_landing";
 @import "_edit_forms";

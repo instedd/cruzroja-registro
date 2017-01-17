@@ -24,8 +24,8 @@ defmodule Seed do
     branch1 = Repo.get_by!(Branch, name: "Saavedra")
     branch2 = Repo.get_by!(Branch, name: "Mercedes")
 
-    branch1_admin_email = "#{String.downcase(branch1.name)}_admin@instedd.org"
-    branch2_admin_email = "#{String.downcase(branch2.name)}_admin@instedd.org"
+    branch1_admin_email = "amartinez@cruzroja.org.ar"
+    branch2_admin_email = "rmarquez@cruzroja.org.ar"
 
     users = [
       %{email: "admin@instedd.org",
@@ -37,32 +37,32 @@ defmodule Seed do
         }
        },
       %{email: branch1_admin_email,
-        password: "admin",
-        password_confirmation: "admin",
-        datasheet: %{ name: "#{branch1.name} admin" }
+        password: "amartinez",
+        password_confirmation: "amartinez",
+        datasheet: %{ name: "Agustín Martínez" }
       },
-      %{email: "volunteer1@example.com",
-        password: "volunteer1",
-        password_confirmation: "volunteer1",
+      %{email: "jperez@gmail.com",
+        password: "jperez",
+        password_confirmation: "jperez",
         datasheet: %{
-          name: "#{branch1.name} volunteer",
+          name: "Juan Pérez",
           role: "volunteer",
-          status: "at_start",
+          status: "approved",
           branch_id: branch1.id
         }
       },
       %{email: branch2_admin_email,
-        password: "admin",
-        password_confirmation: "admin",
-        datasheet: %{ name: "#{branch2.name} admin" }
+        password: "rmarquez",
+        password_confirmation: "rmarquez",
+        datasheet: %{ name: "Raquel Márquez" }
       },
-      %{email: "volunteer2@example.com",
-        password: "volunteer2",
-        password_confirmation: "volunteer2",
+      %{email: "msanchez@hotmail.com",
+        password: "msanchez",
+        password_confirmation: "msanchez",
         datasheet: %{
-          name: "#{branch2.name} volunteer",
+          name: "Maria Sánchez",
           role: "volunteer",
-          status: "at_start",
+          status: "approved",
           branch_id: branch2.id
         }
       }

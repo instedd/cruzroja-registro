@@ -20,7 +20,8 @@ defmodule Registro.Mixfile do
     [mod: {Registro, []},
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex,
-                    :coherence]]
+                    :coherence,
+                    :gen_smtp]]
   end
 
   # Specifies which paths to compile per environment.
@@ -40,7 +41,9 @@ defmodule Registro.Mixfile do
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
      {:coherence, "~> 0.3"},
-     {:csv, "~> 1.4.0"}]
+     {:csv, "~> 1.4.0"},
+     {:gen_smtp, "~> 0.11.0"}
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

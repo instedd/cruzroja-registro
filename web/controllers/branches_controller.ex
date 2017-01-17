@@ -159,7 +159,10 @@ defmodule Registro.BranchesController do
 
     invitation = Repo.insert!(invitation_cs)
 
-    Coherence.ControllerHelpers.send_user_email :invitation, invitation, Invitation.accept_url(invitation)
+    spawn fn ->
+      # TODO: use a mailing queue and provide a mechanism to resend failed invitations
+      Coherence.ControllerHelpers.send_user_email :invitation, invitation, Invitation.accept_url(invitation)
+    end
 
     invitation.datasheet
   end

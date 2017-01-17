@@ -52,7 +52,7 @@ defmodule Registro.Coherence.UnlockController do
       |> case do
         {:ok, _} ->
           if user_schema.locked?(user) do
-            send_user_email :unlock, user, url
+            Registro.ControllerHelpers.send_coherence_email :unlock, user, url
             conn
             |> put_flash(:info, "Unlock Instructions sent.")
             |> redirect_to(:unlock_create, params)

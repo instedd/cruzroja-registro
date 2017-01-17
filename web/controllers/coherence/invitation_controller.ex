@@ -17,7 +17,7 @@ defmodule Registro.Coherence.InvitationController do
   alias Coherence.ControllerHelpers, as: Helpers
   alias Registro.{Invitation, User, Repo, Datasheet}
   import Ecto.Changeset
-  import Registro.Coherence.ControllerHelpers
+  import Registro.ControllerHelpers
   require Logger
 
   plug Coherence.ValidateOption, :invitable
@@ -62,7 +62,7 @@ defmodule Registro.Coherence.InvitationController do
         cs = Invitation.generate_token(cs)
         case Config.repo.insert cs do
           {:ok, invitation} ->
-            send_user_email :invitation, invitation, Invitation.accept_url(invitation)
+            send_coherence_email :invitation, invitation, Invitation.accept_url(invitation)
             Registro.UserAuditLogEntry.add(invitation.datasheet_id, Coherence.current_user(conn), :invite_send)
 
             conn
@@ -159,7 +159,7 @@ defmodule Registro.Coherence.InvitationController do
         conn
         |> put_flash(:error, "No se pudo encontrar la invitación.")
       invitation ->
-        send_user_email :invitation, invitation,
+        send_coherence_email :invitation, invitation,
           router_helpers.invitation_url(conn, :edit, invitation.token)
         put_flash conn, :info, "Invitación enviada."
     end

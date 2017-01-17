@@ -13,7 +13,7 @@ defmodule Registro.Coherence.RegistrationController do
   use Coherence.Web, :controller
   require Logger
   alias Coherence.ControllerHelpers, as: Helpers
-  import Registro.Coherence.ControllerHelpers
+  import Registro.ControllerHelpers
   alias Registro.User
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a

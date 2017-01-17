@@ -60,7 +60,7 @@ defmodule Registro.Coherence.PasswordController do
           %{reset_password_token: token, reset_password_sent_at: dt})
         Config.repo.update! cs
 
-        send_user_email :password, user, url
+        Registro.ControllerHelpers.send_coherence_email :password, user, url
 
         conn
         |> put_flash(:info, "Reset email sent. Check your email for a reset link.")

@@ -52,4 +52,13 @@ defmodule Registro.Router do
     resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/perfil", UsersController, :profile
   end
+
+  # navigate to /dev/mailbox to see sent emails
+  if Mix.env == :dev do
+    scope "/dev" do
+      pipe_through [:browser]
+
+      forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
+    end
+  end
 end

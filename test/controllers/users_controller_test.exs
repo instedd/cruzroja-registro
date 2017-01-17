@@ -244,6 +244,22 @@ defmodule Registro.UsersControllerTest do
       assert admin.datasheet.is_super_admin
     end
 
+    test "a super_admin can edit his own fields", %{conn: conn} do
+      # bugfix: value for is_super_admin reaches the controller
+      # as the string "true" instead of the boolean value.
+      # this caused problems when checking if the flag changed.
+      setup_db
+      admin = get_user_by_email("admin@instedd.org")
+
+      {_conn, admin} = update_user(conn, admin, admin, user: %{ datasheet: %{
+                                                                  id: admin.datasheet.id,
+                                                                  name: "foo",
+                                                                  is_super_admin: "true" } })
+
+      assert admin.datasheet.is_super_admin
+      assert admin.datasheet.name == "foo"
+    end
+
     test "a branch admin cannot grant super_admin permission", %{conn: conn} do
       setup_db
 

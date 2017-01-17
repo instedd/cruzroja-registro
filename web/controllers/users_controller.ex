@@ -292,6 +292,12 @@ defmodule Registro.UsersController do
   def super_admin_changed(%{"datasheet" => datasheet_params}, target_user) do
     case Map.fetch(datasheet_params, "is_super_admin") do
       {:ok, new_value} ->
+        new_value = case new_value do
+                      "true" -> true
+                      "false" -> false
+                      _ -> new_value
+                    end
+
         new_value != target_user.datasheet.is_super_admin
       _ ->
         false

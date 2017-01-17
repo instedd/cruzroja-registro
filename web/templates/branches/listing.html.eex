@@ -4,6 +4,10 @@
       <tr>
         <th data-field="name">Nombre</th>
         <th data-field="address">Dirección</th>
+        <th data-field="phone_number">Teléfono</th>
+        <th data-field="cell_phone_number">Celular</th>
+        <th data-field="email">E-mail</th>
+        <th data-field="compound-authorities">Autoridades</th>
       </tr>
     </thead>
 
@@ -12,6 +16,17 @@
         <tr data-href="<%= branches_path(@conn, :show, b) %>">
           <td><%= b.name %></td>
           <td><%= b.address %></td>
+          <td><%= b.phone_number %></td>
+          <td><%= b.cell_phone_number %></td>
+          <td><%= b.email %></td>
+          <td>
+            <%= if b.president do %>
+              Presidente: <%= b.president %>
+            <% end %>
+            <%= if b.authorities do %>
+              Interventores: <%= b.authorities %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>

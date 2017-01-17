@@ -77,8 +77,8 @@ defmodule Seed do
   def insert_branches do
     File.stream!("priv/data/branches.csv")
     |> Enum.map(&parse_branch_line/1)
-    |> Enum.each(fn [branch_name, address] ->
-      Branch.changeset(%Branch{}, %{name: branch_name, address: address}) |> Repo.insert!
+    |> Enum.each(fn [branch_name, address, province, president, authorities, phone, cell, email] ->
+      Branch.changeset(%Branch{}, %{name: titleize(branch_name), address: titleize(address <> " - " <> province), president: titleize(president), authorities: titleize(authorities), phone_number: phone, cell_phone_number: cell, email: email}) |> Repo.insert!
     end)
   end
 
@@ -102,6 +102,13 @@ defmodule Seed do
     user.datasheet
     |> Datasheet.make_admin_changeset([branch])
     |> Repo.update!
+  end
+
+  def titleize(string) do
+    map = String.split(string," ")
+    map
+    |> Enum.map(&String.capitalize/1)
+    |> Enum.join(" ")
   end
 end
 

@@ -26,5 +26,45 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :phone_number, "Teléfono", class: "control-label active" %>
+      <%= text_input f, :phone_number, class: "form-control" %>
+      <%= error_tag f, :phone_number %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :cell_phone_number, "Celular", class: "control-label active" %>
+      <%= text_input f, :cell_phone_number, class: "form-control" %>
+      <%= error_tag f, :cell_phone_number %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :email, "Email", class: "control-label active" %>
+      <%= text_input f, :email, class: "form-control" %>
+      <%= error_tag f, :email %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :president, "Presidente", class: "control-label active" %>
+      <%= text_input f, :president, class: "form-control" %>
+      <%= error_tag f, :president %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="input-field col s12">
+      <%= label f, :authorities, "Interventores", class: "control-label active" %>
+      <%= text_input f, :authorities, class: "form-control" %>
+      <%= error_tag f, :authorities %>
+    </div>
+  </div>
+
   <%= submit "Actualizar", class: "btn btn-large btn-primary" %>
 <% end %>

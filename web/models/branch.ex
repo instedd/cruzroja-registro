@@ -6,18 +6,22 @@ defmodule Registro.Branch do
   schema "branches" do
     field :name, :string
     field :address, :string
+    field :phone_number, :string
+    field :cell_phone_number, :string
+    field :email, :string
+    field :president, :string
+    field :authorities, :string
+    timestamps
 
     many_to_many :admins, Registro.Datasheet,
       join_through: "branches_admins",
       on_replace: :delete # allow to delete admins by updating the branch
-
-    timestamps
   end
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :address])
-    |> validate_required([:name, :address])
+    |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities])
+    |> validate_required([:name])
     |> unique_constraint(:name)
   end
 

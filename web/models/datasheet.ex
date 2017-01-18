@@ -7,7 +7,13 @@ defmodule Registro.Datasheet do
   alias Registro.Invitation
 
   schema "datasheets" do
-    field :name, :string
+    field :first_name, :string
+    field :last_name, :string
+    field :legal_id, :integer
+    field :birth_date, :date
+    field :occupation, :string
+    field :address, :string
+
     field :status, :string
     field :role, :string
     field :is_super_admin, :boolean
@@ -18,6 +24,8 @@ defmodule Registro.Datasheet do
     # the branch to which the person acts as a volunteer or associate
     belongs_to :branch, Registro.Branch
 
+    belongs_to :country, Registro.Country
+
     # the branches in which the person acts as an administrator
     many_to_many :admin_branches, Registro.Branch, join_through: "branches_admins"
   end
@@ -25,9 +33,19 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :status, :branch_id, :role, :is_super_admin])
+    |> cast(params, [:first_name,
+                    :last_name,
+                    :legal_id,
+                    :birth_date,
+                    :occupation,
+                    :address,
+                    :status,
+                    :branch_id,
+                    :country_id,
+                    :role,
+                    :is_super_admin])
     |> cast_assoc(:admin_branches, required: false)
-    |> validate_required([:name])
+    |> validate_required([:first_name])
     |> validate_colaboration
   end
 

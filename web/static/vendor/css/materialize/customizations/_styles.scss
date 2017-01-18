@@ -8,9 +8,17 @@
  * This snippet applies the style of active-inputs to the ::after part of the
    label, which is where the error message is displayed.
  */
-input[type="password"].invalid + label {
-  &:not(.active)::after {
-    font-size: 0.8rem !important;
-    transform: translateY(-140%) !important;
+input[type="password"].invalid,  // captures password fields, which are blanked before rendering errors
+input.invalid:invalid {          // captures empty input fields marked with a required attribute
+  & + label {
+    &::after {
+      // prevent animation when element is focused (since the label is already where we want it)
+      transition: inherit;
+    }
+
+    &:not(.active)::after {
+      font-size: 0.8rem !important;
+      transform: translateY(-140%) !important;
+    }
   }
 }

@@ -4,9 +4,9 @@
 
       <%= inputs_for f, :datasheet, fn fd -> %>
       <div class="form-group">
-        <%= label fd, :name, "Nombre", class: "control-label" %>
-        <%= text_input fd, :name, class: "form-control", required: "", disabled: "" %>
-        <%= error_tag fd, :name %>
+        <%= label fd, :first_name, "Nombre", class: "control-label" %>
+        <%= text_input fd, :first_name, class: "form-control", required: "", disabled: "" %>
+        <%= error_tag fd, :first_name %>
       </div>
       <% end %>
 

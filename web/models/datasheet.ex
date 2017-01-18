@@ -18,6 +18,8 @@ defmodule Registro.Datasheet do
     field :role, :string
     field :is_super_admin, :boolean
 
+    field :filled, :boolean
+
     has_one :user, Registro.User
     has_one :invitation, Registro.Invitation
 
@@ -30,22 +32,20 @@ defmodule Registro.Datasheet do
     many_to_many :admin_branches, Registro.Branch, join_through: "branches_admins"
   end
 
+  @required_fields [ :first_name,
+                     :last_name,
+                     :legal_id,
+                     :country_id,
+                     :birth_date,
+                     :occupation,
+                     :address ]
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:first_name,
-                    :last_name,
-                    :legal_id,
-                    :birth_date,
-                    :occupation,
-                    :address,
-                    :status,
-                    :branch_id,
-                    :country_id,
-                    :role,
-                    :is_super_admin])
+    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :is_super_admin])
     |> cast_assoc(:admin_branches, required: false)
-    |> validate_required([:first_name])
+    |> put_change(:filled, true)
+    |> validate_required(@required_fields)
     |> validate_colaboration
   end
 
@@ -54,6 +54,15 @@ defmodule Registro.Datasheet do
     |> Registro.Repo.preload(:admin_branches)
     |> Ecto.Changeset.change
     |> Ecto.Changeset.put_assoc(:admin_branches, branches)
+  end
+
+  @doc """
+  Create a new datasheet that is not filled.
+  This means it is allowed to have all fields empty until a user completes it.
+  """
+  def new_empty_changeset() do
+    %Datasheet{ filled: false }
+    |> Ecto.Changeset.change
   end
 
   def pending_approval?(datasheet) do
@@ -165,5 +174,9 @@ defmodule Registro.Datasheet do
 
   defp valid_status?(status) do
     Enum.member? ["at_start", "approved", "rejected"], status
+  end
+
+  def required_fields do
+    @required_fields
   end
 end

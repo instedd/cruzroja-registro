@@ -15,7 +15,7 @@
       <tbody>
         <%= for u <- @users do %>
           <tr data-href="<%= users_path(@conn, :show, u) %>">
-            <td><%= u.datasheet.name %></td>
+            <td><%= "#{u.datasheet.first_name} #{u.datasheet.last_name}" %></td>
             <td><%= u.email %></td>
             <td><%= Registro.Datasheet.role_label(u.datasheet) %></td>
             <td><%= Registro.Datasheet.status_label(u.datasheet.status) %></td>

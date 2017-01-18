@@ -4,6 +4,12 @@ defmodule Registro.HomeControllerTest do
   import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
 
+  setup(context) do
+    create_country("Argentina")
+
+    {:ok, context}
+  end
+
   test "redirects non-authenticated requests to login page", %{conn: conn} do
     conn = get(conn, "/")
 
@@ -12,7 +18,7 @@ defmodule Registro.HomeControllerTest do
 
   test "redirects colaborators to their profile", %{conn: conn} do
     branch = create_branch(name: "Branch")
-    volunteer = create_user(email: "volunteer@example.com", role: "volunteer", branch_id: branch.id)
+    volunteer = create_volunteer("volunteer@example.com", branch.id)
 
     conn = request_home_as(conn, volunteer)
 
@@ -21,7 +27,7 @@ defmodule Registro.HomeControllerTest do
 
   test "redirects branch_admin to users listing", %{conn: conn} do
     branch = create_branch(name: "Branch")
-    branch_admin = create_branch_admin(email: "admin@instedd.org", branch: branch)
+    branch_admin = create_branch_admin("admin@instedd.org", branch)
 
     conn = request_home_as(conn, branch_admin)
 
@@ -29,7 +35,7 @@ defmodule Registro.HomeControllerTest do
   end
 
   test "redirects super_admin to usersl listing", %{conn: conn} do
-    super_admin = create_super_admin(email: "admin@instedd.org")
+    super_admin = create_super_admin("admin@instedd.org")
     conn = request_home_as(conn, super_admin)
 
     assert redirected_to(conn) == "/usuarios"

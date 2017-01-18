@@ -4,10 +4,31 @@ defmodule Registro.BranchesControllerTest do
   import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
 
-  alias Registro.Branch
-  alias Registro.User
-  alias Registro.Invitation
-  alias Registro.Datasheet
+  alias Registro.{
+    Branch,
+    User,
+    Invitation,
+    Datasheet,
+  }
+
+  setup(context) do
+    some_country = create_country("Argentina")
+
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+
+    create_volunteer("mary@example.com", branch1.id)
+
+    super_admin = create_super_admin("admin@instedd.org")
+
+    create_branch_admin("branch_admin1@instedd.org", branch1, country_id: some_country.id)
+    create_branch_admin("branch_admin2@instedd.org", branch1, country_id: some_country.id)
+
+    {:ok, Map.merge(context, %{ super_admin: super_admin,
+                                branch1: branch1,
+                                branch2: branch2,
+                              })}
+  end
 
   describe "listing" do
     test "verifies that user is logged in", %{conn: conn} do
@@ -16,8 +37,6 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "does not allow non-admin users", %{conn: conn} do
-      setup_db
-
       conn = conn
       |> log_in("mary@example.com")
       |> get("/filiales")
@@ -25,11 +44,9 @@ defmodule Registro.BranchesControllerTest do
       assert_unauthorized(conn)
     end
 
-    test "displays all branches to super_admin user", %{conn: conn} do
-      setup_db
-
+    test "displays all branches to super_admin user", %{conn: conn, super_admin: super_admin} do
       conn = conn
-      |> log_in("admin@instedd.org")
+      |> log_in(super_admin)
       |> get("/filiales")
 
       assert html_response(conn, 200)
@@ -37,8 +54,6 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "branch admin can only see his administrated branches", %{conn: conn} do
-      setup_db
-
       conn = conn
       |> log_in("branch_admin1@instedd.org")
       |> get("/filiales")
@@ -52,11 +67,7 @@ defmodule Registro.BranchesControllerTest do
     end
   end
 
-  test "a branch admin cannot access a branch he doesn't administrate", %{conn: conn} do
-    setup_db
-
-    branch2 = Repo.get_by!(Branch, name: "Branch 2")
-
+  test "a branch admin cannot access a branch he doesn't administrate", %{conn: conn, branch2: branch2} do
     conn = conn
          |> log_in("branch_admin1@instedd.org")
          |> get(branches_path(conn, :show, branch2))
@@ -65,11 +76,7 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "update" do
-    test "allows to update a branch's name and address", %{conn: conn} do
-      setup_db
-
-      branch = Repo.get_by!(Branch, name: "Branch 1")
-
+    test "allows to update a branch's name and address", %{conn: conn, branch1: branch} do
       params = %{ admin_emails: "branch_admin1@instedd.org|branch_admin2@instedd.org",
                   branch: %{
                     name: "Updated name",
@@ -86,8 +93,6 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "allows to add branch admins", %{conn: conn} do
-      setup_db
-
       desired_admins = ["branch_admin1@instedd.org",
                         "branch_admin2@instedd.org",
                         "mary@example.com"]
@@ -100,8 +105,6 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "allows to remove other admins", %{conn: conn} do
-      setup_db
-
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin1@instedd.org"])
 
       assert updated_admins == [{:added, "branch_admin1@instedd.org"}]
@@ -112,27 +115,19 @@ defmodule Registro.BranchesControllerTest do
 
     test "allows to remove all admins", %{conn: conn} do
       # test encoding/decoding of empty list
-      setup_db
-
       {_conn, updated_admins} = admins_update(conn, "admin@instedd.org", "Branch 1", [])
 
       assert updated_admins == []
     end
 
     test "fails if user is trying to remove himself as branch admin", %{conn: conn} do
-      setup_db
-
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin2@instedd.org"])
 
       assert updated_admins == [{:added, "branch_admin1@instedd.org"},
                                 {:added, "branch_admin2@instedd.org"}]
     end
 
-    test "sends an invitation to unknown emails", %{conn: conn} do
-      setup_db
-
-      branch = Repo.get_by!(Branch, name: "Branch 1")
-
+    test "sends an invitation to unknown emails", %{conn: conn, branch1: branch} do
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin1@instedd.org",
                                                                                               "branch_admin2@instedd.org",
                                                                                               "unknown@example.com"])
@@ -172,17 +167,4 @@ defmodule Registro.BranchesControllerTest do
       {conn, Enum.sort(updated_admins)}
     end
   end
-
-  def setup_db do
-    branch1 = create_branch(name: "Branch 1")
-    _branch2 = create_branch(name: "Branch 2")
-
-    create_user(email: "mary@example.com", role: "volunteer", branch_id: branch1.id)
-
-    create_super_admin(email: "admin@instedd.org")
-
-    create_branch_admin(email: "branch_admin1@instedd.org", branch: branch1)
-    create_branch_admin(email: "branch_admin2@instedd.org", branch: branch1)
-  end
-
 end

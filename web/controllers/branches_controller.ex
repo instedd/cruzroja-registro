@@ -136,18 +136,8 @@ defmodule Registro.BranchesController do
   end
 
   def invite!(email) do
-    # TODO: We are currently validating that datasheets have a valid name, but when sending invitations
-    # for branch admins we need to have a datasheet to grant permissions to, even if we only have the email.
-    invitation_params = %{ "name" => "Completar",
-                           "email" => email,
-                           "datasheet" => %{
-                             "name" => "Completar"
-                           }}
-
-    invitation_cs = Invitation.changeset(%Invitation{}, invitation_params)
-    |> Invitation.generate_token
-
-    invitation = Repo.insert!(invitation_cs)
+    invitation = Invitation.new_admin_changeset(email)
+               |> Repo.insert!
 
     Registro.ControllerHelpers.send_coherence_email :invitation, invitation, Invitation.accept_url(invitation)
 

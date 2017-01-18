@@ -9,7 +9,7 @@
 <div id="profile">
   <div class="row">
     <div class="col">
-      <h2 class="name"><%= @changeset.data.datasheet.name %></h2>
+      <h2 class="name"><%= "#{@changeset.data.datasheet.first_name} #{@changeset.data.datasheet.last_name}" %></h2>
     </div>
   </div>
   <div class="row">

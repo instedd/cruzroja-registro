@@ -6,8 +6,14 @@ defmodule Registro.InvitationsControllerTest do
 
   alias Registro.{Invitation, Datasheet, User}
 
+  setup(context) do
+    create_country("Argentina")
+
+    {:ok, context}
+  end
+
   test "renders invitation form", %{conn: conn} do
-    admin = create_super_admin(email: "admin@instedd.org")
+    admin = create_super_admin("admin@instedd.org")
 
     conn = conn
     |> log_in(admin)
@@ -19,7 +25,7 @@ defmodule Registro.InvitationsControllerTest do
   describe "sending invitations" do
     test "invitation creation with associated datasheet", %{conn: conn} do
       branch = create_branch(name: "Branch")
-      admin = create_super_admin(email: "admin@instedd.org")
+      admin = create_super_admin("admin@instedd.org")
 
       params = invitation_params(branch.id)
 
@@ -34,7 +40,7 @@ defmodule Registro.InvitationsControllerTest do
 
     test "branch admin can send invitations for the same branch", %{conn: conn} do
       branch = create_branch(name: "Branch")
-      branch_admin = create_branch_admin(email: "branch1@instedd.org", branch: branch)
+      branch_admin = create_branch_admin("branch1@instedd.org", branch)
 
       params = invitation_params(branch.id)
 
@@ -51,7 +57,7 @@ defmodule Registro.InvitationsControllerTest do
       branch1 = create_branch(name: "Branch 1")
       branch2 = create_branch(name: "Branch 2")
 
-      branch1_admin = create_branch_admin(email: "branch1@instedd.org", branch: branch1)
+      branch1_admin = create_branch_admin("branch1@instedd.org", branch1)
 
       params = invitation_params(branch2.id)
 
@@ -72,6 +78,13 @@ defmodule Registro.InvitationsControllerTest do
         %{ "name" => "John",
            "email" => "john@example.com",
            "datasheet" => %{
+             "first_name" => "John",
+             "last_name" => "Doe",
+             "legal_id" => 1,
+             "birth_date" => ~D[1980-01-01],
+             "occupation" => "...",
+             "address" => "...",
+             "country_id" => some_country!.id,
              "role" => "volunteer",
              "branch_id" => "#{branch_id}"
            }
@@ -83,7 +96,6 @@ defmodule Registro.InvitationsControllerTest do
       %Invitation{datasheet: datasheet} = Repo.get_by!(Invitation, email: params["invitation"]["email"])
       |> Repo.preload([:datasheet])
 
-      assert datasheet.name == params["invitation"]["name"]
       assert datasheet.status == "at_start"
       assert datasheet.role == "volunteer"
       assert datasheet.branch_id == String.to_integer(params["invitation"]["datasheet"]["branch_id"])
@@ -127,7 +139,13 @@ defmodule Registro.InvitationsControllerTest do
 
       branch = create_branch(name: "Branch")
 
-      datasheet_params = %{ "name" => "John",
+      datasheet_params = %{ "first_name" => "John",
+                            "last_name" => "Doe",
+                            "legal_id" => 1,
+                            "birth_date" => ~D[1980-01-01],
+                            "occupation" => "...",
+                            "address" => "...",
+                            "country_id" => some_country!.id,
                             "status" => "at_start",
                             "role" => "volunteer",
                             "branch_id" => branch.id }
@@ -152,7 +170,7 @@ defmodule Registro.InvitationsControllerTest do
       user = Repo.get_by!(User, email: email)
            |> Repo.preload([:datasheet])
 
-      assert user.datasheet.name == "John"
+      assert user.datasheet.first_name == "John"
     end
   end
 

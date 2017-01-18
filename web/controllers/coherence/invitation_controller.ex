@@ -172,7 +172,7 @@ defmodule Registro.Coherence.InvitationController do
   end
 
   def add_default_datasheet_fields(invitation_params) do
-    defaults = %{ "name" => invitation_params["name"], "status" => "at_start" }
+    defaults = %{ "status" => "at_start" }
 
     invitation_params
     |> update_in(["datasheet"], fn(dp) -> Dict.merge(dp, defaults) end)

@@ -209,11 +209,9 @@ defmodule Registro.UsersController do
     if Datasheet.is_admin?(datasheet) do
       user_id = String.to_integer(conn.params["id"])
 
-      id_or_nil = (from u in User, where: u.id == ^user_id, select: 1)
+      (from u in User, where: u.id == ^user_id)
       |> restrict_to_visible_users(conn)
-      |> Repo.one
-
-      id_or_nil != nil
+      |> Repo.exists?
     else
       false
     end

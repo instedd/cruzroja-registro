@@ -41,5 +41,6 @@
 
     <%= toast_flash_message(@conn, :info) %>
     <%= toast_flash_message(@conn, :error) %>
+    <%= global_toast %>
   </body>
 </html>

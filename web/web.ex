@@ -52,6 +52,7 @@ defmodule Registro.Web do
       import Registro.Router.Helpers
       import Registro.ErrorHelpers
       import Registro.Gettext
+      import Registro.ViewHelpers
     end
   end
 

@@ -1,0 +1,24 @@
+/*
+ * Materialize applies an offset to empty non-focused elements' labels.
+ *
+ * Error labels for invalid fields look fine when displaying an error for a
+   non-empty field, but password fields are always blanked when displaying error
+   pages, which causes the offset to be applied to the error message.
+ *
+ * This snippet applies the style of active-inputs to the ::after part of the
+   label, which is where the error message is displayed.
+ */
+input[type="password"].invalid,  // captures password fields, which are blanked before rendering errors
+input.invalid:invalid {          // captures empty input fields marked with a required attribute
+  & + label {
+    &::after {
+      // prevent animation when element is focused (since the label is already where we want it)
+      transition: inherit;
+    }
+
+    &:not(.active)::after {
+      font-size: 0.8rem !important;
+      transform: translateY(-140%) !important;
+    }
+  }
+}

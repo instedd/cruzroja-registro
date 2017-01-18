@@ -2,6 +2,10 @@
 <% datasheet = @changeset.data.datasheet %>
 <% pending_approval = Registro.Datasheet.pending_approval?(datasheet) %>
 
+<%= if @changeset.action do %>
+  <%= set_generic_error_toast %>
+<% end %>
+
 <div id="profile">
   <div class="row">
     <div class="col">
@@ -21,18 +25,16 @@
         <%= form_for @changeset, users_path(@conn, :update, @user), fn f -> %>
           <div class="row">
             <div class="input-field col s12">
-              <%= label f, :email, class: "control-label" %>
-              <%= text_input f, :email, class: "form-control", required: "" %>
-              <%= error_tag f, :email %>
+              <%= validated_input f, :email, class: "form-control", required: "" %>
+              <%= validated_label f, :email, [ required: true ], class: "control-label" %>
             </div>
           </div>
 
           <%= inputs_for f, :datasheet, fn fd -> %>
             <div class="row">
               <div class="input-field col s12">
-                <%= label fd, :name, "Nombre", class: "control-label" %>
-                <%= text_input fd, :name, class: "form-control", required: "" %>
-                <%= error_tag fd, :name %>
+                <%= validated_input fd, :name, class: "form-control", required: "" %>
+                <%= validated_label fd, :name, [ text: "Nombre", required: true ], class: "control-label" %>
               </div>
             </div>
 

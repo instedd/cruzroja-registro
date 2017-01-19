@@ -9,7 +9,7 @@
 <div id="profile">
   <div class="row">
     <div class="col">
-      <h2 class="name"><%= "#{@changeset.data.datasheet.first_name} #{@changeset.data.datasheet.last_name}" %></h2>
+      <h2 class="name"><%= Registro.Datasheet.full_name(@changeset.data.datasheet) %></h2>
     </div>
   </div>
   <div class="row">
@@ -33,8 +33,15 @@
           <%= inputs_for f, :datasheet, fn fd -> %>
             <div class="row">
               <div class="input-field col s12">
-                <%= validated_input fd, :name, class: "form-control", required: "" %>
-                <%= validated_label fd, :name, [ text: "Nombre", required: true ], class: "control-label" %>
+                <%= validated_input fd, :first_name, class: "form-control", required: "" %>
+                <%= validated_label fd, :first_name, [ text: "Nombre", required: true ], class: "control-label" %>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="input-field col s12">
+                <%= validated_input fd, :last_name, class: "form-control", required: "" %>
+                <%= validated_label fd, :last_name, [ text: "Nombre", required: true ], class: "control-label" %>
               </div>
             </div>
 

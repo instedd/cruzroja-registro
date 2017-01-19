@@ -185,4 +185,8 @@ defmodule Registro.Datasheet do
   def legal_id_kind(datasheet) do
     LegalIdKind.for_id(datasheet.legal_id_kind)
   end
+
+  def full_name(datasheet) do
+    "#{datasheet.first_name} #{datasheet.last_name}"
+  end
 end

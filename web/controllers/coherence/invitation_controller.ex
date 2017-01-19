@@ -37,7 +37,10 @@ defmodule Registro.Coherence.InvitationController do
   Render the new invitation form.
   """
   def new(conn, _params) do
-    changeset = Invitation.changeset(%Invitation{})
+    default_country = Repo.get_by(Country, name: "Argentina")
+
+    changeset = Invitation.changeset(%Invitation{}, %{datasheet: %{country_id: default_country.id}})
+
     conn
     |> load_invitation_form_data
     |> render("new.html", changeset: changeset)

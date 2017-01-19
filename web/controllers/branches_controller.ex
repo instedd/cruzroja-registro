@@ -57,24 +57,10 @@ defmodule Registro.BranchesController do
 
   def update(conn, %{"branch" => branch_params, "admin_emails" => encoded_emails} = params) do
     branch = Repo.one!(from b in Branch, where: b.id == ^params["id"], preload: [admins: :user])
-
     emails = String.split(encoded_emails, "|")
            |> Enum.filter(&(String.match?(&1, ~r/@/)))
 
-    preexisting_datasheets = Repo.all(from d in Datasheet,
-      left_join: u in assoc(d, :user),
-      left_join: i in assoc(d, :invitation),
-      where: (u.email in ^emails) or (i.email in ^emails),
-      preload: [:user, :invitation]
-    )
-
-    preexisting_emails = preexisting_datasheets
-                       |> Enum.map(&Datasheet.email/1)
-
-    new_datasheets = emails
-                    |> Enum.filter(fn(email) -> !Enum.member?(preexisting_emails, email) end)
-                    |> Enum.map(&BranchesController.invite!/1)
-
+    [preexisting_datasheets, new_datasheets] = existing_and_new_from_emails(emails)
     admin_datasheets = preexisting_datasheets ++ new_datasheets
 
     changeset = branch
@@ -84,14 +70,7 @@ defmodule Registro.BranchesController do
 
     case Repo.update(changeset) do
       {:ok, _branch} ->
-        msg = case new_datasheets do
-                [] ->
-                  "Los cambios en la filial fueron efectuados."
-                [d] ->
-                  "Se envió una invitación a #{Datasheet.email(d)} para ser administrador de la filial."
-                [_|_] ->
-                  "Se enviaron #{Enum.count(new_datasheets)} invitaciones para los nuevos administradores de la filial."
-              end
+        msg = msg_for_admin_invites(new_datasheets)
         conn
         |> put_flash(:info, msg)
         |> redirect(to: branches_path(conn, :show, branch))
@@ -108,15 +87,26 @@ defmodule Registro.BranchesController do
     |> render("new.html", changeset: changeset)
   end
 
-  def create(conn, %{"branch" => branch_params} = _params) do
+  def create(conn, %{"branch" => branch_params, "admin_emails" => encoded_emails} = params) do
+    emails = String.split(encoded_emails, "|")
+           |> Enum.filter(&(String.match?(&1, ~r/@/)))
+
+    [preexisting_datasheets, new_datasheets] = existing_and_new_from_emails(emails)
+    admin_datasheets = preexisting_datasheets ++ new_datasheets
+
     changeset = Branch.changeset(%Branch{}, branch_params)
+              |> Branch.update_admins(admin_datasheets)
+              |> validate_admin_not_removing_himself(Coherence.current_user(conn))
+
     case Repo.insert(changeset) do
       {:ok, _branch} ->
+        msg = msg_for_admin_invites(new_datasheets)
         conn
-        |> put_flash(:info, "Nueva filial agregada")
+        |> put_flash(:info, msg)
         |> redirect(to: branches_path(conn, :index))
       {:error, changeset} ->
-        render(conn, "new.html", changeset: changeset)
+        conn
+        |> render("new.html", changeset: changeset, admin_emails: emails)
     end
   end
 
@@ -162,5 +152,34 @@ defmodule Registro.BranchesController do
     Registro.ControllerHelpers.send_coherence_email :invitation, invitation, Invitation.accept_url(invitation)
 
     invitation.datasheet
+  end
+
+  defp existing_and_new_from_emails(emails) do
+    preexisting_datasheets = Repo.all(from d in Datasheet,
+      left_join: u in assoc(d, :user),
+      left_join: i in assoc(d, :invitation),
+      where: (u.email in ^emails) or (i.email in ^emails),
+      preload: [:user, :invitation]
+    )
+
+    preexisting_emails = preexisting_datasheets
+                       |> Enum.map(&Datasheet.email/1)
+
+    new_datasheets = emails
+                    |> Enum.filter(fn(email) -> !Enum.member?(preexisting_emails, email) end)
+                    |> Enum.map(&BranchesController.invite!/1)
+
+    [preexisting_datasheets,new_datasheets]
+  end
+
+  defp msg_for_admin_invites(new_datasheets) do
+    case new_datasheets do
+      [] ->
+        "Los cambios en la filial fueron efectuados."
+      [d] ->
+        "Se envió una invitación a #{Datasheet.email(d)} para ser administrador de la filial."
+      [_|_] ->
+        "Se enviaron #{Enum.count(new_datasheets)} invitaciones para los nuevos administradores de la filial."
+    end
   end
 end

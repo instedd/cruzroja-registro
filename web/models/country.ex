@@ -11,4 +11,8 @@ defmodule Registro.Country do
     |> validate_required([:name])
     |> unique_constraint(:name)
   end
+
+  def all do
+    Registro.Repo.all(__MODULE__)
+  end
 end

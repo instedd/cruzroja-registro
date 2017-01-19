@@ -3,46 +3,50 @@
     <%= set_generic_error_toast %>
   <% end %>
 
-  <%= inputs_for f, :datasheet, fn fd -> %>
-    <div class="row">
-      <div class="input-field col s12">
-        <%= validated_input fd, :name, class: "form-control", required: "", autofocus: "" %>
-        <%= validated_label fd, :name, [text: "Nombre", required: true] %>
-      </div>
-    </div>
-  <% end %>
-
-  <div class="row">
-    <div class="input-field col s12">
-      <%= validated_input f, :email, class: "form-control", required: "" %>
-      <%= validated_label f, :email, [text: "Email", required: true] %>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="input-field col s12">
-      <%= validated_password_input f, :password, [class: "form-control"] ++ @required %>
-      <%= validated_label f, :password, [text: "Contraseña"], [] %>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="input-field col s12">
-      <%= validated_password_input f, :password_confirmation, [class: "form-control"] ++ @required %>
-      <%= validated_label f, :password_confirmation, [text: "Confirmación de contraseña"], [] %>
-    </div>
-  </div>
+  <%= form_rows [ [ validated_field(f, :email, text: "Email", autofocus: true, required: true)
+                  ],
+                  [ validated_password_input(f, :password, [class: "form-control"] ++ @required),
+                    validated_label(f, :password, [text: "Contraseña"], [])
+                  ],
+                  [ validated_password_input(f, :password_confirmation, [class: "form-control"] ++ @required),
+                    validated_label(f, :password_confirmation, [text: "Confirmación de contraseña"], [])
+                  ]
+  ] %>
 
   <%= inputs_for f, :datasheet, fn fd -> %>
-    <div class="row">
-      <div class="input-field col s12">
-        <%= select fd, :branch_id, @conn.assigns[:branches], class: "form-control", required: "" %>
-        <%= label fd, :branch_id, "Filial" %>
-      </div>
-    </div>
 
+  <%= form_rows [
+    [ validated_field(fd, :first_name, text: "Nombre", required: true)
+    ],
+
+    [ validated_field(fd, :last_name, text: "Apellido", required: true)
+    ],
+
+    [ label(fd, :birth_date, "Fecha de nacimiento"),
+      date_picker(fd, :birth_date)
+    ],
+
+    [ select(fd, :country_id, @conn.assigns[:countries], class: "form-control", required: ""),
+      label(fd, :country_id, "Nacionalidad")
+    ],
+
+    [ validated_field(fd, :legal_id, text: "DNI", required: true)
+    ],
+
+    [ validated_field(fd, :address, text: "Domicilio", required: true)
+    ],
+
+    [ validated_field(fd, :occupation, text: "Ocupación", required: true)
+    ],
+
+    [ select(fd, :branch_id, @conn.assigns[:branches], class: "form-control", required: ""),
+      label(fd, :branch_id, "Filial")
+    ]
+  ] %>
+
+    <br/>
     <div class="row">
-      <div class="input-field col s12">
+      <div class="col s12">
         Me quiero anotar como:
         <p>
           <%= radio_button fd, :role, "volunteer", checked: "checked", id: "registration_datasheet_volunteer", class: "with-gap" %>
@@ -56,8 +60,10 @@
     </div>
   <% end %>
 
-  <div class="form-group actions">
-    <%= submit "Aceptar", class: "btn btn-primary" %>
-    <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+  <div class="row">
+    <div class="form-group actions right">
+      <%= submit "Aceptar", class: "btn btn-primary" %>
+      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+    </div>
   </div>
 <% end %>

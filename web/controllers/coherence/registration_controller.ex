@@ -14,7 +14,8 @@ defmodule Registro.Coherence.RegistrationController do
   require Logger
   alias Coherence.ControllerHelpers, as: Helpers
   import Registro.ControllerHelpers
-  alias Registro.User
+
+  alias Registro.{Branch,Country, User, Repo}
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
@@ -34,7 +35,9 @@ defmodule Registro.Coherence.RegistrationController do
   Render the new user form.
   """
   def new(conn, _params) do
-    cs = User.changeset(:create_with_datasheet, %{})
+    default_country = Repo.get_by(Country, name: "Argentina")
+
+    cs = User.changeset(:create_with_datasheet, %{ datasheet: %{country_id: default_country.id} })
 
     conn
     |> load_registration_form_data
@@ -80,6 +83,7 @@ defmodule Registro.Coherence.RegistrationController do
 
   defp load_registration_form_data(conn) do
     conn
-    |> assign(:branches, Registro.Branch.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:branches, Branch.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
   end
 end

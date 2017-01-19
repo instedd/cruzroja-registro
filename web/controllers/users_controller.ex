@@ -191,7 +191,7 @@ defmodule Registro.UsersController do
     name = "%" <> param <> "%"
     from u in query,
       join: d in Datasheet, on: u.datasheet_id == d.id,
-      where: ilike(d.first_kname, ^name) or ilike(u.email, ^name)
+      where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
   defp restrict_to_visible_users(query, conn) do

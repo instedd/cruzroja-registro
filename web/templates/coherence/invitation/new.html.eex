@@ -2,35 +2,49 @@
   <h5>Invitación para crear cuenta</h5>
 
   <%= form_for @changeset, invitation_path(@conn, :create), [as: :invitation], fn f  -> %>
+  <%= inputs_for f, :datasheet, fn fd -> %>
     <%= if @changeset.action do %>
       <%= set_generic_error_toast %>
     <% end %>
 
-    <div class="row">
-      <div class="col s12 input-field">
-        <%= text_input f, :name, class: "form-control", required: "", autofocus: "" %>
-        <%= required_label f, :name, "Nombre", class: "control-label" %>
-        <%= error_tag f, :name %>
-      </div>
-    </div>
+    <%= form_rows [
+      [ validated_field(f, :email, required: true, autofocus: true)
+      ],
 
-    <div class="row">
-      <div class="col s12 input-field">
-        <%= text_input f, :email, class: "form-control", required: "" %>
-        <%= required_label f, :email, class: "control-label" %>
-        <%= error_tag f, :email %>
-      </div>
-    </div>
+      [ validated_field(fd, :first_name, text: "Nombre", required: true)
+      ],
 
-    <%= inputs_for f, :datasheet, fn fd -> %>
+      [ validated_field(fd, :last_name, text: "Apellido", required: true)
+      ],
+
+      [ label(fd, :birth_date, "Fecha de nacimiento"),
+        date_picker(fd, :birth_date)
+      ],
+
+      [ select(fd, :country_id, @conn.assigns[:countries], class: "form-control", required: ""),
+        label(fd, :country_id, "Nacionalidad")
+      ],
+
+      [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], class: "form-control", required: ""),
+        label(fd, :legal_id_ind, "Tipo de documento")
+      ],
+
+      [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true)
+      ],
+
+      [ validated_field(fd, :address, text: "Domicilio", required: true)
+      ],
+
+      [ validated_field(fd, :occupation, text: "Ocupación", required: true)
+      ],
+    ]%>
+
       <% datasheet = @conn.assigns[:current_user].datasheet %>
-
       <%= if datasheet.is_super_admin do %>
         <div class="row">
-          <div class="col s12">
+          <div class="input-field col s12">
             <%= select fd, :branch_id, @conn.assigns[:branches], [class: "form-control", required: ""] %>
-            <%= required_label fd, :branch_id, "Filial", [] %>
-            <%= error_tag fd, :branch_id %>
+            <%= label fd, :branch_id, "Filial" %>
           </div>
         </div>
       <% else %>
@@ -50,14 +64,16 @@
         </p>
       </div>
       </div>
-  <% end %>
 
-    <div class="form-group actions">
-      <%= submit "Enviar invitación", class: "btn btn-primary" %>
-      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
-      <%= if invitation = @conn.assigns[:invitation] do %>
-        <%= link "Reenviar invitación", to: invitation_path(@conn, :resend, invitation.id), class: "btn" %>
-      <% end %>
+    <div class="row">
+      <div class="form-group actions right">
+        <%= submit "Enviar invitación", class: "btn btn-primary" %>
+        <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+        <%= if invitation = @conn.assigns[:invitation] do %>
+          <%= link "Reenviar invitación", to: invitation_path(@conn, :resend, invitation.id), class: "btn" %>
+        <% end %>
+      </div>
     </div>
+  <% end %>
   <% end %>
 </div>

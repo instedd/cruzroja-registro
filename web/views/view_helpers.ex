@@ -65,6 +65,22 @@ defmodule Registro.ViewHelpers do
     tag(:input, attrs)
   end
 
+  def form_rows(rows) do
+    Enum.map(rows, fn(row_content) ->
+      form_row do
+        row_content
+      end
+    end)
+  end
+
+  def form_row(do: content) do
+    content_tag(:div, class: "row") do
+      content_tag(:div, class: "input-field col s12") do
+        content
+      end
+    end
+  end
+
   defp add_msg_if_field_error(f, name, attrs) do
     case f.errors[name] do
       nil ->

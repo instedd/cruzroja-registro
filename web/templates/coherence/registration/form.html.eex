@@ -3,19 +3,20 @@
     <%= set_generic_error_toast %>
   <% end %>
 
-  <%= form_rows [ [ validated_field(f, :email, text: "Email", autofocus: true, required: true)
-                  ],
-                  [ validated_password_input(f, :password, [class: "form-control"] ++ @required),
-                    validated_label(f, :password, [text: "Contraseña"], [])
-                  ],
-                  [ validated_password_input(f, :password_confirmation, [class: "form-control"] ++ @required),
-                    validated_label(f, :password_confirmation, [text: "Confirmación de contraseña"], [])
-                  ]
-  ] %>
-
   <%= inputs_for f, :datasheet, fn fd -> %>
 
   <%= form_rows [
+    [ validated_field(f, :email, text: "Email", autofocus: true, required: true)
+    ],
+
+    [ validated_password_input(f, :password, [class: "form-control"] ++ @required),
+      validated_label(f, :password, [text: "Contraseña"], [])
+    ],
+
+    [ validated_password_input(f, :password_confirmation, [class: "form-control"] ++ @required),
+      validated_label(f, :password_confirmation, [text: "Confirmación de contraseña"], [])
+    ],
+
     [ validated_field(fd, :first_name, text: "Nombre", required: true)
     ],
 

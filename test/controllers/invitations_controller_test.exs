@@ -75,8 +75,7 @@ defmodule Registro.InvitationsControllerTest do
 
     defp invitation_params(branch_id) do
       %{ "invitation" =>
-        %{ "name" => "John",
-           "email" => "john@example.com",
+        %{ "email" => "john@example.com",
            "datasheet" => %{
              "first_name" => "John",
              "last_name" => "Doe",

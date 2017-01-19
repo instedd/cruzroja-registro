@@ -13,8 +13,20 @@ defmodule Registro.ViewHelpers do
     end
   end
 
+  def validated_field(f, name, opts) do
+    [ validated_input(f, name, opts, class: "form-control"),
+      validated_label(f, name, opts) ]
+  end
+
   def validated_input(f, name, attrs) do
+    validated_input(f, name, [], attrs)
+  end
+
+  def validated_input(f, name, opts, attrs) do
     attrs = add_class_if_field_error(f, name, attrs, "invalid")
+
+    attrs = if opts[:autofocus], do: [ {:autofocus, ""} | attrs ], else: attrs
+    attrs = if opts[:required], do: [ {:required, ""} | attrs ], else: attrs
 
     text_input f, name, attrs
   end
@@ -30,11 +42,41 @@ defmodule Registro.ViewHelpers do
     attrs = add_msg_if_field_error(f, name, attrs)
 
     label f, name, attrs do
-      case opts[:required] do
-        true ->
-          ["#{text}\n", content_tag(:abbr, "*", class: "required", title: "required")]
-        _ ->
-          text
+      text
+    end
+  end
+
+  def date_picker(f, name, attrs \\ []) do
+    import Phoenix.HTML.Form, only: [input_id: 2, input_name: 2, input_value: 2]
+
+    attrs = [ {:type, "date"},
+              {:class, "datepicker"},
+              {:id, input_id(f, name)},
+              {:name, input_name(f, name)}
+              | attrs ]
+
+    attrs = case input_value(f, name) do
+              %Date{} = d ->
+                [{:'data-value', Date.to_iso8601(d)} | attrs]
+              _ ->
+                attrs
+            end
+
+    tag(:input, attrs)
+  end
+
+  def form_rows(rows) do
+    Enum.map(rows, fn(row_content) ->
+      form_row do
+        row_content
+      end
+    end)
+  end
+
+  def form_row(do: content) do
+    content_tag(:div, class: "row") do
+      content_tag(:div, class: "input-field col s12") do
+        content
       end
     end
   end

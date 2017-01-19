@@ -15,7 +15,7 @@ defmodule Registro.Coherence.InvitationController do
   alias __MODULE__
   alias Coherence.{Config}
   alias Coherence.ControllerHelpers, as: Helpers
-  alias Registro.{Invitation, User, Repo, Datasheet}
+  alias Registro.{Country,Invitation, User, Repo, Datasheet}
   import Ecto.Changeset
   import Registro.ControllerHelpers
   require Logger
@@ -37,7 +37,10 @@ defmodule Registro.Coherence.InvitationController do
   Render the new invitation form.
   """
   def new(conn, _params) do
-    changeset = Invitation.changeset(%Invitation{})
+    default_country = Repo.get_by(Country, name: "Argentina")
+
+    changeset = Invitation.changeset(%Invitation{}, %{datasheet: %{country_id: default_country.id}})
+
     conn
     |> load_invitation_form_data
     |> render("new.html", changeset: changeset)
@@ -53,6 +56,7 @@ defmodule Registro.Coherence.InvitationController do
     repo = Config.repo
     user_schema = Config.user_schema
     email = invitation_params["email"]
+
     invitation_params = add_default_datasheet_fields(invitation_params)
 
     cs = Invitation.changeset(%Invitation{}, invitation_params)
@@ -169,13 +173,16 @@ defmodule Registro.Coherence.InvitationController do
   defp load_invitation_form_data(conn) do
     conn
     |> assign(:branches, Registro.Branch.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
   end
 
   def add_default_datasheet_fields(invitation_params) do
-    defaults = %{ "name" => invitation_params["name"], "status" => "at_start" }
+    datasheet_params = invitation_params["datasheet"]
+                     |> Map.merge(%{ "status" => "at_start" })
 
-    invitation_params
-    |> update_in(["datasheet"], fn(dp) -> Dict.merge(dp, defaults) end)
+    Map.merge(invitation_params, %{ "name" => datasheet_params["first_name"],
+                                    "datasheet" => datasheet_params})
   end
 
   def check_authorization(conn, current_user) do

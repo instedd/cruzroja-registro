@@ -1,34 +1,54 @@
 <div id="profile">
   <div class="content-main">
     <%= form_for @changeset, users_path(@conn, :update, @current_user), fn f -> %>
+    <%= inputs_for f, :datasheet, fn fd -> %>
 
-      <%= inputs_for f, :datasheet, fn fd -> %>
-      <div class="form-group">
-        <%= label fd, :name, "Nombre", class: "control-label" %>
-        <%= text_input fd, :name, class: "form-control", required: "", disabled: "" %>
-        <%= error_tag fd, :name %>
-      </div>
-      <% end %>
+    <%=
+    form_rows [
+      [ label(fd, :first_name, "Nombre", class: "control-label"),
+        text_input(fd, :first_name, class: "form-control", disabled: "")
+      ],
+      [ label(fd, :last_name, "Apellido", class: "control-label"),
+        text_input(fd, :last_name, class: "form-control", disabled: "")
+      ],
+      [ label(fd, :birth_date, "Fecha de nacimiento", class: "control-label"),
+        text_input(fd, :birth_date, class: "form-control", disabled: "")
+      ],
+      [ content_tag(:label, "Nacionalidad", for: "country_name"),
+        tag(:input, class: "form-control", disabled: "", id: "country_name", name: "country_name", type: "text", value: @current_user.datasheet.country.name)
+      ],
+      [ label(fd, :legal_id_kind, "Tipo de documento", class: "control-label"),
+        text_input(fd, :legal_id_kind, class: "form-control", disabled: "")
+      ],
+      [ label(fd, :legal_id_number, "Número de documento", class: "control-label"),
+        text_input(fd, :legal_id_number, class: "form-control", disabled: "")
+      ],
+      [ label(fd, :address, "Domicilio", class: "control-label"),
+        text_input(fd, :address, class: "form-control", disabled: "")
+      ],
+      [ label(fd, :occupation, "Ocupación", class: "control-label"),
+        text_input(fd, :occupation, class: "form-control", disabled: "")
+      ],
+    ]
+    %>
 
-      <div class="form-group">
-        <%= label f, :email, class: "control-label" %>
-        <%= text_input f, :email, class: "form-control", required: "", disabled: "" %>
-        <%= error_tag f, :email %>
-      </div>
-
-      <div class="form-group actions">
-        <%= submit "Actualizar", class: "btn btn-primary", disabled: "" %>
-      </div>
-
+    <%= if Registro.Datasheet.is_colaborator?(@current_user.datasheet) do %>
+      <p class="user-status">
       <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
-        <p class="user-status">
           Actualmente tu trámite se encuentra en estado
           <b><%= String.upcase Registro.Datasheet.status_label(@current_user.datasheet.status) %></b>
           para ser <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
           de la filial <%= branch_label(@current_user) %>.
-        </p>
+      <% else %>
+          Estás registrado como
+          <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
+          en la filial
+          <%= branch_label(@current_user) %>.
       <% end %>
+      </p>
+    <% end %>
 
+    <% end %>
     <% end %>
   </div>
 </div>

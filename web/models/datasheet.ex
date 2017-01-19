@@ -7,10 +7,19 @@ defmodule Registro.Datasheet do
   alias Registro.Invitation
 
   schema "datasheets" do
-    field :name, :string
+    field :first_name, :string
+    field :last_name, :string
+    field :legal_id_kind, :string
+    field :legal_id_number, :string
+    field :birth_date, :date
+    field :occupation, :string
+    field :address, :string
+
     field :status, :string
     field :role, :string
     field :is_super_admin, :boolean
+
+    field :filled, :boolean
 
     has_one :user, Registro.User
     has_one :invitation, Registro.Invitation
@@ -18,16 +27,27 @@ defmodule Registro.Datasheet do
     # the branch to which the person acts as a volunteer or associate
     belongs_to :branch, Registro.Branch
 
+    belongs_to :country, Registro.Country
+
     # the branches in which the person acts as an administrator
     many_to_many :admin_branches, Registro.Branch, join_through: "branches_admins"
   end
 
+  @required_fields [ :first_name,
+                     :last_name,
+                     :legal_id_kind,
+                     :legal_id_number,
+                     :country_id,
+                     :birth_date,
+                     :occupation,
+                     :address ]
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :status, :branch_id, :role, :is_super_admin])
+    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :is_super_admin])
     |> cast_assoc(:admin_branches, required: false)
-    |> validate_required([:name])
+    |> put_change(:filled, true)
+    |> validate_required(@required_fields)
     |> validate_colaboration
   end
 
@@ -36,6 +56,15 @@ defmodule Registro.Datasheet do
     |> Registro.Repo.preload(:admin_branches)
     |> Ecto.Changeset.change
     |> Ecto.Changeset.put_assoc(:admin_branches, branches)
+  end
+
+  @doc """
+  Create a new datasheet that is not filled.
+  This means it is allowed to have all fields empty until a user completes it.
+  """
+  def new_empty_changeset() do
+    %Datasheet{ filled: false }
+    |> Ecto.Changeset.change
   end
 
   def pending_approval?(datasheet) do
@@ -147,5 +176,17 @@ defmodule Registro.Datasheet do
 
   defp valid_status?(status) do
     Enum.member? ["at_start", "approved", "rejected"], status
+  end
+
+  def required_fields do
+    @required_fields
+  end
+
+  def legal_id_kind(datasheet) do
+    LegalIdKind.for_id(datasheet.legal_id_kind)
+  end
+
+  def full_name(datasheet) do
+    "#{datasheet.first_name} #{datasheet.last_name}"
   end
 end

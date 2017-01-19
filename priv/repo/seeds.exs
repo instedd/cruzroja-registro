@@ -12,6 +12,7 @@
 
 alias Registro.{
   Branch,
+  Country,
   Datasheet,
   Repo,
   User
@@ -20,47 +21,86 @@ alias Registro.{
 defmodule Seed do
   def run do
     insert_branches
+    insert_countries
+
+    argentina = Repo.get_by!(Country, name: "Argentina")
 
     branch1 = Repo.get_by!(Branch, name: "Saavedra")
     branch2 = Repo.get_by!(Branch, name: "Clorinda")
-
-    branch1_admin_email = "amartinez@cruzroja.org.ar"
-    branch2_admin_email = "rmarquez@cruzroja.org.ar"
 
     users = [
       %{email: "admin@instedd.org",
         password: "admin",
         password_confirmation: "admin",
         datasheet: %{
-          name: "Admin",
+          first_name: "Admin",
+          last_name: "-",
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
+          country_id: argentina.id,
+          birth_date: ~D[1980-01-01],
+          occupation: "Administrador de Cruz Roja",
+          address: "-",
           is_super_admin: true
         }
        },
-      %{email: branch1_admin_email,
+      %{email: "amartinez@cruzroja.org.ar",
         password: "amartinez",
         password_confirmation: "amartinez",
-        datasheet: %{ name: "Agustín Martínez" }
+        datasheet: %{
+          first_name: "Agustín",
+          last_name: "Martínez",
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
+          country_id: argentina.id,
+          birth_date: ~D[1980-01-01],
+          occupation: "-",
+          address: "-",
+        }
       },
       %{email: "jperez@gmail.com",
         password: "jperez",
         password_confirmation: "jperez",
         datasheet: %{
-          name: "Juan Pérez",
+          first_name: "Juan",
+          last_name: "Pérez",
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
+          country_id: argentina.id,
+          birth_date: ~D[1980-01-01],
+          occupation: "-",
+          address: "-",
           role: "volunteer",
           status: "approved",
           branch_id: branch1.id
         }
       },
-      %{email: branch2_admin_email,
+      %{email: "rmarquez@cruzroja.org.ar",
         password: "rmarquez",
         password_confirmation: "rmarquez",
-        datasheet: %{ name: "Raquel Márquez" }
+        datasheet: %{
+          first_name: "Raquel",
+          last_name: "Márquez",
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
+          country_id: argentina.id,
+          birth_date: ~D[1980-01-01],
+          occupation: "-",
+          address: "-",
+        }
       },
       %{email: "msanchez@hotmail.com",
         password: "msanchez",
         password_confirmation: "msanchez",
         datasheet: %{
-          name: "Maria Sánchez",
+          first_name: "Maria",
+          last_name: "Sánchez",
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
+          country_id: argentina.id,
+          birth_date: ~D[1980-01-01],
+          occupation: "-",
+          address: "-",
           role: "volunteer",
           status: "approved",
           branch_id: branch2.id
@@ -70,8 +110,8 @@ defmodule Seed do
 
     Enum.map(users, &insert_user/1)
 
-    mark_as_branch_admin(branch1_admin_email, branch1)
-    mark_as_branch_admin(branch2_admin_email, branch2)
+    mark_as_branch_admin("amartinez@cruzroja.org.ar", branch1)
+    mark_as_branch_admin("rmarquez@cruzroja.org.ar", branch2)
   end
 
   def insert_branches do
@@ -79,6 +119,15 @@ defmodule Seed do
     |> Enum.map(&parse_branch_line/1)
     |> Enum.each(fn [branch_name, address, province, president, authorities, phone, cell, email] ->
       Branch.changeset(%Branch{}, %{name: titleize(branch_name), address: titleize(address <> " - " <> province), president: titleize(president), authorities: titleize(authorities), phone_number: phone, cell_phone_number: cell, email: email}) |> Repo.insert!
+    end)
+  end
+
+  def insert_countries do
+    File.stream!("priv/data/countries.csv")
+    |> Enum.map(&(String.replace(&1, "\n", "")))
+    |> Enum.each(fn name ->
+      Country.changeset(%Country{}, %{name: name})
+      |> Repo.insert
     end)
   end
 

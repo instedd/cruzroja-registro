@@ -1,6 +1,9 @@
 defmodule Registro.Invitation do
   use Coherence.Web, :model
 
+  alias __MODULE__
+  alias Registro.Datasheet
+
   schema "invitations" do
     field :name, :string
     field :email, :string
@@ -11,16 +14,23 @@ defmodule Registro.Invitation do
     timestamps
   end
 
-  @doc """
-  Creates a changeset based on the `model` and `params`.
-
-  If no params are provided, an invalid changeset is returned
-  with no validation performed.
-  """
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, ~w(name email token))
+    |> base_changeset(params)
     |> cast_assoc(:datasheet, required: false)
+  end
+
+  def new_admin_changeset(email) do
+    params = %{name: "-", email: email, datasheet: %{}}
+    %Invitation{}
+    |> base_changeset(params)
+    |> generate_token
+    |> cast_assoc(:datasheet, with: fn (_,_) -> Datasheet.new_empty_changeset end)
+  end
+
+  defp base_changeset(model, params) do
+    model
+    |> cast(params, ~w(name email token))
     |> validate_required([:name, :email])
     |> unique_constraint(:email)
     |> validate_format(:email, ~r/@/)

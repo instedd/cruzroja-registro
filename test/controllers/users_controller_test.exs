@@ -5,6 +5,26 @@ defmodule Registro.UsersControllerTest do
 
   alias Registro.{User, Datasheet, Branch}
 
+  setup(context) do
+    create_country("Argentina")
+
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+    branch3 = create_branch(name: "Branch 3")
+
+    create_super_admin("admin@instedd.org")
+
+    create_branch_admin("branch_admin1@instedd.org", [branch1, branch3])
+    create_branch_admin("branch_admin2@instedd.org", branch2)
+    create_branch_admin("branch_admin3@instedd.org", branch3)
+
+    create_volunteer("volunteer1@example.com", branch1.id)
+    create_volunteer("volunteer2@example.com", branch2.id)
+    create_volunteer("volunteer3@example.com", branch3.id)
+
+    {:ok, context}
+  end
+
   describe "listing" do
     test "verifies that user is logged in", %{conn: conn} do
       conn = get conn, "/usuarios"
@@ -13,8 +33,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "non admin users are not allowed", %{conn: conn} do
-      setup_db
-
       conn = conn
           |> log_in("volunteer1@example.com")
           |> get("/usuarios")
@@ -23,8 +41,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "super_admin can see all users", %{conn: conn} do
-      setup_db
-
       conn = conn
             |> log_in("admin@instedd.org")
             |> get("/usuarios")
@@ -38,8 +54,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "branch admin can only see colaborators of his administrated branches", %{conn: conn} do
-      setup_db
-
       conn = conn
       |> log_in("branch_admin1@instedd.org")
       |> get("/usuarios")
@@ -56,8 +70,6 @@ defmodule Registro.UsersControllerTest do
 
   describe "update" do
     test "a super_admin can update a user's branch", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer1@example.com")
 
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
@@ -75,8 +87,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a branch admin cannot update a user's branch", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer1@example.com")
 
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
@@ -93,8 +103,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a branch admin can change role of colaborations of the same branch", %{conn: conn} do
-      setup_db
-
       u1 = get_user_by_email("branch_admin1@instedd.org")
       u2 = get_user_by_email("volunteer1@example.com")
 
@@ -112,8 +120,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a branch admin can't change role of colaborations of other branches", %{conn: conn} do
-      setup_db
-
       u1 = get_user_by_email("branch_admin1@instedd.org")
       u2 = get_user_by_email("volunteer2@example.com")
 
@@ -133,22 +139,16 @@ defmodule Registro.UsersControllerTest do
 
   describe "status changes" do
     test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
-      setup_db
-
       {_conn, user} = try_approve(conn, "admin@instedd.org", "volunteer1@example.com")
       assert user.datasheet.status == "approved"
     end
 
     test "a branch admin is allowed to change the status of volunteers of his administrated branches", %{conn: conn} do
-      setup_db
-
       {_conn, user} = try_approve(conn, "branch_admin1@instedd.org", "volunteer1@example.com")
       assert user.datasheet.status == "approved"
     end
 
     test "a branch admin is not allowed to change the status of volunteers of branches he doesn't adminstrate", %{conn: conn} do
-      setup_db
-
       {conn, user} = try_approve(conn, "branch_admin2@instedd.org", "volunteer1@example.com")
 
       assert_unauthorized(conn)
@@ -156,8 +156,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a volunteer is not allowed to change his status", %{conn: conn} do
-      setup_db
-
       {conn, user} = try_approve(conn, "volunteer1@example.com", "volunteer1@example.com")
 
       assert_unauthorized(conn)
@@ -186,8 +184,6 @@ defmodule Registro.UsersControllerTest do
   # colaboration (ie. other admins) as a colaborator of any branch.
   describe "marking users as colaborators of a branch after registration" do
     test "the colaboration is assumed approved when set by a super_admin", %{conn: conn} do
-      setup_db
-
       %{datasheet: datasheet} = user = get_user_by_email("branch_admin1@instedd.org")
 
       branch2 = Repo.get_by(Branch, name: "Branch 2")
@@ -209,8 +205,6 @@ defmodule Registro.UsersControllerTest do
 
   describe "granting super_admin permissions" do
     test "a super_admin can grant super_admin permissions to other users", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer1@example.com")
 
       {_conn, user} = update_user(conn, "admin@instedd.org", volunteer, user: %{
@@ -222,8 +216,7 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
-      setup_db
-      other_admin = create_super_admin(email: "admin2@instedd.org")
+      other_admin = create_super_admin("admin2@instedd.org")
 
       {_conn, other_admin} = update_user(conn, "admin@instedd.org", other_admin, user: %{
                                                                                   datasheet: %{
@@ -234,7 +227,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a super_admin cannot revoke his own super_admin permissions", %{conn: conn} do
-      setup_db
       admin = get_user_by_email("admin@instedd.org")
 
       {_conn, admin} = update_user(conn, admin, admin, user: %{ datasheet: %{
@@ -248,21 +240,18 @@ defmodule Registro.UsersControllerTest do
       # bugfix: value for is_super_admin reaches the controller
       # as the string "true" instead of the boolean value.
       # this caused problems when checking if the flag changed.
-      setup_db
       admin = get_user_by_email("admin@instedd.org")
 
       {_conn, admin} = update_user(conn, admin, admin, user: %{ datasheet: %{
                                                                   id: admin.datasheet.id,
-                                                                  name: "foo",
+                                                                  first_name: "foo",
                                                                   is_super_admin: "true" } })
 
       assert admin.datasheet.is_super_admin
-      assert admin.datasheet.name == "foo"
+      assert admin.datasheet.first_name == "foo"
     end
 
     test "a branch admin cannot grant super_admin permission", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer1@example.com")
 
       params = %{ user: %{ datasheet: %{ id: volunteer.datasheet.id, is_super_admin: true } } }
@@ -274,8 +263,6 @@ defmodule Registro.UsersControllerTest do
 
   describe "detail" do
     test "an admin can access any users detail", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -286,8 +273,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a branch admin can access details of colaborators of administrated branches", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -298,8 +283,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a branch admin can not access details of other admins of administrated branches", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("branch_admin3@instedd.org")
 
       conn = conn
@@ -310,8 +293,6 @@ defmodule Registro.UsersControllerTest do
     end
 
     test "a branch admin can not access details of colaborators of branches he doesn't administrate", %{conn: conn} do
-      setup_db
-
       volunteer = get_user_by_email("volunteer2@example.com")
 
       conn = conn
@@ -324,8 +305,6 @@ defmodule Registro.UsersControllerTest do
 
   describe "own profile" do
     test "renders admin's own profile", %{conn: conn} do
-      setup_db
-
       user = get_user_by_email("admin@instedd.org")
 
       conn = conn
@@ -334,13 +313,11 @@ defmodule Registro.UsersControllerTest do
 
       response = html_response(conn, 200)
 
-      assert response =~ user.email
-      assert response =~ user.datasheet.name
+      assert response =~ user.datasheet.first_name
+      assert response =~ user.datasheet.last_name
     end
 
     test "renders volunteer own profile", %{conn: conn} do
-      setup_db
-
       user = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -349,8 +326,8 @@ defmodule Registro.UsersControllerTest do
 
       response = html_response(conn, 200)
 
-      assert response =~ user.email
-      assert response =~ user.datasheet.name
+      assert response =~ user.datasheet.first_name
+      assert response =~ user.datasheet.last_name
       assert response =~ String.upcase Datasheet.status_label(user.datasheet.status)
       assert response =~ user.datasheet.branch.name
     end
@@ -358,8 +335,6 @@ defmodule Registro.UsersControllerTest do
 
   describe "CSV download" do
     test "it allows downloading all users' information as CSV", %{conn: conn} do
-      setup_db
-
       conn = conn
       |> log_in("admin@instedd.org")
       |> get(users_path(Registro.Endpoint, :download_csv))
@@ -367,14 +342,14 @@ defmodule Registro.UsersControllerTest do
       response = response(conn, 200)
 
       assert response == """
-      Nombre,Email,Filial,Rol,Estado\r
-      admin,admin@instedd.org,,,\r
-      branch_admin1,branch_admin1@instedd.org,,,\r
-      branch_admin2,branch_admin2@instedd.org,,,\r
-      branch_admin3,branch_admin3@instedd.org,,,\r
-      volunteer1,volunteer1@example.com,Branch 1,Voluntario,Pendiente\r
-      volunteer2,volunteer2@example.com,Branch 2,Voluntario,Pendiente\r
-      volunteer3,volunteer3@example.com,Branch 3,Voluntario,Pendiente\r
+      Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado\r
+      Doe,admin,admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin1,branch_admin1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
+      Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
+      Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
       """
     end
   end
@@ -392,20 +367,5 @@ defmodule Registro.UsersControllerTest do
   end
   def update_user(conn, current_user_email, target_user, params) do
     update_user(conn, get_user_by_email(current_user_email), target_user, params)
-  end
-
-  def setup_db do
-    branch1 = create_branch(name: "Branch 1")
-    branch2 = create_branch(name: "Branch 2")
-    branch3 = create_branch(name: "Branch 3")
-
-    create_super_admin(email: "admin@instedd.org")
-    create_branch_admin(email: "branch_admin1@instedd.org", branches: [branch1, branch3])
-    create_branch_admin(email: "branch_admin2@instedd.org", branch: branch2)
-    create_branch_admin(email: "branch_admin3@instedd.org", branch: branch3)
-
-    create_user(email: "volunteer1@example.com", role: "volunteer", branch_id: branch1.id)
-    create_user(email: "volunteer2@example.com", role: "volunteer", branch_id: branch2.id)
-    create_user(email: "volunteer3@example.com", role: "volunteer", branch_id: branch3.id)
   end
 end

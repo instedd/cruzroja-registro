@@ -1,6 +1,9 @@
 <% datasheet = @conn.assigns[:current_user].datasheet %>
 
-<%= menu_item(@conn, users_path(@conn, :profile), "Perfil") %>
+<%= if datasheet.filled do %>
+  <%= menu_item(@conn, users_path(@conn, :profile), "Perfil") %>
+<% end %>
+
 <%= if Registro.Datasheet.is_admin?(datasheet) do %>
   <%= menu_item(@conn, users_path(@conn, :index), "Usuarios") %>
 

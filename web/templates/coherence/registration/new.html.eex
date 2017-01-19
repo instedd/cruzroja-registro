@@ -1,10 +1,14 @@
 <div id="register">
-  <div class="content-main">
-    <h5>Ingresá tus datos</h5>
-
-    <%= render "form.html", conn: @conn,
-                            changeset: @changeset,
-                            required: [required: ""],
-                            action: registration_path(@conn, :create) %>
+  <div class="row">
+    <div class="col s6 offset-s3">
+      <div class="content-main">
+      <h5>Ingresá tus datos</h5>
+      <br/>
+      <%= render "form.html", conn: @conn,
+                              changeset: @changeset,
+                              required: [required: ""],
+                              action: registration_path(@conn, :create) %>
+      </div>
+    </div>
   </div>
 </div>

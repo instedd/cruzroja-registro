@@ -108,12 +108,30 @@ defmodule Registro.UsersController do
   end
 
   def download_csv(conn, params) do
-    header = ["Nombre", "Email", "Filial", "Rol", "Estado"]
+    header = ["Apellido",
+              "Nombre",
+              "Email",
+              "Tipo de documento",
+              "Número de documento",
+              "Nacionalidad",
+              "Fecha de nacimiento",
+              "Ocupación",
+              "Dirección",
+              "Filial",
+              "Rol",
+              "Estado"]
 
     format = fn(%User{ email: email, datasheet: d }) ->
       [
-        d.name,
+        d.last_name,
+        d.first_name,
         email,
+        Datasheet.legal_id_kind(d).label,
+        d.legal_id_number,
+        d.country.name,
+        Date.to_iso8601(d.birth_date),
+        d.occupation,
+        d.address,
         if(d.branch == nil, do: "", else: d.branch.name),
         if(d.role == nil, do: "", else: Datasheet.role_label(d)),
         Datasheet.status_label(d.status)
@@ -122,7 +140,8 @@ defmodule Registro.UsersController do
 
     query = from u in User.query_with_datasheet,
       join: d in assoc(u, :datasheet),
-      order_by: d.name
+      order_by: [d.last_name, d.first_name, d.id],
+      preload: [datasheet: :country]
 
     users = query
           |> apply_filters(params)
@@ -172,7 +191,7 @@ defmodule Registro.UsersController do
     name = "%" <> param <> "%"
     from u in query,
       join: d in Datasheet, on: u.datasheet_id == d.id,
-      where: ilike(d.name, ^name) or ilike(u.email, ^name)
+      where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
   defp restrict_to_visible_users(query, conn) do
@@ -220,7 +239,7 @@ defmodule Registro.UsersController do
   defp listing_page_query(conn, page_number) do
     (from u in User,
       join: d in Datasheet, on: d.id == u.datasheet_id,
-      order_by: d.name)
+      order_by: d.last_name)
       |> User.query_with_datasheet
       |> Pagination.query(page_number: page_number)
       |> restrict_to_visible_users(conn)

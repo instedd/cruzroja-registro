@@ -1,6 +1,7 @@
 defmodule Registro.UserAuditLogEntry do
   use Registro.Web, :model
 
+  alias Registro.Datasheet
   alias Registro.Repo
   alias Registro.UserAuditLogEntry
 
@@ -47,7 +48,8 @@ defmodule Registro.UserAuditLogEntry do
   end
 
   def description(entry) do
-    actor = Repo.get(Registro.Datasheet, entry.actor_id).name
+    actor = Repo.get!(Registro.Datasheet, entry.actor_id)
+          |> Datasheet.full_name
     date = Registro.DateTime.to_local(entry.inserted_at)
     date = " el " <> Registro.DateTime.format_date(date) <> " a las " <> Registro.DateTime.format_time(date)
     case entry.action_id do

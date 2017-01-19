@@ -313,8 +313,8 @@ defmodule Registro.UsersControllerTest do
 
       response = html_response(conn, 200)
 
-      assert response =~ user.email
       assert response =~ user.datasheet.first_name
+      assert response =~ user.datasheet.last_name
     end
 
     test "renders volunteer own profile", %{conn: conn} do
@@ -326,8 +326,8 @@ defmodule Registro.UsersControllerTest do
 
       response = html_response(conn, 200)
 
-      assert response =~ user.email
       assert response =~ user.datasheet.first_name
+      assert response =~ user.datasheet.last_name
       assert response =~ String.upcase Datasheet.status_label(user.datasheet.status)
       assert response =~ user.datasheet.branch.name
     end

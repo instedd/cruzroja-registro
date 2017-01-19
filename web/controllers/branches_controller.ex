@@ -87,7 +87,7 @@ defmodule Registro.BranchesController do
     |> render("new.html", changeset: changeset)
   end
 
-  def create(conn, %{"branch" => branch_params, "admin_emails" => encoded_emails} = params) do
+  def create(conn, %{"branch" => branch_params, "admin_emails" => encoded_emails}) do
     emails = String.split(encoded_emails, "|")
            |> Enum.filter(&(String.match?(&1, ~r/@/)))
 

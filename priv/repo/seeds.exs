@@ -35,7 +35,8 @@ defmodule Seed do
         datasheet: %{
           first_name: "Admin",
           last_name: "-",
-          legal_id: 11111111,
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
           country_id: argentina.id,
           birth_date: ~D[1980-01-01],
           occupation: "Administrador de Cruz Roja",
@@ -49,7 +50,8 @@ defmodule Seed do
         datasheet: %{
           first_name: "Agustín",
           last_name: "Martínez",
-          legal_id: 11111111,
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
           country_id: argentina.id,
           birth_date: ~D[1980-01-01],
           occupation: "-",
@@ -62,7 +64,8 @@ defmodule Seed do
         datasheet: %{
           first_name: "Juan",
           last_name: "Pérez",
-          legal_id: 11111111,
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
           country_id: argentina.id,
           birth_date: ~D[1980-01-01],
           occupation: "-",
@@ -78,7 +81,8 @@ defmodule Seed do
         datasheet: %{
           first_name: "Raquel",
           last_name: "Márquez",
-          legal_id: 11111111,
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
           country_id: argentina.id,
           birth_date: ~D[1980-01-01],
           occupation: "-",
@@ -91,7 +95,8 @@ defmodule Seed do
         datasheet: %{
           first_name: "Maria",
           last_name: "Sánchez",
-          legal_id: 11111111,
+          legal_id_kind: "DNI",
+          legal_id_number: "11111111",
           country_id: argentina.id,
           birth_date: ~D[1980-01-01],
           occupation: "-",

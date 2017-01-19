@@ -30,7 +30,11 @@
       label(fd, :country_id, "Nacionalidad")
     ],
 
-    [ validated_field(fd, :legal_id, text: "DNI", required: true)
+    [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], class: "form-control", required: ""),
+      label(fd, :legal_id_ind, "Tipo de documento")
+    ],
+
+    [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true)
     ],
 
     [ validated_field(fd, :address, text: "Domicilio", required: true)

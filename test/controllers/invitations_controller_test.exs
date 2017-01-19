@@ -80,7 +80,8 @@ defmodule Registro.InvitationsControllerTest do
            "datasheet" => %{
              "first_name" => "John",
              "last_name" => "Doe",
-             "legal_id" => 1,
+             "legal_id_kind" => "DNI",
+             "legal_id_number" => "1",
              "birth_date" => ~D[1980-01-01],
              "occupation" => "...",
              "address" => "...",
@@ -141,7 +142,8 @@ defmodule Registro.InvitationsControllerTest do
 
       datasheet_params = %{ "first_name" => "John",
                             "last_name" => "Doe",
-                            "legal_id" => 1,
+                            "legal_id_kind" => "DNI",
+                            "legal_id_number" => "1",
                             "birth_date" => ~D[1980-01-01],
                             "occupation" => "...",
                             "address" => "...",

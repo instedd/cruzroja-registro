@@ -10,7 +10,8 @@ defmodule Registro.Repo.Migrations.AddFieldsToDatasheets do
 
     alter table(:datasheets) do
       add :last_name, :string
-      add :legal_id, :integer
+      add :legal_id_kind, :string
+      add :legal_id_number, :string
       add :country_id, references(:countries)
       add :birth_date, :date
       add :occupation, :string
@@ -25,7 +26,8 @@ defmodule Registro.Repo.Migrations.AddFieldsToDatasheets do
   def down do
     alter table(:datasheets) do
       remove :last_name
-      remove :legal_id
+      remove :legal_id_kind
+      remove :legal_id_number
       remove :country_id
       remove :birth_date
       remove :occupation

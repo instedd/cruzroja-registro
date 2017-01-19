@@ -9,7 +9,8 @@ defmodule Registro.Datasheet do
   schema "datasheets" do
     field :first_name, :string
     field :last_name, :string
-    field :legal_id, :integer
+    field :legal_id_kind, :string
+    field :legal_id_number, :string
     field :birth_date, :date
     field :occupation, :string
     field :address, :string
@@ -34,7 +35,8 @@ defmodule Registro.Datasheet do
 
   @required_fields [ :first_name,
                      :last_name,
-                     :legal_id,
+                     :legal_id_kind,
+                     :legal_id_number,
                      :country_id,
                      :birth_date,
                      :occupation,
@@ -178,5 +180,9 @@ defmodule Registro.Datasheet do
 
   def required_fields do
     @required_fields
+  end
+
+  def legal_id_kind(datasheet) do
+    LegalIdKind.for_id(datasheet.legal_id_kind)
   end
 end

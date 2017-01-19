@@ -342,14 +342,14 @@ defmodule Registro.UsersControllerTest do
       response = response(conn, 200)
 
       assert response == """
-      Apellido,Nombre,Email,DNI,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado\r
-      Doe,admin,admin@instedd.org,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin1,branch_admin1@instedd.org,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin2,branch_admin2@instedd.org,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin3,branch_admin3@instedd.org,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,volunteer1,volunteer1@example.com,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
-      Doe,volunteer2,volunteer2@example.com,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
-      Doe,volunteer3,volunteer3@example.com,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
+      Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado\r
+      Doe,admin,admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin1,branch_admin1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
+      Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
+      Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
       """
     end
   end

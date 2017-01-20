@@ -47,7 +47,7 @@ defmodule Registro.UsersControllerTest do
 
       assert html_response(conn, 200)
 
-      result_count = Enum.count conn.assigns[:users]
+      result_count = Enum.count conn.assigns[:datasheets]
       all_users_count = Repo.aggregate(User, :count, :id)
 
       assert result_count == all_users_count
@@ -60,7 +60,7 @@ defmodule Registro.UsersControllerTest do
 
       assert html_response(conn, 200)
 
-      user_emails = Enum.map conn.assigns[:users], &(&1.email)
+      user_emails = Enum.map conn.assigns[:datasheets], &(&1.user.email)
 
       assert user_emails == ["volunteer1@example.com",
                              "volunteer3@example.com"

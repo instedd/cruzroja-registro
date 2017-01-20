@@ -197,7 +197,7 @@ defmodule Registro.UsersController do
       where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
-  defp restrict_to_visible_users(query, conn) do
+  defp restrict_to_visible_users(query, conn, from_user \\ false) do
     user = conn.assigns[:current_user]
     datasheet = user.datasheet
 
@@ -207,9 +207,14 @@ defmodule Registro.UsersController do
       Datasheet.is_branch_admin?(datasheet) ->
         administrated_branch_ids = Enum.map(datasheet.admin_branches, &(&1.id))
 
-        from u in query,
-        join: d in Datasheet, on: u.datasheet_id == d.id,
-        where: d.branch_id in ^administrated_branch_ids
+        if from_user do
+          from u in query,
+          join: d in Datasheet, on: u.datasheet_id == d.id,
+          where: d.branch_id in ^administrated_branch_ids
+        else
+          from d in query,
+          where: d.branch_id in ^administrated_branch_ids
+        end
     end
   end
 
@@ -232,7 +237,7 @@ defmodule Registro.UsersController do
       user_id = String.to_integer(conn.params["id"])
 
       (from u in User, where: u.id == ^user_id)
-      |> restrict_to_visible_users(conn)
+      |> restrict_to_visible_users(conn,true)
       |> Repo.exists?
     else
       false
@@ -245,7 +250,7 @@ defmodule Registro.UsersController do
       order_by: d.last_name)
       |> Datasheet.full_query
       |> Pagination.query(page_number: page_number)
-      # |> restrict_to_visible_users(conn)
+      |> restrict_to_visible_users(conn)
   end
 
   defp action_for(changeset) do

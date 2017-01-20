@@ -9,7 +9,7 @@ defmodule Registro.Endpoint do
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/", from: :registro, gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only_matching: ~w(css fonts images js robots.txt favicon apple-touch-icon mstile)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

@@ -4,8 +4,9 @@ defmodule Registro.BranchesController do
   alias __MODULE__
   alias Registro.{Repo, Branch, Pagination, Datasheet, User, Invitation}
 
-  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2 ] when action in [:index, :new, :create]
+  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2 ] when action in [:index]
   plug Registro.Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
+  plug Registro.Authorization, [ check: &BranchesController.authorize_creation/2 ] when action in [:new, :create]
 
   def index(conn, params) do
     import Ecto.Query
@@ -118,6 +119,10 @@ defmodule Registro.BranchesController do
     branch_id = String.to_integer(conn.params["id"])
 
     datasheet.is_super_admin || Datasheet.is_admin_of?(datasheet, branch_id)
+  end
+
+  def authorize_creation(_conn, %User{datasheet: datasheet}) do
+    datasheet.is_super_admin
   end
 
   defp validate_admin_not_removing_himself(changeset, current_user) do

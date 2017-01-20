@@ -167,4 +167,34 @@ defmodule Registro.BranchesControllerTest do
       {conn, Enum.sort(updated_admins)}
     end
   end
+
+  describe "creation" do
+    test "a super_admin can create new branches", %{conn: conn, super_admin: super_admin} do
+      params = %{ admin_emails: "", branch: %{ name: "NewBranch" }}
+
+      conn
+      |> log_in(super_admin)
+      |> post("/filiales", params)
+
+      branch = (from b in Branch, where: b.name == "NewBranch", preload: :admins)
+             |> Repo.one
+
+      assert branch.admins == []
+    end
+
+    test "branch admins are not allowed to create branches", %{conn: conn} do
+      params = %{ admin_emails: "", branch: %{ name: "NewBranch" }}
+
+      conn = conn
+           |> log_in("branch_admin1@instedd.org")
+           |> post("/filiales", params)
+
+      branch = (from b in Branch, where: b.name == "NewBranch", preload: :admins)
+             |> Repo.one
+
+      assert_unauthorized(conn)
+
+      assert branch == nil
+    end
+  end
 end

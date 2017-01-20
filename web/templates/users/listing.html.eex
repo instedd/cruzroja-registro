@@ -6,26 +6,26 @@
             <th data-field="email">Email</th>
             <th data-field="role">Rol</th>
             <th data-field="status">Estado</th>
-            <%= if @conn.assigns[:current_user].datasheet.role == "super_admin" do %>
+            <%= if Coherence.current_user(@conn).datasheet.is_super_admin do %>
             <th data-field="branch">Filial</th>
             <% end %>
         </tr>
       </thead>
 
       <tbody>
-        <%= for u <- @users do %>
-          <tr data-href="<%= users_path(@conn, :show, u) %>">
-            <td><%= "#{u.datasheet.first_name} #{u.datasheet.last_name}" %></td>
-            <td><%= u.email %></td>
-            <td><%= Registro.Datasheet.role_label(u.datasheet) %></td>
-            <td><%= Registro.Datasheet.status_label(u.datasheet.status) %></td>
-            <%= if @conn.assigns[:current_user].datasheet.role == "super_admin" do %>
-            <td><%= branch_label(u) %></td>
+        <%= for d <- @datasheets do %>
+          <tr data-href="">
+            <td><%= "#{d.first_name} #{d.last_name}" %></td>
+            <td><%= if d.user, do: d.user.email, else: "" %></td>
+            <td><%= Registro.Datasheet.role_label(d) %></td>
+            <td><%= Registro.Datasheet.status_label(d.status) %></td>
+            <%= if Coherence.current_user(@conn).datasheet.is_super_admin do %>
+              <td><%= branch_label(d) %></td>
             <% end %>
           </tr>
         <% end %>
       </tbody>
     </table>
 
-  <%= pager(@page, @page_size, Enum.count(@users), @page_count, @total_count) %>
+  <%= pager(@page, @page_size, Enum.count(@datasheets), @page_count, @total_count) %>
 </div>

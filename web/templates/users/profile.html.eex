@@ -38,12 +38,12 @@
           Actualmente tu trámite se encuentra en estado
           <b><%= String.upcase Registro.Datasheet.status_label(@current_user.datasheet.status) %></b>
           para ser <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
-          de la filial <%= branch_label(@current_user) %>.
+          de la filial <%= branch_label(@current_user.datasheet) %>.
       <% else %>
           Estás registrado como
           <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
           en la filial
-          <%= branch_label(@current_user) %>.
+          <%= branch_label(@current_user.datasheet) %>.
       <% end %>
       </p>
     <% end %>

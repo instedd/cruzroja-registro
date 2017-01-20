@@ -17,13 +17,13 @@ defmodule Registro.UsersController do
 
   def index(conn, _params) do
     query = listing_page_query(conn, 1)
-    users = Repo.all(query)
+    datasheets = Repo.all(query)
     total_count = Repo.aggregate(query, :count, :id)
 
     conn
     |> assign(:branches, Branch.all)
     |> render("index.html",
-      users: users,
+      datasheets: datasheets,
       page: 1,
       page_count: Pagination.page_count(total_count),
       page_size: Pagination.default_page_size,
@@ -97,12 +97,12 @@ defmodule Registro.UsersController do
           |> apply_filters(params)
 
     total_count = Repo.aggregate(query, :count, :id)
-    users = Repo.all(query |> Pagination.restrict(page_number: page))
+    datasheets = Repo.all(query |> Pagination.restrict(page_number: page))
 
     conn
     |> put_layout(false)
     |> render("listing.html",
-      users: users,
+      datasheets: datasheets,
       page: page,
       page_count: Pagination.page_count(total_count),
       page_size: Pagination.default_page_size,
@@ -124,11 +124,11 @@ defmodule Registro.UsersController do
               "Rol",
               "Estado"]
 
-    format = fn(%User{ email: email, datasheet: d }) ->
+    format = fn(d) ->
       [
         d.last_name,
         d.first_name,
-        email,
+        d.user.email,
         Datasheet.legal_id_kind(d).label,
         d.legal_id_number,
         d.country.name,
@@ -141,18 +141,18 @@ defmodule Registro.UsersController do
       ]
     end
 
-    query = from u in User.query_with_datasheet,
-      join: d in assoc(u, :datasheet),
+    query = from d in Datasheet.full_query(Registro.Datasheet),
+      join: u in assoc(d, :user),
       order_by: [d.last_name, d.first_name, d.id],
-      preload: [datasheet: :country]
+      preload: [:country]
 
-    users = query
+    datasheets = query
           |> apply_filters(params)
           |> restrict_to_visible_users(conn)
           |> Repo.all
           |> Enum.map(format)
 
-    csv_content = [ header | users]
+    csv_content = [ header | datasheets]
                 |> CSV.encode
                 |> Enum.to_list
                 |> to_string
@@ -181,19 +181,19 @@ defmodule Registro.UsersController do
   end
 
   def role_filter(query, param) when is_nil(param), do: query
-  def role_filter(query, param), do: from u in query, join: d in Datasheet, on: u.datasheet_id == d.id, where: d.role == ^param
+  def role_filter(query, param), do: from d in query, where: d.role == ^param
 
   def branch_filter(query, param) when is_nil(param), do: query
-  def branch_filter(query, param), do: from u in query, join: d in Datasheet, on: u.datasheet_id == d.id, where: d.branch_id == ^param
+  def branch_filter(query, param), do: from d in query, where: d.branch_id == ^param
 
   def status_filter(query, param) when is_nil(param), do: query
-  def status_filter(query, param), do: from u in query, join: d in Datasheet, on: u.datasheet_id == d.id, where: d.status == ^param
+  def status_filter(query, param), do: from d in query, where: d.status == ^param
 
   def name_filter(query, param) when is_nil(param), do: query
   def name_filter(query, param) do
     name = "%" <> param <> "%"
-    from u in query,
-      join: d in Datasheet, on: u.datasheet_id == d.id,
+    from d in query,
+      join: u in User, on: u.datasheet_id == d.id,
       where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
@@ -240,12 +240,12 @@ defmodule Registro.UsersController do
   end
 
   defp listing_page_query(conn, page_number) do
-    (from u in User,
-      join: d in Datasheet, on: d.id == u.datasheet_id,
+    (from d in Datasheet,
+      left_join: u in User, on: u.datasheet_id == d.id,
       order_by: d.last_name)
-      |> User.query_with_datasheet
+      |> Datasheet.full_query
       |> Pagination.query(page_number: page_number)
-      |> restrict_to_visible_users(conn)
+      # |> restrict_to_visible_users(conn)
   end
 
   defp action_for(changeset) do

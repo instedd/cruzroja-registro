@@ -189,4 +189,10 @@ defmodule Registro.Datasheet do
   def full_name(datasheet) do
     "#{datasheet.first_name} #{datasheet.last_name}"
   end
+
+  def full_query(q) do
+    import Ecto.Query
+    from d in q, preload: [:branch, :admin_branches, :country, :user]
+  end
+
 end

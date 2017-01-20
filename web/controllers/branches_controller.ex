@@ -4,7 +4,7 @@ defmodule Registro.BranchesController do
   alias __MODULE__
   alias Registro.{Repo, Branch, Pagination, Datasheet, User, Invitation}
 
-  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2 ] when action in [:index]
+  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2 ] when action in [:index, :new, :create]
   plug Registro.Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
 
   def index(conn, params) do

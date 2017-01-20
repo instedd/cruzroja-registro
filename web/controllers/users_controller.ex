@@ -2,6 +2,7 @@ defmodule Registro.UsersController do
   use Registro.Web, :controller
 
   alias __MODULE__
+  alias Registro.Country
   alias Registro.Pagination
   alias Registro.User
   alias Registro.Role
@@ -69,6 +70,7 @@ defmodule Registro.UsersController do
           branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
           conn
           |> assign(:history, UserAuditLogEntry.for(user))
+          |> load_datasheet_form_data
           |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
       end
     end
@@ -84,6 +86,7 @@ defmodule Registro.UsersController do
     |> assign(:branches, Branch.all)
     |> assign(:roles, Role.all)
     |> assign(:history, UserAuditLogEntry.for(user))
+    |> load_datasheet_form_data
     |> render("show.html", changeset: changeset, user: user, branch_name: branch_name)
   end
 
@@ -319,5 +322,11 @@ defmodule Registro.UsersController do
       _ ->
         false
     end
+  end
+
+  defp load_datasheet_form_data(conn) do
+    conn
+    |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
   end
 end

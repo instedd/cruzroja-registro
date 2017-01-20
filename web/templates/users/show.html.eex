@@ -23,97 +23,106 @@
     <div class="col s9">
       <div class="content-main">
         <%= form_for @changeset, users_path(@conn, :update, @user), fn f -> %>
-          <div class="row">
-            <div class="input-field col s12">
-              <%= validated_input f, :email, class: "form-control", required: "" %>
-              <%= validated_label f, :email, [ required: true ], class: "control-label" %>
-            </div>
+        <%= inputs_for f, :datasheet, fn fd -> %>
+          <div class="section">
+            <h3>Datos personales</h3>
+            <%= form_rows [
+              [ validated_field(f, :email, required: true)
+              ],
+              [ validated_field(fd, :first_name, text: "Nombre", required: true)
+              ],
+              [ validated_field(fd, :last_name, text: "Apellido", required: true)
+              ],
+              [ label(fd, :birth_date, "Fecha de nacimiento"),
+                date_picker(fd, :birth_date)
+              ],
+              [ select(fd, :country_id, @conn.assigns[:countries], class: "form-control", required: ""),
+                label(fd, :country_id, "Nacionalidad")
+              ],
+
+              [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], class: "form-control", required: ""),
+                label(fd, :legal_id_ind, "Tipo de documento")
+              ],
+
+              [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true)
+              ],
+
+              [ validated_field(fd, :address, text: "Domicilio", required: true)
+              ],
+
+              [ validated_field(fd, :occupation, text: "Ocupación", required: true)
+              ],
+            ] %>
           </div>
 
-          <%= inputs_for f, :datasheet, fn fd -> %>
+          <div class="section">
+            <h3>Colaboración en filial</h3>
             <div class="row">
-              <div class="input-field col s12">
-                <%= validated_input fd, :first_name, class: "form-control", required: "" %>
-                <%= validated_label fd, :first_name, [ text: "Nombre", required: true ], class: "control-label" %>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="input-field col s12">
-                <%= validated_input fd, :last_name, class: "form-control", required: "" %>
-                <%= validated_label fd, :last_name, [ text: "Nombre", required: true ], class: "control-label" %>
-              </div>
-            </div>
-
-            <div class="section">
-              <h3>Colaboración en filial</h3>
-              <div class="row">
-                <div class="input-field col s6">
-                  <label class="control-label" for="user_datasheet_branch_name">Filial</label>
-                  <%= if current_user.datasheet.is_super_admin do %>
-                    <%= tag(:input,
-                      type: "text",
-                      id: "user_datasheet_branch_name",
-                      name: "branch_name",
-                      class: "autocomplete form-control",
-                      value: @branch_name) %>
-                    <%= error_tag fd, :branch_name %>
-                  <% else %>
-                    <%= tag(:input,
-                            class: "form-control", name: "", type: "text", disabled: "",
-                            value: @branch_name
-                            ) %>
-                  <% end %>
-                </div>
-
-                <%= if pending_approval do %>
-                  <%#
-                  display the role selected when registering, without allowing changes.
-                  this field can be modified later by an administrator, once the user is approved.
-                  %>
-                  <div class="input-field col s3">
-                    <%= label fd, :role, "Rol", class: "control-label" %>
-                    <%= tag(:input,
-                            class: "form-control", name: "", type: "text", disabled: "",
-                            value: "#{Registro.Role.label(@user.datasheet.role)}",
-                            ) %>
-                    <%= hidden_input fd, :role, class: "form-control", disabled: "" %>
-                  </div>
-                  <%#
-                  if pending approval, the status will be set depending on which
-                  button is pressed. (see form actions below).
-                  %>
-                  <div class="input-field col s3">
-                    <%= label fd, :status, "Estado", class: "control-label" %>
-                    <%= tag(:input,
-                            class: "form-control", name: "", type: "text", disabled: "",
-                            value: "Pendiente",
-                            ) %>
-                  </div>
+              <div class="input-field col s6">
+                <label class="control-label" for="user_datasheet_branch_name">Filial</label>
+                <%= if current_user.datasheet.is_super_admin do %>
+                  <%= tag(:input,
+                    type: "text",
+                    id: "user_datasheet_branch_name",
+                    name: "branch_name",
+                    class: "autocomplete form-control",
+                    value: @branch_name) %>
+                  <%= error_tag fd, :branch_name %>
                 <% else %>
-                  <div class="input-field col s3">
-                    <%= label fd, :role, "Rol", class: "control-label active" %>
-                    <%= role_selector("user[datasheet][role]", datasheet.role) %>
-                    <%= error_tag fd, :role %>
-                  </div>
-                    <%= if @user.datasheet.status do %>
-                      <%#
-                      display the user status without allowing changes.
-
-                      if a user doesn't have status then any change to {branch_id, role}
-                      will automatically mark the status as "approved", so the user is not
-                      required to select the status when marking a user as a colaborator
-                      of a branch.
-                      %>
-                      <div class="input-field col s3">
-                        <%= label fd, :status, "Estado", class: "control-label" %>
-                        <%= tag(:input,
-                                class: "form-control", name: "", type: "text", disabled: "",
-                                value: Registro.Datasheet.status_label(@user.datasheet.status),
-                                ) %>
-                      </div>
-                    <%= end %>
+                  <%= tag(:input,
+                          class: "form-control", name: "", type: "text", disabled: "",
+                          value: @branch_name
+                          ) %>
                 <% end %>
+              </div>
+
+              <%= if pending_approval do %>
+                <%#
+                display the role selected when registering, without allowing changes.
+                this field can be modified later by an administrator, once the user is approved.
+                %>
+                <div class="input-field col s3">
+                  <%= label fd, :role, "Rol", class: "control-label" %>
+                  <%= tag(:input,
+                          class: "form-control", name: "", type: "text", disabled: "",
+                          value: "#{Registro.Role.label(@user.datasheet.role)}",
+                          ) %>
+                  <%= hidden_input fd, :role, class: "form-control", disabled: "" %>
+                </div>
+                <%#
+                if pending approval, the status will be set depending on which
+                button is pressed. (see form actions below).
+                %>
+                <div class="input-field col s3">
+                  <%= label fd, :status, "Estado", class: "control-label" %>
+                  <%= tag(:input,
+                          class: "form-control", name: "", type: "text", disabled: "",
+                          value: "Pendiente",
+                          ) %>
+                </div>
+              <% else %>
+                <div class="input-field col s3">
+                  <%= label fd, :role, "Rol", class: "control-label active" %>
+                  <%= role_selector("user[datasheet][role]", datasheet.role) %>
+                  <%= error_tag fd, :role %>
+                </div>
+                  <%= if @user.datasheet.status do %>
+                    <%#
+                    display the user status without allowing changes.
+
+                    if a user doesn't have status then any change to {branch_id, role}
+                    will automatically mark the status as "approved", so the user is not
+                    required to select the status when marking a user as a colaborator
+                    of a branch.
+                    %>
+                    <div class="input-field col s3">
+                      <%= label fd, :status, "Estado", class: "control-label" %>
+                      <%= tag(:input,
+                              class: "form-control", name: "", type: "text", disabled: "",
+                              value: Registro.Datasheet.status_label(@user.datasheet.status),
+                              ) %>
+                    </div>
+                  <%= end %>
               </div>
             </div>
 
@@ -130,6 +139,7 @@
             <% else %>
               <%= hidden_input fd, :is_super_admin, disabled: "" %>
             <% end %>
+          <% end %>
           <% end %>
 
           <div class="form-group actions">

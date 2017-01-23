@@ -1,34 +1,34 @@
-<div class="content-main">
-  <h5>Ingresá tus datos</h5>
+<div class="row">
+  <div class="col s6 offset-s3">
+    <div class="content-main">
+      <h5>Bienvenido</h5>
 
-  <%= form_for @changeset, invitation_path(@conn, :create_user), fn f  -> %>
-    <%= if @changeset.action do %>
-      <%= set_generic_error_toast %>
-    <% end %>
+      <p>
+        Antes de continuar, por favor generá tu contraseña.
+      </p>
 
-    <input type="hidden" name="token" value="<%= @token %>">
+      <%= form_for @changeset, invitation_path(@conn, :create_user), fn f  -> %>
+        <%= if @changeset.action do %>
+          <%= set_generic_error_toast %>
+        <% end %>
 
-    <div class="input-field">
-      <%= required_label f, :name, "Nombre", class: "control-label" %>
-      <%= text_input f, :name, class: "form-control", required: "", autofocus: "" %>
-      <%= error_tag f, :name %>
+        <input type="hidden" name="token" value="<%= @token %>">
+
+        <div class="input-field">
+          <%= validated_password_input(f, :password, [class: "form-control", required: ""]) %>
+          <%= validated_label(f, :password, [text: "Contraseña"], []) %>
+        </div>
+
+        <div class="input-field">
+          <%= validated_password_input(f, :password_confirmation, [class: "form-control", required: ""]) %>
+          <%= validated_label(f, :password_confirmation, [text: "Confirmación de contraseña"], []) %>
+        </div>
+
+        <div class="form-group actions">
+          <%= submit "Aceptar", class: "btn btn-primary" %>
+          <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+        </div>
+      <% end %>
     </div>
-
-    <div class="input-field">
-      <%= required_label f, :password, "Contraseña", class: "control-label" %>
-      <%= password_input f, :password, class: "form-control", required: "" %>
-      <%= error_tag f, :password %>
-    </div>
-
-    <div class="input-field">
-      <%= required_label f, :password_confirmation, "Confirmación de contraseña", class: "control-label" %>
-      <%= password_input f, :password_confirmation, class: "form-control", required: "" %>
-      <%= error_tag f, :password_confirmation %>
-    </div>
-
-    <div class="form-group">
-      <%= submit "Aceptar", class: "btn btn-primary" %>
-      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
-    </div>
-  <% end %>
+  </div>
 </div>

@@ -114,11 +114,9 @@ defmodule Registro.BranchesControllerTest do
 
       user = Repo.get_by!(User, email: "mary@example.com") |> Repo.preload(:datasheet)
 
-      code = UserAuditLogEntry.action_to_code(:branch_admin_granted)
-
       entries = UserAuditLogEntry
-              |> where([e], e.action_id == ^code)
-              |> where([e], e.user_id == ^user.datasheet.id)
+              |> where([e], e.action == "branch_admin_granted")
+              |> where([e], e.target_datasheet_id == ^user.datasheet.id)
               |> Repo.all
 
       assert Enum.count(entries) == 1
@@ -145,11 +143,9 @@ defmodule Registro.BranchesControllerTest do
 
       user = Repo.get_by!(User, email: "branch_admin2@instedd.org") |> Repo.preload(:datasheet)
 
-      code = UserAuditLogEntry.action_to_code(:branch_admin_revoked)
-
       entries = UserAuditLogEntry
-      |> where([e], e.action_id == ^code)
-      |> where([e], e.user_id == ^user.datasheet.id)
+      |> where([e], e.action == "branch_admin_revoked")
+      |> where([e], e.target_datasheet_id == ^user.datasheet.id)
       |> Repo.all
 
       assert Enum.count(entries) == 1

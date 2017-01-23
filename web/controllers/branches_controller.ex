@@ -2,7 +2,13 @@ defmodule Registro.BranchesController do
   use Registro.Web, :controller
 
   alias __MODULE__
-  alias Registro.{Repo, Branch, Pagination, Datasheet, User, Invitation}
+  alias Registro.{Repo,
+                  Branch,
+                  Pagination,
+                  Datasheet,
+                  User,
+                  Invitation,
+                  UserAuditLogEntry}
 
   plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2 ] when action in [:index]
   plug Registro.Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
@@ -68,6 +74,8 @@ defmodule Registro.BranchesController do
               |> Branch.changeset(branch_params)
               |> Branch.update_admins(admin_datasheets)
               |> validate_admin_not_removing_himself(Coherence.current_user(conn))
+
+    log_changes(conn, changeset)
 
     case Repo.update(changeset) do
       {:ok, _branch} ->
@@ -176,5 +184,28 @@ defmodule Registro.BranchesController do
       [_|_] ->
         "Se enviaron #{Enum.count(new_datasheets)} invitaciones para los nuevos administradores de la filial."
     end
+  end
+
+  defp log_changes(conn, changeset) do
+    current_user = Coherence.current_user(conn)
+
+    previous_admins = changeset.data.admins |> Enum.map(&(&1.id))
+    updated_admins  = changeset |> Ecto.Changeset.get_field(:admins) |> Enum.map(&(&1.id))
+
+    added_admins = updated_admins
+                 |> Enum.reject(fn id -> Enum.member?(previous_admins, id) end)
+
+    removed_admins = previous_admins
+                   |> Enum.reject(fn id -> Enum.member?(updated_admins, id) end)
+
+    Enum.each(added_admins, fn id ->
+      UserAuditLogEntry.add(id, current_user, :branch_admin_granted)
+    end)
+
+    Enum.each(removed_admins, fn id ->
+      UserAuditLogEntry.add(id, current_user, :branch_admin_revoked)
+    end)
+
+    :ok
   end
 end

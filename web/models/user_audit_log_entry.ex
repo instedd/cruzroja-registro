@@ -43,6 +43,8 @@ defmodule Registro.UserAuditLogEntry do
       :reject -> 3
       :invite_send -> 4
       :invite_confirm -> 5
+      :branch_admin_granted -> 6
+      :branch_admin_revoked -> 7
       _ -> 100
     end
   end
@@ -73,6 +75,10 @@ defmodule Registro.UserAuditLogEntry do
         actor <> " le envió una invitación a registrarse " <> date
       5 ->
         "Se registró " <> date
+      6 ->
+        actor <> " lo hizo administrador de una filial" <> date
+      7 ->
+        actor <> " lo removió como administrador de una filial" <> date
       100 ->
         "Actualización sin detalle registrada"
     end

@@ -9,6 +9,7 @@ defmodule Registro.BranchesControllerTest do
     User,
     Invitation,
     Datasheet,
+    UserAuditLogEntry
   }
 
   setup(context) do
@@ -104,6 +105,25 @@ defmodule Registro.BranchesControllerTest do
                                 {:added, "mary@example.com"}]
     end
 
+    test "generated audit entries for new admins", %{conn: conn} do
+      desired_admins = ["branch_admin1@instedd.org",
+                        "branch_admin2@instedd.org",
+                        "mary@example.com"]
+
+      {_conn, _updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", desired_admins)
+
+      user = Repo.get_by!(User, email: "mary@example.com") |> Repo.preload(:datasheet)
+
+      code = UserAuditLogEntry.action_to_code(:branch_admin_granted)
+
+      entries = UserAuditLogEntry
+              |> where([e], e.action_id == ^code)
+              |> where([e], e.user_id == ^user.datasheet.id)
+              |> Repo.all
+
+      assert Enum.count(entries) == 1
+    end
+
     test "allows to remove other admins", %{conn: conn} do
       {_conn, updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin1@instedd.org"])
 
@@ -118,6 +138,21 @@ defmodule Registro.BranchesControllerTest do
       {_conn, updated_admins} = admins_update(conn, "admin@instedd.org", "Branch 1", [])
 
       assert updated_admins == []
+    end
+
+    test "generated audit entries for removed admins", %{conn: conn} do
+      {_conn, _updated_admins} = admins_update(conn, "branch_admin1@instedd.org", "Branch 1", ["branch_admin1@instedd.org"])
+
+      user = Repo.get_by!(User, email: "branch_admin2@instedd.org") |> Repo.preload(:datasheet)
+
+      code = UserAuditLogEntry.action_to_code(:branch_admin_revoked)
+
+      entries = UserAuditLogEntry
+      |> where([e], e.action_id == ^code)
+      |> where([e], e.user_id == ^user.datasheet.id)
+      |> Repo.all
+
+      assert Enum.count(entries) == 1
     end
 
     test "fails if user is trying to remove himself as branch admin", %{conn: conn} do

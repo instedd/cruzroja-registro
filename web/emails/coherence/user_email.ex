@@ -14,7 +14,7 @@ defmodule Registro.Coherence.UserEmail do
     |> to(user_email(user))
     |> add_reply_to
     |> subject("#{site_name} - Reset password instructions")
-    |> render_body("password.html", %{url: url, name: first_name(user.name)})
+    |> render_body("password.html", %{url: url, name: user.datasheet.first_name})
   end
 
   def confirmation(user, url) do
@@ -41,7 +41,7 @@ defmodule Registro.Coherence.UserEmail do
     |> to(user_email(user))
     |> add_reply_to
     |> subject("#{site_name} - Unlock Instructions")
-    |> render_body("unlock.html", %{url: url, name: first_name(user.name)})
+    |> render_body("unlock.html", %{url: url, name: user.datasheet.first_name})
   end
 
   defp add_reply_to(mail) do
@@ -59,8 +59,11 @@ defmodule Registro.Coherence.UserEmail do
     end
   end
 
-  defp user_email(user) do
-    {user.name, user.email}
+  defp user_email(%Registro.User{datasheet: %Registro.Datasheet{ first_name: name }, email: email}) do
+    {name, email}
+  end
+  defp user_email(%Registro.Invitation{name: name, email: email}) do
+    {name, email}
   end
 
   defp from_email do

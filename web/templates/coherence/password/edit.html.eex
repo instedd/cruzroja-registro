@@ -1,25 +1,27 @@
-<br \>
+<div class="row">
+  <div class="col s6 offset-s3">
+    <div class="content-main">
+      <h3>Generar nueva contraseña</h3>
 
-<h3>Create a New Password</h3>
+      <%= form_for @changeset, password_path(@conn, :update, @changeset.data), [as: :password], fn f  -> %>
 
-<%= form_for @changeset, password_path(@conn, :update, @changeset.data), [as: :password], fn f  -> %>
+        <%= hidden_input f, :reset_password_token %>
 
-  <%= hidden_input f, :reset_password_token %>
+        <div class="input-field">
+          <%= validated_password_input(f, :password, [class: "form-control", required: "", autofocus: ""]) %>
+          <%= validated_label(f, :password, [text: "Contraseña"], []) %>
+        </div>
 
-  <div class="form-group">
-    <%= required_label f, :password, class: "control-label" %>
-    <%= password_input f, :password, class: "form-control", required: "" %>
-    <%= error_tag f, :password %>
+        <div class="input-field">
+          <%= validated_password_input(f, :password_confirmation, [class: "form-control", required: ""]) %>
+          <%= validated_label(f, :password_confirmation, [text: "Confirmación"], []) %>
+        </div>
+
+        <div class="form-group">
+          <%= submit "Cambiar contraseña", class: "btn btn-primary" %>
+          <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+        </div>
+      <% end %>
+    </div>
   </div>
-
-  <div class="form-group">
-    <%= required_label f, :password_confirmation, class: "control-label" %>
-    <%= password_input f, :password_confirmation, class: "form-control", required: "" %>
-    <%= error_tag f, :password_confirmation %>
-  </div>
-
-  <div class="form-group">
-    <%= submit "Update Password", class: "btn btn-primary" %>
-    <%= link "Cancel", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
-  </div>
-<% end %>
+</div>

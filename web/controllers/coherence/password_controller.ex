@@ -42,14 +42,16 @@ defmodule Registro.Coherence.PasswordController do
   def create(conn, %{"password" => password_params} = params) do
     user_schema = Config.user_schema
     email = password_params["email"]
-    user = where(user_schema, [u], u.email == ^email)
-    |> Config.repo.one
+
+    user = Registro.User.query_with_datasheet
+        |> where([u], u.email == ^email)
+        |> Config.repo.one
 
     case user do
       nil ->
         changeset = Helpers.changeset :password, user_schema, user_schema.__struct__
         conn
-        |> put_flash(:error, "Could not find that email address")
+        |> put_flash(:error, "El email no pertenece a ninguna cuenta.")
         |> render("new.html", changeset: changeset)
       user ->
         token = random_string 48
@@ -63,7 +65,7 @@ defmodule Registro.Coherence.PasswordController do
         Registro.ControllerHelpers.send_coherence_email :password, user, url
 
         conn
-        |> put_flash(:info, "Reset email sent. Check your email for a reset link.")
+        |> put_flash(:info, "Se envió un email con instrucciones para regenerar la contraseña.")
         |> redirect_to(:password_create, params)
     end
   end
@@ -79,7 +81,7 @@ defmodule Registro.Coherence.PasswordController do
     case user do
       nil ->
         conn
-        |> put_flash(:error, "Invalid reset token.")
+        |> put_flash(:error, "Link inválido.")
         |> redirect(to: logged_out_url(conn))
       user ->
         if expired? user.reset_password_sent_at, days: Config.reset_token_expire_days do
@@ -87,7 +89,7 @@ defmodule Registro.Coherence.PasswordController do
           |> Config.repo.update
 
           conn
-          |> put_flash(:error, "Password reset token expired.")
+          |> put_flash(:error, "El link expiró.")
           |> redirect(to: logged_out_url(conn))
         else
           changeset = Helpers.changeset(:password, user_schema, user)
@@ -109,7 +111,7 @@ defmodule Registro.Coherence.PasswordController do
     case user do
       nil ->
         conn
-        |> put_flash(:error, "Invalid reset token")
+        |> put_flash(:error, "Link inválido.")
         |> redirect(to: logged_out_url(conn))
       user ->
         cs = Helpers.changeset(:password, user_schema, user, password_params)
@@ -119,7 +121,7 @@ defmodule Registro.Coherence.PasswordController do
             |> repo.update
 
             conn
-            |> put_flash(:info, "Password updated successfully.")
+            |> put_flash(:info, "Tu clave fue actualizada.")
             |> redirect_to(:password_update, params)
           {:error, changeset} ->
             conn

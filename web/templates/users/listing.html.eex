@@ -14,7 +14,7 @@
 
       <tbody>
         <%= for d <- @datasheets do %>
-          <tr data-href="">
+          <tr data-href="<%= users_path(@conn, :show, d) %>">
             <td><%= "#{d.first_name} #{d.last_name}" %></td>
             <td><%= if d.user, do: d.user.email, else: "" %></td>
             <td><%= Registro.Datasheet.role_label(d) %></td>

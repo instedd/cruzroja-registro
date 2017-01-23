@@ -1,5 +1,5 @@
 <% current_user = Coherence.current_user(@conn) %>
-<% datasheet = @changeset.data.datasheet %>
+<% datasheet = @changeset.data %>
 <% pending_approval = Registro.Datasheet.pending_approval?(datasheet) %>
 
 <%= if @changeset.action do %>
@@ -9,7 +9,7 @@
 <div id="profile">
   <div class="row">
     <div class="col">
-      <h2 class="name"><%= Registro.Datasheet.full_name(@changeset.data.datasheet) %></h2>
+      <h2 class="name"><%= Registro.Datasheet.full_name(@changeset.data) %></h2>
     </div>
   </div>
   <div class="row">
@@ -22,13 +22,12 @@
     </div>
     <div class="col s9">
       <div class="content-main">
-        <%= form_for @changeset, users_path(@conn, :update, @user), fn f -> %>
-        <%= inputs_for f, :datasheet, fn fd -> %>
+        <%= form_for @changeset, users_path(@conn, :update, @datasheet), fn fd -> %>
           <div class="section">
             <h3>Datos personales</h3>
+            <label for="email">Email</label>
+            <%= tag(:input, type: "text", id: "datasheet_user_email", name: "email", value: (if @datasheet.user, do: @datasheet.user.email, else: "")) %>
             <%= form_rows [
-              [ validated_field(f, :email, required: true)
-              ],
               [ validated_field(fd, :first_name, text: "Nombre", required: true)
               ],
               [ validated_field(fd, :last_name, text: "Apellido", required: true)
@@ -88,7 +87,7 @@
                   <%= label fd, :role, "Rol", class: "control-label" %>
                   <%= tag(:input,
                           class: "form-control", name: "", type: "text", disabled: "",
-                          value: "#{Registro.Role.label(@user.datasheet.role)}",
+                          value: "#{Registro.Role.label(@datasheet.role)}",
                           ) %>
                   <%= hidden_input fd, :role, class: "form-control", disabled: "" %>
                 </div>
@@ -106,10 +105,10 @@
               <% else %>
                 <div class="input-field col s3">
                   <%= label fd, :role, "Rol", class: "control-label active" %>
-                  <%= role_selector("user[datasheet][role]", datasheet.role) %>
+                  <%= role_selector("datasheet[role]", datasheet.role) %>
                   <%= error_tag fd, :role %>
                 </div>
-                  <%= if @user.datasheet.status do %>
+                  <%= if datasheet.status do %>
                     <%#
                     display the user status without allowing changes.
 
@@ -122,7 +121,7 @@
                       <%= label fd, :status, "Estado", class: "control-label" %>
                       <%= tag(:input,
                               class: "form-control", name: "", type: "text", disabled: "",
-                              value: Registro.Datasheet.status_label(@user.datasheet.status),
+                              value: Registro.Datasheet.status_label(datasheet.status),
                               ) %>
                     </div>
                   <%= end %>
@@ -143,12 +142,11 @@
               <%= hidden_input fd, :is_super_admin, disabled: "" %>
             <% end %>
           <% end %>
-          <% end %>
 
           <div class="form-group actions">
           <%= if pending_approval do %>
-            <button class="btn" type="submit" name="user[datasheet][status]" value="approved">Aprobar</button>
-            <button class="btn red" type="submit" name="user[datasheet][status]" value="rejected">Rechazar</button>
+            <button class="btn" type="submit" name="datasheet[status]" value="approved">Aprobar</button>
+            <button class="btn red" type="submit" name="datasheet[status]" value="rejected">Rechazar</button>
           <% else %>
             <%= submit "Actualizar", class: "btn btn-large btn-primary" %>
           <% end %>

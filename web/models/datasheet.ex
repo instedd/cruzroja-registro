@@ -49,6 +49,7 @@ defmodule Registro.Datasheet do
     model
     |> cast(params, @required_fields ++ [:status, :branch_id, :role, :is_super_admin])
     |> cast_assoc(:admin_branches, required: false)
+    |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
     |> validate_colaboration
@@ -209,6 +210,14 @@ defmodule Registro.Datasheet do
   def full_query(q) do
     import Ecto.Query
     from d in q, preload: [:branch, :admin_branches, :country, :user]
+  end
+
+  def full_query do
+    full_query(Registro.Datasheet)
+  end
+
+  def preload_user(ds) do
+    Registro.Repo.preload(ds, [:branch, :admin_branches, :country, :user])
   end
 
 end

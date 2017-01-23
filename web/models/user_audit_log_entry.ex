@@ -29,8 +29,8 @@ defmodule Registro.UserAuditLogEntry do
     end
   end
 
-  def for(user) do
-    id = user.datasheet_id
+  def for(datasheet) do
+    id = datasheet.id
     Repo.all from e in UserAuditLogEntry,
             where: e.target_datasheet_id == ^id,
             preload: [:user, :actor]

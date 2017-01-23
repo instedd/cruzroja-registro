@@ -69,54 +69,58 @@ defmodule Registro.UsersController do
   end
 
   def update(conn, params) do
-    user = Repo.get(User, params["id"]) |> User.preload_datasheet
+    datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
-    %{"user" => user_params} = params
+    %{"datasheet" => datasheet_params} = params
                              |> set_branch_id_from_branch_name
-                             |> set_status_if_creating_colaboration(user)
-
+                             |> set_status_if_creating_colaboration(datasheet)
+    email = params["email"]
     current_user = Coherence.current_user(conn)
 
-    forbidden = if current_user.datasheet.is_super_admin do
+    forbidden = if current_user.datasheet.is_super_admin && datasheet.user do
                   #don't allow a super user to revoke his own permissions
-                  (user.id == current_user.id) && super_admin_changed(user_params, user)
+                  (datasheet.user.id == current_user.id) && super_admin_changed(datasheet_params, datasheet)
                 else
-                  branch_updated(user_params, user) || super_admin_changed(user_params, user)
+                  branch_updated(datasheet_params, datasheet) || super_admin_changed(datasheet_params, datasheet)
                 end
 
     if forbidden do
       Registro.Authorization.handle_unauthorized(conn)
     else
-      changeset = User.changeset(user, :update, user_params)
+      changeset = Datasheet.changeset(datasheet, datasheet_params)
+      if email && email != "" do
+        user = User.changeset(datasheet.user, :update, %{email: email})
+        changeset = Ecto.Changeset.put_assoc(changeset, :user, user)
+      end
 
       case Repo.update(changeset) do
         {:ok, _user} ->
-          UserAuditLogEntry.add(user.datasheet_id, Coherence.current_user(conn), action_for(changeset))
+          UserAuditLogEntry.add(datasheet.id, Coherence.current_user(conn), action_for(changeset))
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
-          |> redirect(to: users_path(conn, :show, user))
+          |> redirect(to: users_path(conn, :show, datasheet))
         {:error, changeset} ->
-          branch_name = if user.datasheet.branch, do: user.datasheet.branch.name
+          branch_name = if datasheet.branch, do: datasheet.branch.name
           conn
-          |> assign(:history, UserAuditLogEntry.for(user))
+          |> assign(:history, UserAuditLogEntry.for(datasheet))
           |> load_datasheet_form_data
-          |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, user: user, branch_name: branch_name)
+          |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, datasheet: datasheet, branch_name: branch_name)
       end
     end
   end
 
   def show(conn, params) do
-    user = Repo.one(from u in User.query_with_datasheet, where: u.id == ^params["id"])
-    changeset = Ecto.Changeset.change(user)
-    branch = user.datasheet.branch
+    datasheet = Repo.one(from d in Datasheet.full_query, where: d.id == ^params["id"])
+    changeset = Ecto.Changeset.change(datasheet)
+    branch = datasheet.branch
     branch_name = if branch, do: branch.name
 
     conn
     |> assign(:branches, Branch.all)
     |> assign(:roles, Role.all)
-    |> assign(:history, UserAuditLogEntry.for(user))
+    |> assign(:history, UserAuditLogEntry.for(datasheet))
     |> load_datasheet_form_data
-    |> render("show.html", changeset: changeset, user: user, branch_name: branch_name)
+    |> render("show.html", changeset: changeset, datasheet: datasheet, branch_name: branch_name)
   end
 
   def filter(conn, params) do
@@ -222,7 +226,7 @@ defmodule Registro.UsersController do
   def name_filter(query, param) do
     name = "%" <> param <> "%"
     from d in query,
-      join: u in User, on: u.datasheet_id == d.id,
+      left_join: u in User, on: u.datasheet_id == d.id,
       where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
@@ -265,8 +269,8 @@ defmodule Registro.UsersController do
     if Datasheet.is_admin?(datasheet) do
       user_id = String.to_integer(conn.params["id"])
 
-      (from u in User, where: u.id == ^user_id)
-      |> restrict_to_visible_users(conn,true)
+      (from d in Datasheet, where: d.id == ^user_id)
+      |> restrict_to_visible_users(conn)
       |> Repo.exists?
     else
       false
@@ -283,15 +287,10 @@ defmodule Registro.UsersController do
   end
 
   defp action_for(changeset) do
-    ds = changeset.changes[:datasheet]
-    if ds do
-      case ds.changes[:status] do
-        "approved" -> :approve
-        "rejected" -> :reject
-        _ -> :update
-      end
-    else
-      :update
+    case changeset.changes[:status] do
+      "approved" -> :approve
+      "rejected" -> :reject
+      _ -> :update
     end
   end
 
@@ -304,28 +303,28 @@ defmodule Registro.UsersController do
       branch_name ->
         [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
 
-        update_in(params, ["user", "datasheet"], fn(dp) ->
+        update_in(params, ["datasheet"], fn(dp) ->
           Map.put(dp, "branch_id", branch_id)
         end)
     end
   end
 
-  defp set_status_if_creating_colaboration(params, user) do
+  defp set_status_if_creating_colaboration(params, datasheet) do
     # if the user doesn't have a current colaboration in a branch
     # and both brach_id and role are set, this means that a superadmin
     # is assigning a user to a branch as a colaborator. the change is
     # assumed to be approved.
 
-    %{"datasheet" => datasheet_params} = params["user"]
+    %{"datasheet" => datasheet_params} = params
 
-    if !Datasheet.is_colaborator?(user.datasheet) do
+    if !Datasheet.is_colaborator?(datasheet) do
       case {datasheet_params["branch_id"], datasheet_params["role"]} do
         {nil, _} ->
           params
         {_, nil} ->
           params
         _ ->
-          update_in(params, ["user", "datasheet"], fn(dp) ->
+          update_in(params, ["datasheet"], fn(dp) ->
             Map.put(dp, "status", "approved")
           end)
       end
@@ -334,16 +333,16 @@ defmodule Registro.UsersController do
     end
   end
 
-  def branch_updated(%{"datasheet" => datasheet_params}, target_user) do
+  def branch_updated(datasheet_params, target_datasheet) do
     case Map.fetch(datasheet_params, "branch_id") do
       {:ok, new_branch_id} ->
-        new_branch_id != target_user.datasheet.branch_id
+        new_branch_id != target_datasheet.branch_id
       _ ->
         false
     end
   end
 
-  def super_admin_changed(%{"datasheet" => datasheet_params}, target_user) do
+  def super_admin_changed(datasheet_params, target_datasheet) do
     case Map.fetch(datasheet_params, "is_super_admin") do
       {:ok, new_value} ->
         new_value = case new_value do
@@ -352,7 +351,7 @@ defmodule Registro.UsersController do
                       _ -> new_value
                     end
 
-        new_value != target_user.datasheet.is_super_admin
+        new_value != target_datasheet.is_super_admin
       _ ->
         false
     end

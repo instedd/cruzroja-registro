@@ -27,6 +27,7 @@ defmodule Registro.ViewHelpers do
 
     attrs = if opts[:autofocus], do: [ {:autofocus, ""} | attrs ], else: attrs
     attrs = if opts[:required], do: [ {:required, ""} | attrs ], else: attrs
+    attrs = if opts[:disabled], do: [ {:disabled, ""} | attrs ], else: attrs
 
     text_input f, name, attrs
   end
@@ -46,20 +47,26 @@ defmodule Registro.ViewHelpers do
     end
   end
 
-  def date_picker(f, name, attrs \\ []) do
+  def date_picker(f, name, opts \\ []) do
     import Phoenix.HTML.Form, only: [input_id: 2, input_name: 2, input_value: 2]
+
+    value = case input_value(f, name) do
+              %Date{} = d ->
+                Date.to_iso8601(d)
+              _ ->
+                nil
+            end
 
     attrs = [ {:type, "date"},
               {:class, "datepicker"},
               {:id, input_id(f, name)},
               {:name, input_name(f, name)}
-              | attrs ]
+            ]
 
-    attrs = case input_value(f, name) do
-              %Date{} = d ->
-                [{:'data-value', Date.to_iso8601(d)} | attrs]
-              _ ->
-                attrs
+    attrs = if opts[:disabled] do
+              [{:disabled, ""}, {:value, value} | attrs]
+            else
+              [{:'data-value', value} | attrs]
             end
 
     tag(:input, attrs)

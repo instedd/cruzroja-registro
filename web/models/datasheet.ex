@@ -51,6 +51,19 @@ defmodule Registro.Datasheet do
     |> validate_colaboration
   end
 
+  def profile_filled_changeset(model, params) do
+    model
+    |> cast(params, @required_fields)
+    |> put_change(:filled, true)
+    |> validate_required(@required_fields)
+  end
+
+  def profile_update_changeset(model, params) do
+    model
+    |> cast(params, [:occupation, :address])
+    |> validate_required([:occupation, :address])
+  end
+
   def make_admin_changeset(datasheet, branches) do
     datasheet
     |> Registro.Repo.preload(:admin_branches)

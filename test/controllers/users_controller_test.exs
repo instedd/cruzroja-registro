@@ -6,7 +6,7 @@ defmodule Registro.UsersControllerTest do
   alias Registro.{User, Datasheet, Branch}
 
   setup(context) do
-    create_country("Argentina")
+    country = create_country("Argentina")
 
     branch1 = create_branch(name: "Branch 1")
     branch2 = create_branch(name: "Branch 2")
@@ -22,7 +22,7 @@ defmodule Registro.UsersControllerTest do
     create_volunteer("volunteer2@example.com", branch2.id)
     create_volunteer("volunteer3@example.com", branch3.id)
 
-    {:ok, context}
+    {:ok, Map.merge(%{ some_country: country, some_branch: branch1 }, context)}
   end
 
   describe "listing" do
@@ -62,13 +62,152 @@ defmodule Registro.UsersControllerTest do
 
       user_emails = Enum.map conn.assigns[:datasheets], &(&1.user.email)
 
-      assert user_emails == ["volunteer1@example.com",
-                             "volunteer3@example.com"
-                            ]
+      assert Enum.sort(user_emails) == ["volunteer1@example.com",
+                                        "volunteer3@example.com"
+                                       ]
     end
   end
 
-  describe "update" do
+  describe "own user's profile" do
+    test "an invited branch admin is redirected to profile page upon navigation until his datasheet is filled", %{conn: conn, some_branch: branch} do
+      user = create_invited_admin(branch)
+
+      conn = conn
+           |> log_in(user)
+           |> get(users_path(conn, :index))
+
+      assert redirected_to(conn) == users_path(conn, :profile)
+    end
+
+    test "profile page with form is rendered even if datasheed isn't filled", %{conn: conn, some_branch: branch} do
+      # this basically test that we don't enter a redirect loop
+      user = create_invited_admin(branch)
+
+      conn = conn
+           |> log_in(user)
+           |> get(users_path(conn, :profile))
+
+      assert html_response(conn, 200)
+    end
+
+    test "allow the user to logout without filling the datasheet", %{conn: conn, some_branch: branch} do
+      user = create_invited_admin(branch)
+
+      conn = conn
+      |> log_in(user)
+      |> delete(session_path(conn, :delete))
+
+      assert html_response(conn, 302)
+      assert redirected_to(conn) == "/"
+    end
+
+    test "a user can edit his datasheet fields when first filling his datasheet", %{conn: conn, some_branch: branch, some_country: country} do
+      user = create_invited_admin(branch)
+
+      {conn, updated_user} = update_profile(conn, user, %{datasheet: datasheet_submission(country.id)})
+
+      assert redirected_to(conn) == users_path(conn, :profile)
+
+      assert updated_user.datasheet.filled
+
+      %Datasheet{
+        first_name: "John",
+        last_name: "Doe",
+        legal_id_kind: "DNI",
+        legal_id_number: "1234567890",
+        birth_date: ~D[1990-01-01],
+        occupation: "occupation...",
+        address: "address...",
+        country: ^country,
+      } = updated_user.datasheet
+    end
+
+    test "collaboration settings can not be updated in profile endpoint", %{conn: conn, some_branch: branch, some_country: country} do
+      user = create_invited_admin(branch)
+
+      params = datasheet_submission(country.id)
+             |> Map.merge(%{role: "volunteer",
+                            status: "at_start",
+                            branch_id: branch.id
+                           })
+      {conn, updated_user} = update_profile(conn, user, %{datasheet: params})
+
+      assert redirected_to(conn) == users_path(conn, :profile)
+
+      assert updated_user.datasheet.role == nil
+      assert updated_user.datasheet.branch_id == nil
+      assert updated_user.datasheet.status == nil
+    end
+
+    test "occupation and address can be edited after filling the datasheet", %{conn: conn} do
+      user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
+
+      params = %{datasheet: %{ occupation: "occupation...", address: "address..." }}
+
+      {conn, updated_user} = update_profile(conn, user, params)
+
+      assert redirected_to(conn) == users_path(conn, :profile)
+
+      assert updated_user.datasheet.occupation == "occupation..."
+      assert updated_user.datasheet.address == "address..."
+    end
+
+    test "other fields cannot be updated once the datasheet has been filled", %{conn: conn} do
+      user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
+           |> User.preload_datasheet
+
+      params = %{datasheet: %{ first_name: "This cannot be changed", is_super_admin: true }}
+
+      {conn, updated_user} = update_profile(conn, user, params)
+
+      assert redirected_to(conn) == users_path(conn, :profile)
+      assert user == updated_user
+    end
+
+    def update_profile(conn, user, params) do
+      conn = conn
+      |> log_in(user)
+      |> put(users_path(conn, :update_profile), params)
+
+      updated_user = (from u in User, preload: [datasheet: :country])
+      |> Repo.get!(user.id)
+      |> User.preload_datasheet
+
+      {conn, updated_user}
+    end
+
+    def datasheet_submission(country_id) do
+      %{
+        first_name: "John",
+        last_name: "Doe",
+        legal_id_kind: "DNI",
+        legal_id_number: "1234567890",
+        birth_date: "1990-01-01",
+        occupation: "occupation...",
+        address: "address...",
+        country_id: country_id,
+      }
+    end
+
+    def create_invited_admin(branch) do
+      invite = Registro.Invitation.new_admin_changeset("user@example.com")
+      |> Repo.insert!
+
+      user = User.changeset(:create_from_invitation, invite, %{ "password" => "123456", "password_confirmation" => "123456" })
+      |> Repo.insert!
+      |> Repo.preload(:datasheet)
+
+      branch
+      |> Repo.preload(:admins)
+      |> Branch.changeset(%{})
+      |> Branch.update_admins([user.datasheet])
+      |> Repo.update!
+
+      user
+    end
+  end
+
+  describe "updating managed datasheets" do
     test "a super_admin can update a user's branch", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 

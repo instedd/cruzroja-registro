@@ -84,6 +84,7 @@ defmodule Registro.InvitationsControllerTest do
              "birth_date" => ~D[1980-01-01],
              "occupation" => "...",
              "address" => "...",
+             "phone_number" => "...",
              "country_id" => some_country!.id,
              "role" => "volunteer",
              "branch_id" => "#{branch_id}"
@@ -146,6 +147,7 @@ defmodule Registro.InvitationsControllerTest do
                             "birth_date" => ~D[1980-01-01],
                             "occupation" => "...",
                             "address" => "...",
+                            "phone_number" => "...",
                             "country_id" => some_country!.id,
                             "status" => "at_start",
                             "role" => "volunteer",

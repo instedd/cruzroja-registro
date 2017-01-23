@@ -17,6 +17,7 @@ defmodule Registro.DatasheetTest do
                              birth_date: ~D[1980-01-01],
                              occupation: "-",
                              address: "-",
+                             phone_number: "+1222222",
                              country_id: country.id }]}
   end
 

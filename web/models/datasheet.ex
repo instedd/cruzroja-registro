@@ -14,6 +14,7 @@ defmodule Registro.Datasheet do
     field :birth_date, :date
     field :occupation, :string
     field :address, :string
+    field :phone_number, :string
 
     field :status, :string
     field :role, :string
@@ -40,7 +41,9 @@ defmodule Registro.Datasheet do
                      :country_id,
                      :birth_date,
                      :occupation,
-                     :address ]
+                     :address,
+                     :phone_number
+                   ]
 
   def changeset(model, params \\ %{}) do
     model
@@ -60,8 +63,8 @@ defmodule Registro.Datasheet do
 
   def profile_update_changeset(model, params) do
     model
-    |> cast(params, [:occupation, :address])
-    |> validate_required([:occupation, :address])
+    |> cast(params, [:phone_number, :occupation, :address])
+    |> validate_required([:phone_number, :occupation, :address])
   end
 
   def make_admin_changeset(datasheet, branches) do

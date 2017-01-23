@@ -41,6 +41,7 @@ defmodule Seed do
           birth_date: ~D[1980-01-01],
           occupation: "Administrador de Cruz Roja",
           address: "-",
+          phone_number: "+54 11111111",
           is_super_admin: true
         }
        },
@@ -56,6 +57,7 @@ defmodule Seed do
           birth_date: ~D[1980-01-01],
           occupation: "-",
           address: "-",
+          phone_number: "+54 11111111",
         }
       },
       %{email: "jperez@gmail.com",
@@ -70,6 +72,7 @@ defmodule Seed do
           birth_date: ~D[1980-01-01],
           occupation: "-",
           address: "-",
+          phone_number: "+54 11111111",
           role: "volunteer",
           status: "approved",
           branch_id: branch1.id
@@ -87,6 +90,7 @@ defmodule Seed do
           birth_date: ~D[1980-01-01],
           occupation: "-",
           address: "-",
+          phone_number: "+54 11111111",
         }
       },
       %{email: "msanchez@hotmail.com",
@@ -101,6 +105,7 @@ defmodule Seed do
           birth_date: ~D[1980-01-01],
           occupation: "-",
           address: "-",
+          phone_number: "+54 11111111",
           role: "volunteer",
           status: "approved",
           branch_id: branch2.id

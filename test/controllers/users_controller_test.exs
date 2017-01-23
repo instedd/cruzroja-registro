@@ -118,6 +118,7 @@ defmodule Registro.UsersControllerTest do
         birth_date: ~D[1990-01-01],
         occupation: "occupation...",
         address: "address...",
+        phone_number: "+111",
         country: ^country,
       } = updated_user.datasheet
     end
@@ -139,15 +140,16 @@ defmodule Registro.UsersControllerTest do
       assert updated_user.datasheet.status == nil
     end
 
-    test "occupation and address can be edited after filling the datasheet", %{conn: conn} do
+    test "phone number, occupation and address can be edited after filling the datasheet", %{conn: conn} do
       user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
 
-      params = %{datasheet: %{ occupation: "occupation...", address: "address..." }}
+      params = %{datasheet: %{ phone_number: "phone number...", occupation: "occupation...", address: "address..." }}
 
       {conn, updated_user} = update_profile(conn, user, params)
 
       assert redirected_to(conn) == users_path(conn, :profile)
 
+      assert updated_user.datasheet.phone_number == "phone number..."
       assert updated_user.datasheet.occupation == "occupation..."
       assert updated_user.datasheet.address == "address..."
     end
@@ -185,6 +187,7 @@ defmodule Registro.UsersControllerTest do
         birth_date: "1990-01-01",
         occupation: "occupation...",
         address: "address...",
+        phone_number: "+111",
         country_id: country_id,
       }
     end

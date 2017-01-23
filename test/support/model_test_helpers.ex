@@ -41,6 +41,7 @@ defmodule Registro.ModelTestHelpers do
                         birth_date: ~D[1980-01-01],
                         occupation: "-",
                         address: "-",
+                        phone_number: "+1222222",
                         country_id: country_id,
                         role: "volunteer",
                         branch_id: branch_id,
@@ -63,6 +64,7 @@ defmodule Registro.ModelTestHelpers do
                         birth_date: ~D[1980-01-01],
                         occupation: "-",
                         address: "-",
+                        phone_number: "+1222222",
                         country_id: country_id }})
 
     user = Repo.insert! changeset
@@ -90,6 +92,7 @@ defmodule Registro.ModelTestHelpers do
                         birth_date: ~D[1980-01-01],
                         occupation: "-",
                         address: "-",
+                        phone_number: "+1222222",
                         country_id: country_id,
                         is_super_admin: true }})
     Repo.insert! changeset

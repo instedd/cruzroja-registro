@@ -47,6 +47,9 @@
               [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true)
               ],
 
+              [ validated_field(fd, :phone_number, text: "Teléfono", required: true)
+              ],
+
               [ validated_field(fd, :address, text: "Domicilio", required: true)
               ],
 

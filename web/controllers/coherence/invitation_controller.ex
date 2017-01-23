@@ -169,8 +169,12 @@ defmodule Registro.Coherence.InvitationController do
   end
 
   defp load_invitation_form_data(conn) do
+    datasheet = Coherence.current_user(conn).datasheet
+    branches = if datasheet.is_super_admin, do: Registro.Branch.all, else: datasheet.admin_branches
+             |> Enum.sort_by(&(&1.name))
+
     conn
-    |> assign(:branches, Registro.Branch.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:branches, branches |> Enum.map(&{&1.name, &1.id }))
     |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
     |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
   end
@@ -192,6 +196,7 @@ defmodule Registro.Coherence.InvitationController do
 
       cond do
         datasheet.is_super_admin -> true
+
         Datasheet.is_branch_admin?(datasheet) ->
           case action do
             :new ->
@@ -199,6 +204,9 @@ defmodule Registro.Coherence.InvitationController do
             _ ->
               Datasheet.is_admin_of?(datasheet, target_branch_id(conn.params))
           end
+
+        true ->
+          false
       end
     else
       true

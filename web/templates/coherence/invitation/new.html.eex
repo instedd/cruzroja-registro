@@ -42,17 +42,12 @@
       ],
     ]%>
 
-      <% datasheet = @conn.assigns[:current_user].datasheet %>
-      <%= if datasheet.is_super_admin do %>
-        <div class="row">
-          <div class="input-field col s12">
-            <%= select fd, :branch_id, @conn.assigns[:branches], [class: "form-control", required: ""] %>
-            <%= label fd, :branch_id, "Filial" %>
-          </div>
+      <div class="row">
+        <div class="input-field col s12">
+          <%= select fd, :branch_id, @conn.assigns[:branches], [class: "form-control", required: ""] %>
+          <%= label fd, :branch_id, "Filial" %>
         </div>
-      <% else %>
-        <%= hidden_input fd, :branch_id , value: datasheet.branch_id%>
-      <% end %>
+      </div>
 
       <div class="row">
       <div class="col s12">

@@ -9,28 +9,61 @@ defmodule Registro.InvitationsControllerTest do
   setup(context) do
     create_country("Argentina")
 
-    {:ok, context}
+    super_admin = create_super_admin("admin@instedd.org")
+
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+
+    branch1_admin = create_branch_admin("branch1@instedd.org", branch1)
+    branch1_volunteer = create_volunteer("mary@example.com", branch1.id)
+
+    {:ok, Map.merge(context, %{
+                      super_admin: super_admin,
+                      branch1: branch1,
+                      branch2: branch2,
+                      branch1_admin: branch1_admin,
+                      branch1_volunteer: branch1_volunteer,
+                    })}
   end
 
-  test "renders invitation form", %{conn: conn} do
-    admin = create_super_admin("admin@instedd.org")
+  describe "form rendering" do
+    test "renders invitation form with all branches for super_admin", %{conn: conn, super_admin: super_admin} do
+      conn = conn
+      |> log_in(super_admin)
+      |> get("/usuarios/alta")
 
-    conn = conn
-    |> log_in(admin)
-    |> get("/usuarios/alta")
+      assert html_response(conn, 200)
+      assert branches_names(conn) == ["Branch 1", "Branch 2"]
+    end
 
-    assert html_response(conn, 200)
+    test "renders invitation form with administrated branches for branch admin", %{conn: conn, branch1_admin: branch1_admin} do
+      conn = conn
+      |> log_in(branch1_admin)
+      |> get("/usuarios/alta")
+
+      assert html_response(conn, 200)
+      assert branches_names(conn) == ["Branch 1"]
+    end
+
+    test "is not available for non admin users", %{conn: conn, branch1_volunteer: volunteer} do
+      conn = conn
+      |> log_in(volunteer)
+      |> get("/usuarios/alta")
+
+      assert_unauthorized(conn)
+    end
+
+    defp branches_names(conn) do
+      conn.assigns[:branches] |> Enum.map(fn {name, _id} -> name end)
+    end
   end
 
   describe "sending invitations" do
-    test "invitation creation with associated datasheet", %{conn: conn} do
-      branch = create_branch(name: "Branch")
-      admin = create_super_admin("admin@instedd.org")
-
+    test "invitation creation with associated datasheet", %{conn: conn, branch1: branch, super_admin: super_admin} do
       params = invitation_params(branch.id)
 
       conn = conn
-      |> log_in(admin)
+      |> log_in(super_admin)
       |> post("/usuarios/alta", params)
 
       assert html_response(conn, 302)
@@ -38,10 +71,7 @@ defmodule Registro.InvitationsControllerTest do
       verify_invitation(params)
     end
 
-    test "branch admin can send invitations for the same branch", %{conn: conn} do
-      branch = create_branch(name: "Branch")
-      branch_admin = create_branch_admin("branch1@instedd.org", branch)
-
+    test "branch admin can send invitations for the same branch", %{conn: conn, branch1: branch, branch1_admin: branch_admin} do
       params = invitation_params(branch.id)
 
       conn = conn
@@ -53,24 +83,26 @@ defmodule Registro.InvitationsControllerTest do
       verify_invitation(params)
     end
 
-    test "branch admin can not send invitations for other branches", %{conn: conn} do
-      branch1 = create_branch(name: "Branch 1")
-      branch2 = create_branch(name: "Branch 2")
-
-      branch1_admin = create_branch_admin("branch1@instedd.org", branch1)
-
+    test "branch admin can not send invitations for other branches", %{conn: conn, branch2: branch2, branch1_admin: branch1_admin} do
       params = invitation_params(branch2.id)
 
       conn = conn
       |> log_in(branch1_admin)
       |> post("/usuarios/alta", params)
 
-      assert html_response(conn, 302)
-
+      assert_unauthorized(conn)
       assert Invitation.count == 0
     end
 
-    test "volunteers can not send invitations" do
+    test "volunteers can not send invitations", %{conn: conn, branch1_volunteer: branch1_volunteer, branch1: branch1} do
+      params = invitation_params(branch1.id)
+
+      conn = conn
+      |> log_in(branch1_volunteer)
+      |> post("/usuarios/alta", params)
+
+      assert_unauthorized(conn)
+      assert Invitation.count == 0
     end
 
     defp invitation_params(branch_id) do

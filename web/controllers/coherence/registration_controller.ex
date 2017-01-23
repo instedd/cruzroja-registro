@@ -35,9 +35,7 @@ defmodule Registro.Coherence.RegistrationController do
   Render the new user form.
   """
   def new(conn, _params) do
-    default_country = Repo.get_by(Country, name: "Argentina")
-
-    cs = User.changeset(:create_with_datasheet, %{ datasheet: %{country_id: default_country.id} })
+    cs = User.changeset(:create_with_datasheet, %{ datasheet: %{country_id: Country.default.id} })
 
     conn
     |> load_registration_form_data

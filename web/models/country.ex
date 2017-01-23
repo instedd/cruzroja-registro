@@ -12,6 +12,10 @@ defmodule Registro.Country do
     |> unique_constraint(:name)
   end
 
+  def default do
+    Registro.Repo.get_by!(Registro.Country, name: "Argentina")
+  end
+
   def all do
     Registro.Repo.all(__MODULE__)
   end

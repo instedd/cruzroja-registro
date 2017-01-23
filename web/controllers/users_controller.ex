@@ -2,13 +2,15 @@ defmodule Registro.UsersController do
   use Registro.Web, :controller
 
   alias __MODULE__
-  alias Registro.Country
-  alias Registro.Pagination
-  alias Registro.User
-  alias Registro.Role
-  alias Registro.Branch
-  alias Registro.Datasheet
-  alias Registro.UserAuditLogEntry
+  alias Registro.{
+    Country,
+    Pagination,
+    User,
+    Role,
+    Branch,
+    Datasheet,
+    UserAuditLogEntry,
+  }
 
   import Ecto.Query
 
@@ -33,10 +35,37 @@ defmodule Registro.UsersController do
 
   def profile(conn, _params) do
     user = Coherence.current_user(conn)
-    changeset = Ecto.Changeset.change(user)
+
+    changeset = if user.datasheet.filled do
+                  Datasheet.changeset(user.datasheet)
+                else
+                  Datasheet.changeset(user.datasheet, %{ country_id: Registro.Country.default.id })
+                end
 
     conn
-    |> render("profile.html", changeset: changeset)
+    |> load_datasheet_form_data
+    |> render("profile.html", user: user, changeset: changeset, filled: user.datasheet.filled)
+  end
+
+  def update_profile(conn, %{"datasheet" => datasheet_params}) do
+    user = Coherence.current_user(conn)
+
+    changeset = if user.datasheet.filled do
+                    Datasheet.profile_update_changeset(user.datasheet, datasheet_params)
+                  else
+                    Datasheet.profile_filled_changeset(user.datasheet, datasheet_params)
+                end
+
+    case Repo.update(changeset) do
+      {:ok, _datasheet} ->
+        conn
+        |> put_flash(:info, "Tus datos fueron actualizados.")
+        |> redirect(to: users_path(conn, :profile))
+      {:error, changeset} ->
+        conn
+        |> load_datasheet_form_data
+        |> render("profile.html", user: user, changeset: changeset, filled: user.datasheet.filled)
+    end
   end
 
   def update(conn, params) do

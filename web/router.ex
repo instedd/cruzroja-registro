@@ -28,6 +28,10 @@ defmodule Registro.Router do
     plug Registro.PreloadDatasheet
   end
 
+  pipeline :check_filled_datasheet do
+    plug Registro.CheckDatasheet, redirect_to: "/perfil"
+  end
+
   scope "/", Registro do
     pipe_through [:browser, :set_user]
 
@@ -41,7 +45,7 @@ defmodule Registro.Router do
   end
 
   scope "/", Registro do
-    pipe_through [:browser, :check_authentication]
+    pipe_through [:browser, :check_authentication, :check_filled_datasheet]
 
     get  "/usuarios/alta",              Coherence.InvitationController, :new
     post "/usuarios/alta",                Coherence.InvitationController, :create
@@ -51,6 +55,7 @@ defmodule Registro.Router do
     resources "/filiales/", BranchesController
     get "/usuarios/filter", UsersController, :filter
     get "/usuarios/descargar", UsersController, :download_csv
+    put  "/perfil", UsersController, :update_profile
     resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/perfil", UsersController, :profile
   end

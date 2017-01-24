@@ -218,9 +218,8 @@ defmodule Registro.UsersControllerTest do
 
       params = %{
         branch_name: "Branch 2",
-        user: %{
-          datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
-        }}
+        datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
+      }
 
       {_conn, volunteer} = update_user(conn, "admin@instedd.org", volunteer, params)
 
@@ -235,9 +234,8 @@ defmodule Registro.UsersControllerTest do
 
       params = %{
         branch_name: "Branch 2",
-        user: %{
-          datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
-        }}
+        datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
+        }
 
       {_conn, updated_volunteer} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
 
@@ -250,11 +248,10 @@ defmodule Registro.UsersControllerTest do
 
       assert u2.datasheet.role == "volunteer"
 
-      params = %{ user:
-                  %{ :datasheet => %{
+      params = %{ :datasheet => %{
                   id: u2.datasheet.id,
                   role: "associate",
-                  status: u2.datasheet.status }}}
+                  status: u2.datasheet.status }}
 
       {_conn, u2} = update_user(conn, u1, u2, params)
 
@@ -267,11 +264,10 @@ defmodule Registro.UsersControllerTest do
 
       assert u2.datasheet.role == "volunteer"
 
-      params = %{ user:
-                  %{ :datasheet => %{
+      params = %{ :datasheet => %{
                   id: u2.datasheet.id,
                   role: "associate",
-                  status: u2.datasheet.status }}}
+                  status: u2.datasheet.status }}
 
       {conn, _u2} = update_user(conn, u1, u2, params)
 
@@ -310,11 +306,10 @@ defmodule Registro.UsersControllerTest do
       assert volunteer.datasheet.status == "at_start"
 
       params = %{
-        user: %{
           datasheet: %{
             id: volunteer.datasheet.id,
             status: "approved"
-          }}}
+          }}
 
       {conn, volunteer} = update_user(conn, current_user_email, volunteer, params)
 
@@ -333,9 +328,8 @@ defmodule Registro.UsersControllerTest do
       {nil, nil, nil} = {datasheet.branch_id, datasheet.role, datasheet.status}
 
       params = %{
-        user: %{
           datasheet: %{ id: user.datasheet.id, branch_id: branch2.id, role: "volunteer" }
-        }}
+        }
 
       {_conn, user} = update_user(conn, "admin@instedd.org", user, params)
 
@@ -349,10 +343,9 @@ defmodule Registro.UsersControllerTest do
     test "a super_admin can grant super_admin permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      {_conn, user} = update_user(conn, "admin@instedd.org", volunteer, user: %{
-                                                                          datasheet: %{
+      {_conn, user} = update_user(conn, "admin@instedd.org", volunteer, datasheet: %{
                                                                             id: volunteer.datasheet.id,
-                                                                            is_super_admin: true } } )
+                                                                            is_super_admin: true })
 
       assert user.datasheet.is_super_admin
     end
@@ -360,10 +353,9 @@ defmodule Registro.UsersControllerTest do
     test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
       other_admin = create_super_admin("admin2@instedd.org")
 
-      {_conn, other_admin} = update_user(conn, "admin@instedd.org", other_admin, user: %{
-                                                                                  datasheet: %{
+      {_conn, other_admin} = update_user(conn, "admin@instedd.org", other_admin, datasheet: %{
                                                                                     id: other_admin.datasheet.id,
-                                                                                    is_super_admin: false } } )
+                                                                                    is_super_admin: false })
 
       refute other_admin.datasheet.is_super_admin
     end
@@ -371,9 +363,9 @@ defmodule Registro.UsersControllerTest do
     test "a super_admin cannot revoke his own super_admin permissions", %{conn: conn} do
       admin = get_user_by_email("admin@instedd.org")
 
-      {_conn, admin} = update_user(conn, admin, admin, user: %{ datasheet: %{
+      {_conn, admin} = update_user(conn, admin, admin, datasheet: %{
                                                                   id: admin.datasheet.id,
-                                                                  is_super_admin: false } })
+                                                                  is_super_admin: false })
 
       assert admin.datasheet.is_super_admin
     end
@@ -384,10 +376,10 @@ defmodule Registro.UsersControllerTest do
       # this caused problems when checking if the flag changed.
       admin = get_user_by_email("admin@instedd.org")
 
-      {_conn, admin} = update_user(conn, admin, admin, user: %{ datasheet: %{
+      {_conn, admin} = update_user(conn, admin, admin, datasheet: %{
                                                                   id: admin.datasheet.id,
                                                                   first_name: "foo",
-                                                                  is_super_admin: "true" } })
+                                                                  is_super_admin: "true" })
 
       assert admin.datasheet.is_super_admin
       assert admin.datasheet.first_name == "foo"
@@ -396,7 +388,7 @@ defmodule Registro.UsersControllerTest do
     test "a branch admin cannot grant super_admin permission", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      params = %{ user: %{ datasheet: %{ id: volunteer.datasheet.id, is_super_admin: true } } }
+      params = %{ datasheet: %{ id: volunteer.datasheet.id, is_super_admin: true } }
       {_conn, user} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
 
       refute user.datasheet.is_super_admin
@@ -409,7 +401,7 @@ defmodule Registro.UsersControllerTest do
 
       conn = conn
       |> log_in("admin@instedd.org")
-      |> get(users_path(Registro.Endpoint, :show, volunteer))
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert html_response(conn, 200)
     end
@@ -419,7 +411,7 @@ defmodule Registro.UsersControllerTest do
 
       conn = conn
       |> log_in("branch_admin1@instedd.org")
-      |> get(users_path(Registro.Endpoint, :show, volunteer))
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert html_response(conn, 200)
     end
@@ -503,10 +495,11 @@ defmodule Registro.UsersControllerTest do
   def update_user(conn, %User{} = current_user, target_user, params) do
     conn = conn
     |> log_in(current_user)
-    |> patch(users_path(Registro.Endpoint, :update, target_user), params)
+    |> patch(users_path(Registro.Endpoint, :update, target_user.datasheet), params)
 
     {conn, Repo.get(User.query_with_datasheet, target_user.id)}
   end
+
   def update_user(conn, current_user_email, target_user, params) do
     update_user(conn, get_user_by_email(current_user_email), target_user, params)
   end

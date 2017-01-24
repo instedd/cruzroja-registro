@@ -280,7 +280,8 @@ defmodule Registro.UsersController do
   defp listing_page_query(conn, page_number) do
     (from d in Datasheet,
       left_join: u in User, on: u.datasheet_id == d.id,
-      order_by: d.last_name)
+      order_by: d.last_name,
+      where: d.filled == true)
       |> Datasheet.full_query
       |> Pagination.query(page_number: page_number)
       |> restrict_to_visible_users(conn)

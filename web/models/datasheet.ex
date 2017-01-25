@@ -18,6 +18,7 @@ defmodule Registro.Datasheet do
 
     field :status, :string
     field :role, :string
+    field :volunteer_since, :date
     field :is_super_admin, :boolean
 
     field :filled, :boolean
@@ -51,6 +52,7 @@ defmodule Registro.Datasheet do
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
+    |> track_volunteer_confirmation
     |> validate_required(@required_fields)
     |> validate_colaboration
   end
@@ -193,6 +195,18 @@ defmodule Registro.Datasheet do
     end
   end
 
+  defp track_volunteer_confirmation(changeset) do
+    role = get_field(changeset, :role)
+    status_change = changeset.changes[:status]
+
+    case {role, status_change} do
+      { "volunteer", "approved" } ->
+        put_change(changeset, :volunteer_since, Ecto.Date.utc())
+      _ ->
+        changeset
+    end
+  end
+
   defp valid_status?(status) do
     Enum.member? ["at_start", "approved", "rejected"], status
   end
@@ -221,5 +235,4 @@ defmodule Registro.Datasheet do
   def preload_user(ds) do
     Registro.Repo.preload(ds, [:branch, :admin_branches, :country, :user])
   end
-
 end

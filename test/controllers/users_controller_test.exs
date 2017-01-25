@@ -140,18 +140,41 @@ defmodule Registro.UsersControllerTest do
       assert updated_user.datasheet.status == nil
     end
 
-    test "phone number, occupation and address can be edited after filling the datasheet", %{conn: conn} do
+    test "email, phone number, occupation and address can be edited after filling the datasheet", %{conn: conn} do
       user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
 
-      params = %{datasheet: %{ phone_number: "phone number...", occupation: "occupation...", address: "address..." }}
+      params = %{datasheet: %{
+                    phone_number: "phone number...",
+                    occupation: "occupation...",
+                    address: "address...",
+                    user: %{ id: "#{user.id}",
+                             email: "modified_email@instedd.org" }}}
 
       {conn, updated_user} = update_profile(conn, user, params)
 
       assert redirected_to(conn) == users_path(conn, :profile)
 
+      assert updated_user.email == "modified_email@instedd.org"
       assert updated_user.datasheet.phone_number == "phone number..."
       assert updated_user.datasheet.occupation == "occupation..."
       assert updated_user.datasheet.address == "address..."
+    end
+
+    test "it is not possible to change datasheet>user association", %{conn: conn} do
+      user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
+      other_user = Repo.get_by!(User, email: "branch_admin2@instedd.org")
+
+      params = %{datasheet: %{ user: %{ id:  "#{other_user.id}" }}}
+
+      {conn, _} = update_profile(conn, user, params)
+
+      assert_unauthorized(conn)
+
+      updated_user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
+      updated_other_user = Repo.get_by!(User, email: "branch_admin2@instedd.org")
+
+      assert user == updated_user
+      assert other_user == updated_other_user
     end
 
     test "other fields cannot be updated once the datasheet has been filled", %{conn: conn} do

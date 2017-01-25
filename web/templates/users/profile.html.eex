@@ -9,17 +9,17 @@
         <% end %>
 
         <%= form_for @changeset, users_path(@conn, :update_profile), fn fd  -> %>
+        <%= inputs_for fd, :user, fn fu -> %>
 
         <%= if @changeset.action do %>
           <%= set_generic_error_toast %>
         <% end %>
 
         <%= form_rows [
-          [ tag(:input, type: "text", value: @user.email, disabled: ""),
-            content_tag(:label, "Email", class: "control-label")
+          [ validated_field(fu, :email, text: "Email", required: true, autofocus: true)
           ],
 
-          [ validated_field(fd, :first_name, text: "Nombre", required: true, disabled: @filled, autofocus: true)
+          [ validated_field(fd, :first_name, text: "Nombre", required: true, disabled: @filled)
           ],
 
           [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: @filled)
@@ -64,6 +64,7 @@
              <%= branch_label(@current_user.datasheet) %>.
          <% end %>
          </p>
+       <% end %>
        <% end %>
 
         <div class="form-group actions">

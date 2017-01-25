@@ -16,6 +16,7 @@ defmodule Registro.UsersController do
 
   plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index, :filter]
   plug Registro.Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
+  plug Registro.Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
 
   def index(conn, _params) do
     query = listing_page_query(conn, 1)
@@ -34,26 +35,26 @@ defmodule Registro.UsersController do
   end
 
   def profile(conn, _params) do
-    user = Coherence.current_user(conn)
+    datasheet = load_datasheet_for_update(conn)
 
-    changeset = if user.datasheet.filled do
-                  Datasheet.changeset(user.datasheet)
+    changeset = if datasheet.filled do
+                  Datasheet.profile_update_changeset(datasheet)
                 else
-                  Datasheet.changeset(user.datasheet, %{ country_id: Registro.Country.default.id })
+                  Datasheet.profile_filled_changeset(datasheet, %{ country_id: Registro.Country.default.id })
                 end
 
     conn
     |> load_datasheet_form_data
-    |> render("profile.html", user: user, changeset: changeset, filled: user.datasheet.filled)
+    |> render("profile.html", changeset: changeset, filled: datasheet.filled)
   end
 
   def update_profile(conn, %{"datasheet" => datasheet_params}) do
-    user = Coherence.current_user(conn)
+    datasheet = load_datasheet_for_update(conn)
 
-    changeset = if user.datasheet.filled do
-                    Datasheet.profile_update_changeset(user.datasheet, datasheet_params)
+    changeset = if datasheet.filled do
+                    Datasheet.profile_update_changeset(datasheet, datasheet_params)
                   else
-                    Datasheet.profile_filled_changeset(user.datasheet, datasheet_params)
+                    Datasheet.profile_filled_changeset(datasheet, datasheet_params)
                 end
 
     case Repo.update(changeset) do
@@ -64,7 +65,7 @@ defmodule Registro.UsersController do
       {:error, changeset} ->
         conn
         |> load_datasheet_form_data
-        |> render("profile.html", user: user, changeset: changeset, filled: user.datasheet.filled)
+        |> render("profile.html", changeset: changeset, filled: datasheet.filled)
     end
   end
 
@@ -277,6 +278,15 @@ defmodule Registro.UsersController do
     end
   end
 
+  def authorize_profile_update(conn, current_user) do
+    case conn.params["datasheet"]["user"] do
+      nil ->
+        true
+      %{ "id" => id } ->
+        String.to_integer(id) == current_user.id
+    end
+  end
+
   defp listing_page_query(conn, page_number) do
     (from d in Datasheet,
       left_join: u in User, on: u.datasheet_id == d.id,
@@ -362,5 +372,12 @@ defmodule Registro.UsersController do
     conn
     |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
     |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
+  end
+
+  # Since we allow updating the user from the datasheet,
+  # we need to preload the association from the datasheet's side
+  defp load_datasheet_for_update(conn) do
+    user = Coherence.current_user(conn)
+    Repo.preload(user.datasheet, :user)
   end
 end

@@ -55,16 +55,18 @@ defmodule Registro.Datasheet do
     |> validate_colaboration
   end
 
-  def profile_filled_changeset(model, params) do
+  def profile_filled_changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields)
+    |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
   end
 
-  def profile_update_changeset(model, params) do
+  def profile_update_changeset(model, params \\ %{}) do
     model
     |> cast(params, [:phone_number, :occupation, :address])
+    |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> validate_required([:phone_number, :occupation, :address])
   end
 

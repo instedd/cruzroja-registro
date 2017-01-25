@@ -329,6 +329,7 @@ defmodule Registro.UsersControllerTest do
       assert volunteer.datasheet.status == "at_start"
 
       params = %{
+          email: target_user_email,
           datasheet: %{
             id: volunteer.datasheet.id,
             status: "approved"
@@ -351,6 +352,7 @@ defmodule Registro.UsersControllerTest do
       {nil, nil, nil} = {datasheet.branch_id, datasheet.role, datasheet.status}
 
       params = %{
+          email: user.email,
           datasheet: %{ id: user.datasheet.id, branch_id: branch2.id, role: "volunteer" }
         }
 

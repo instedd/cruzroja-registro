@@ -96,9 +96,9 @@ defmodule Registro.UsersController do
       end
 
       case Repo.update(changeset) do
-        {:ok, _user} ->
+        {:ok, ds} ->
           UserAuditLogEntry.add(datasheet.id, Coherence.current_user(conn), action_for(changeset))
-          send_email_on_status_change(conn, changeset, email)
+          send_email_on_status_change(conn, changeset, email, ds)
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
           |> redirect(to: users_path(conn, :show, datasheet))
@@ -383,12 +383,13 @@ defmodule Registro.UsersController do
     Repo.preload(user.datasheet, :user)
   end
 
-  defp send_email_on_status_change(conn, changeset, email) do
+  defp send_email_on_status_change(conn, changeset, email, ds) do
+    ds = Repo.preload(ds, :branch)
     if action_for(changeset) == :approve do
-      Registro.Coherence.UserEmail.approve(changeset.data, users_path(conn, :profile), email)
+      Registro.Coherence.UserEmail.approve(ds, users_path(conn, :profile), email)
     end
     if action_for(changeset) == :reject do
-      Registro.Coherence.UserEmail.reject(changeset.data, users_path(conn, :profile), email)
+      Registro.Coherence.UserEmail.reject(ds, users_path(conn, :profile), email)
     end
   end
 end

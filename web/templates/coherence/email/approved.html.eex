@@ -3,10 +3,10 @@
 </div>
 <div class="content">
   <p>
-  ¡Hola <%= Registro.Datasheet.full_name(@user) %>!
+  ¡Hola <%= Registro.Datasheet.full_name(@ds) %>!
   </p>
   <p>
-  Tu solicitud como <%= Registro.Role.label(@user.role) %> de la filial <%= @user.branch.name %> fue aprobada. Si querés revisar o corregir tus datos de inscripción hacé click en el enlace:
+  Tu solicitud como <%= Registro.Role.label(@ds.role) %> de la filial <%= @ds.branch.name %> fue aprobada. Si querés revisar o corregir tus datos de inscripción hacé click en el enlace:
   </p>
   <p>
     <a href="<%= @url %>" target="_blank">Ver mi solicitud</a>

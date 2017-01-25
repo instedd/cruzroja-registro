@@ -44,23 +44,23 @@ defmodule Registro.Coherence.UserEmail do
     |> render_body("unlock.html", %{url: url, name: user.datasheet.first_name})
   end
 
-  def approve(user, url, email) do
+  def approve(ds, url, email) do
     %Email{}
     |> from(from_email)
     |> to(email)
     |> add_reply_to
     |> subject("Tu solicitud en Cruz Roja fue aprobada")
-    |> render_body("approved.html", %{url: url, user: user})
+    |> render_body("approved.html", %{url: url, ds: ds})
     |> Registro.Coherence.Mailer.deliver
   end
 
-  def reject(user, url, email) do
+  def reject(ds, url, email) do
     %Email{}
     |> from(from_email)
     |> to(email)
     |> add_reply_to
     |> subject("Tu solicitud en Cruz Roja fue rechazada")
-    |> render_body("rejected.html", %{url: url, user: user})
+    |> render_body("rejected.html", %{url: url, ds: ds})
     |> Registro.Coherence.Mailer.deliver
   end
 

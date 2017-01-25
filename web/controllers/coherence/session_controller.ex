@@ -140,7 +140,7 @@ defmodule Registro.Coherence.SessionController do
     conn
   end
 
-  @flash_invalid "Incorrect #{Config.login_field} or password."
+  @flash_invalid "Email o contraseña incorrectos."
   @flash_locked "Maximum Login attempts exceeded. Your account has been locked."
 
   defp log_lockable_update({:error, changeset}) do

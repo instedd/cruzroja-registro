@@ -341,6 +341,52 @@ defmodule Registro.UsersControllerTest do
     end
   end
 
+  describe "volunteer transition to associate" do
+    test "someone who has been a volunteer for more than a year can ask to become an associate", %{conn: conn, some_branch: branch} do
+      {conn, user} = create_approved_volunteer(branch, a_year_ago)
+                    |> request_volunteer_update(conn)
+
+      assert redirected_to(conn) == users_path(Registro.Endpoint, :profile)
+      assert user.datasheet.status == "associate_requested"
+    end
+
+    test "volunteers with less than a year cannot ask", %{conn: conn, some_branch: branch} do
+      {conn, user} = create_approved_volunteer(branch, less_than_a_year_ago)
+                   |> request_volunteer_update(conn)
+
+      assert_unauthorized(conn)
+      assert user.datasheet.status == "approved"
+    end
+
+    def request_volunteer_update(volunteer, conn) do
+      conn = conn
+      |> log_in(volunteer)
+      |> post(users_path(Registro.Endpoint, :associate_request))
+
+      updated_volunteer = Repo.get(User.query_with_datasheet, volunteer.id)
+
+      {conn, updated_volunteer}
+    end
+
+    def create_approved_volunteer(branch, volunteer_since) do
+      user = create_volunteer("approved_volunteer@example.com", branch.id)
+
+      user
+      |> Ecto.Changeset.change
+      |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, volunteer_since: volunteer_since, status: "approved"  })
+      |> Repo.update!
+    end
+
+    def a_year_ago do
+      { date, _time } = Timex.Date.today |> Timex.shift(years: -1, days: -1) |> Timex.to_erlang_datetime
+      Ecto.Date.from_erl(date)
+    end
+
+    def less_than_a_year_ago do
+      Ecto.Date.utc
+    end
+  end
+
   # A super admin should be allowed to mark a user with no previous branch
   # colaboration (ie. other admins) as a colaborator of any branch.
   describe "marking users as colaborators of a branch after registration" do

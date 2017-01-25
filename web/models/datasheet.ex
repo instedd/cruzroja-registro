@@ -97,6 +97,7 @@ defmodule Registro.Datasheet do
       "at_start" -> "Pendiente"
       "approved" -> "Aprobado"
       "rejected" -> "Rechazado"
+      "associate_requested" -> "Solicitó ser asociado"
       nil        -> ""
     end
   end
@@ -208,7 +209,7 @@ defmodule Registro.Datasheet do
   end
 
   defp valid_status?(status) do
-    Enum.member? ["at_start", "approved", "rejected"], status
+    Enum.member? ["at_start", "approved", "rejected", "associate_requested"], status
   end
 
   def required_fields do
@@ -234,5 +235,18 @@ defmodule Registro.Datasheet do
 
   def preload_user(ds) do
     Registro.Repo.preload(ds, [:branch, :admin_branches, :country, :user])
+  end
+
+  def can_ask_to_become_associate?(%Datasheet{ role: role, status: status, volunteer_since: volunteer_since }) do
+    case {role, status} do
+      { "volunteer", "approved" } ->
+        a_year_ago = Timex.Date.today |> Timex.shift(years: -1)
+        {:ok, erl_date} = Ecto.Date.dump(volunteer_since)
+
+        Timex.to_date(erl_date)
+        |> Timex.before?(a_year_ago)
+      _ ->
+        false
+    end
   end
 end

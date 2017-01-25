@@ -3,6 +3,7 @@ defmodule Registro.UsersController do
 
   alias __MODULE__
   alias Registro.{
+    Authorization,
     Country,
     Pagination,
     User,
@@ -14,10 +15,11 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
-  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
-  plug Registro.Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
-  plug Registro.Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
+  plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
+  plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
+  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
+  plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
+  plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
   def index(conn, _params) do
     query = listing_page_query(conn, 1)
@@ -87,7 +89,7 @@ defmodule Registro.UsersController do
                 end
 
     if forbidden do
-      Registro.Authorization.handle_unauthorized(conn)
+      Authorization.handle_unauthorized(conn)
     else
       changeset = Datasheet.changeset(datasheet, datasheet_params)
       if email && email != "" do
@@ -110,6 +112,16 @@ defmodule Registro.UsersController do
           |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, datasheet: datasheet, branch_name: branch_name)
       end
     end
+  end
+
+  def associate_request(conn, params) do
+    datasheet = Coherence.current_user(conn).datasheet
+
+    Datasheet.changeset(datasheet, %{ status: "associate_requested" })
+    |> Repo.update!
+
+    conn
+    |> redirect(to: users_path(conn, :profile))
   end
 
   def show(conn, params) do
@@ -287,6 +299,10 @@ defmodule Registro.UsersController do
       %{ "id" => id } ->
         String.to_integer(id) == current_user.id
     end
+  end
+
+  def authorize_associate_request(_conn, %User{ datasheet: datasheet }) do
+    Datasheet.can_ask_to_become_associate?(datasheet)
   end
 
   defp listing_page_query(conn, page_number) do

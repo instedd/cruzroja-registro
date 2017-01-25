@@ -13,7 +13,7 @@ defmodule Registro.Coherence.UserEmail do
     |> from(from_email)
     |> to(user_email(user))
     |> add_reply_to
-    |> subject("#{site_name} - Reset password instructions")
+    |> subject("Reseteo de contraseña en Cruz Roja")
     |> render_body("password.html", %{url: url, name: user.datasheet.first_name})
   end
 
@@ -31,7 +31,7 @@ defmodule Registro.Coherence.UserEmail do
     |> from(from_email)
     |> to(user_email(invitation))
     |> add_reply_to
-    |> subject("#{site_name} - Invitation to create a new account")
+    |> subject("Invitación a Cruz Roja Argentina")
     |> render_body("invitation.html", %{url: url, name: first_name(invitation.name)})
   end
 
@@ -42,6 +42,26 @@ defmodule Registro.Coherence.UserEmail do
     |> add_reply_to
     |> subject("#{site_name} - Unlock Instructions")
     |> render_body("unlock.html", %{url: url, name: user.datasheet.first_name})
+  end
+
+  def approve(user, url, email) do
+    %Email{}
+    |> from(from_email)
+    |> to(email)
+    |> add_reply_to
+    |> subject("Tu solicitud en Cruz Roja fue aprobada")
+    |> render_body("approved.html", %{url: url, user: user})
+    |> Registro.Coherence.Mailer.deliver
+  end
+
+  def reject(user, url, email) do
+    %Email{}
+    |> from(from_email)
+    |> to(email)
+    |> add_reply_to
+    |> subject("Tu solicitud en Cruz Roja fue rechazada")
+    |> render_body("rejected.html", %{url: url, user: user})
+    |> Registro.Coherence.Mailer.deliver
   end
 
   defp add_reply_to(mail) do

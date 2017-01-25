@@ -1,0 +1,16 @@
+<div>
+<div id="cross"></div>
+</div>
+<div class="content">
+  <p>
+  ¡Hola <%= Registro.Datasheet.full_name(@user) %>!
+  </p>
+  <p>
+  Tu solicitud como <%= Registro.Role.label(@user.role) %> de la filial <%= @user.branch.name %> fue aprobada. Si querés revisar o corregir tus datos de inscripción hacé click en el enlace:
+  </p>
+  <p>
+    <a href="<%= @url %>" target="_blank">Ver mi solicitud</a>
+  </p>
+  <p>Vamos a usar esta dirección de email para comunicarnos con vos. ¡Bienvenido/a!</p>
+</div>
+<%= render "email_styles.html" %>

@@ -1,0 +1,16 @@
+<div>
+<div id="cross"></div>
+</div>
+<div class="content">
+  <p>
+  Hola <%= Registro.Datasheet.full_name(@user) %>
+  </p>
+  <p>
+  Tu solicitud como <%= Registro.Role.label(@user.role) %> de la filial <%= @user.branch.name %> fue rechazada. Si querés revisar tus datos de inscripción hacé click en el enlace:
+  </p>
+  <p>
+    <a href="<%= @url %>" target="_blank">Ver mi solicitud</a>
+  </p>
+  <p>Si querés saber más, comunicate con tu filial. Gracias.</p>
+</div>
+<%= render "email_styles.html" %>

@@ -1,0 +1,32 @@
+<style>
+  #cross {
+    background: rgb(226,0,0);
+    height: 41px;
+    position: relative;
+    left: 30px;
+    top: 15px;
+    width: 15px;
+  }
+
+  #cross:after {
+    background: rgb(226,0,0);
+    content: "";
+    height: 15px;
+    left: -13px;
+    position: absolute;
+    top: 13px;
+    width: 41px;
+  }
+
+  .content {
+    background-color: #EEEEEE;
+    margin: 50px 100px;
+    padding: 50px;
+    font-family: helvetica neue, lucida grande, sans-serif;
+    font-size: 16px;
+  }
+
+  .content a {
+    color: rgb(226,0,0);
+  }
+</style>

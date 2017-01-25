@@ -1,11 +1,13 @@
 <div>
-  <p>
-    You have been invited to create an Account. Use the link below to create
-    an account.
-  </p>
-  <p>
-    <a href="<%= @url %>">Create my Account</a>
-  </p>
-  <p>Thank you!</p>
+<div id="cross"></div>
 </div>
-
+<div class="content">
+  <p>
+  Bienvenido. Fuiste ingresado al sistema de Cruz Roja Argentina. Para terminar el proceso y sacar tu cuenta, por favor usá el siguiente enlace.
+  </p>
+  <p>
+    <a href="<%= @url %>" target="_blank">Crear mi cuenta</a>
+  </p>
+  <p>¡Muchas gracias!</p>
+</div>
+<%= render "email_styles.html" %>

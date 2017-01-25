@@ -10,7 +10,7 @@ defmodule Registro.BranchesController do
                   Invitation,
                   UserAuditLogEntry}
 
-  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2 ] when action in [:index]
+  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2, redirect: false ] when action in [:index]
   plug Registro.Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
   plug Registro.Authorization, [ check: &BranchesController.authorize_creation/2 ] when action in [:new, :create]
 

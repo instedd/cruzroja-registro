@@ -31,18 +31,20 @@ var fetch = (config, params) => {
 
   $.ajax({
     url: buildUri(config.endpoint, params),
-    type: "get",
-    success: function (data) {
-      config.container.find('#replaceable').html(data)
+    type: "get"
+  }).done( data => {
+    config.container.find('#replaceable').html(data)
 
-      initPagination(config)
-      bindItemClick(config)
+    initPagination(config)
+    bindItemClick(config)
 
-      if (config.afterFetch) {
-        config.afterFetch()
-      }
+    if (config.afterFetch) {
+      config.afterFetch()
     }
-  });
+  }).fail( data => {
+    Materialize.toast("Hubo un error al actualizar los datos.", 8000)
+  })
+  ;
 }
 
 var filterParams = (filters) => {

@@ -14,7 +14,8 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index, :filter]
+  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
+  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
   plug Registro.Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
   plug Registro.Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
 

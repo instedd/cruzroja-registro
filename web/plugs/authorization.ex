@@ -18,7 +18,10 @@ defmodule Registro.Authorization do
   ```
 
   To handle authorization errors without using the plug, use the
-  handle_unauthorized/1 function.
+  handle_unauthorized/2 function. When a request is unauthorized it will be
+  redirected to the login page with a flash message, unless the { :redirect, false }
+  option is passed, case in which a raw 401 status code will be retuned with an
+  empty response.
   """
 
   import Plug.Conn
@@ -38,15 +41,29 @@ defmodule Registro.Authorization do
       {true, abilities} ->
         assign(conn, :abilities, abilities)
       _ ->
-        handle_unauthorized(conn)
+        handle_unauthorized(conn, opts)
     end
   end
 
-  def handle_unauthorized(conn) do
-    conn
-    |> put_flash(:info, "Página no accesible")
-    |> redirect(to: Routes.home_path(conn, :index))
-    |> halt
+  def handle_unauthorized(conn, opts \\ []) do
+    redirect = case opts[:redirect] do
+                 false ->
+                   false
+                 _ ->
+                   # redirect by default
+                   true
+               end
+
+    if redirect do
+      conn
+      |> put_flash(:info, "Página no accesible")
+      |> redirect(to: Routes.home_path(conn, :index))
+      |> halt
+    else
+      conn
+      |> put_status(401)
+      |> halt
+    end
   end
 
 end

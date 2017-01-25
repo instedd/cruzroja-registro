@@ -2,7 +2,8 @@ defmodule Registro.BranchesController do
   use Registro.Web, :controller
 
   alias __MODULE__
-  alias Registro.{Repo,
+  alias Registro.{Authorization,
+                  Repo,
                   Branch,
                   Pagination,
                   Datasheet,
@@ -10,45 +11,54 @@ defmodule Registro.BranchesController do
                   Invitation,
                   UserAuditLogEntry}
 
-  plug Registro.Authorization, [ check: &BranchesController.authorize_listing/2, redirect: false ] when action in [:index]
-  plug Registro.Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
-  plug Registro.Authorization, [ check: &BranchesController.authorize_creation/2 ] when action in [:new, :create]
+  plug Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
+  plug Authorization, [ check: &BranchesController.authorize_creation/2 ] when action in [:new, :create]
 
   def index(conn, params) do
-    import Ecto.Query
+    authorized = Datasheet.is_admin?(Coherence.current_user(conn).datasheet)
+    render_raw = params["raw"] != nil
 
-    datasheet = Coherence.current_user(conn).datasheet
+    case {authorized, render_raw} do
+      { true, _ } ->
+        import Ecto.Query
 
-    query = if datasheet.is_super_admin do
-              from b in Branch
-            else
-              branch_ids = datasheet.admin_branches |> Enum.map(&(&1.id))
+        datasheet = Coherence.current_user(conn).datasheet
 
-              from b in Branch, where: b.id in ^branch_ids
-            end
+        query = if datasheet.is_super_admin do
+                  from b in Branch
+                else
+                  branch_ids = datasheet.admin_branches |> Enum.map(&(&1.id))
 
-    query = from b in query, order_by: :name
+                  from b in Branch, where: b.id in ^branch_ids
+                end
 
-    page = Pagination.requested_page(params)
-    total_count = Repo.aggregate(query, :count, :id)
-    page_count = Pagination.page_count(total_count)
-    branches = Pagination.all(query, page_number: page)
+        query = from b in query, order_by: :name
 
-    {template, conn} = case params["raw"] do
-                         nil ->
-                           { "index.html", conn }
+        page = Pagination.requested_page(params)
+        total_count = Repo.aggregate(query, :count, :id)
+        page_count = Pagination.page_count(total_count)
+        branches = Pagination.all(query, page_number: page)
 
-                         _   ->
-                           { "listing.html", put_layout(conn, false) }
-                       end
+        {template, conn} = if render_raw do
+                            { "index.html", conn }
+                           else
+                            { "listing.html", put_layout(conn, false) }
+                           end
 
-    render(conn, template,
-      branches: branches,
-      page: page,
-      page_count: page_count,
-      page_size: Pagination.default_page_size,
-      total_count: total_count
-    )
+        render(conn, template,
+          branches: branches,
+          page: page,
+          page_count: page_count,
+          page_size: Pagination.default_page_size,
+          total_count: total_count
+        )
+
+      { false, false } ->
+        Authorization.handle_unauthorized(conn, redirect: true)
+
+      { false, true } ->
+        Authorization.handle_unauthorized(conn, redirect: false)
+    end
   end
 
   def show(conn, params) do
@@ -117,10 +127,6 @@ defmodule Registro.BranchesController do
         conn
         |> render("new.html", changeset: changeset, admin_emails: emails)
     end
-  end
-
-  def authorize_listing(_conn, %User{datasheet: datasheet}) do
-    Datasheet.is_admin?(datasheet)
   end
 
   def authorize_detail(conn, %User{datasheet: datasheet}) do

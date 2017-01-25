@@ -40,9 +40,9 @@ defmodule Registro.BranchesController do
         branches = Pagination.all(query, page_number: page)
 
         {template, conn} = if render_raw do
-                            { "index.html", conn }
+                             { "listing.html", put_layout(conn, false) }
                            else
-                            { "listing.html", put_layout(conn, false) }
+                             { "index.html", conn }
                            end
 
         render(conn, template,

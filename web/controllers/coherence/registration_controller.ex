@@ -15,7 +15,7 @@ defmodule Registro.Coherence.RegistrationController do
   alias Coherence.ControllerHelpers, as: Helpers
   import Registro.ControllerHelpers
 
-  alias Registro.{Branch,Country, User, Repo}
+  alias Registro.{Branch,Country, User}
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable

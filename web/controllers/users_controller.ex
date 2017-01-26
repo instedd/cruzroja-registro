@@ -90,10 +90,12 @@ defmodule Registro.UsersController do
       Authorization.handle_unauthorized(conn)
     else
       changeset = Datasheet.changeset(datasheet, datasheet_params)
-      if email && email != "" do
-        user = User.changeset(datasheet.user, :update, %{email: email})
-        changeset = Ecto.Changeset.put_assoc(changeset, :user, user)
-      end
+      changeset = if email && email != "" do
+                    user = User.changeset(datasheet.user, :update, %{email: email})
+                    Ecto.Changeset.put_assoc(changeset, :user, user)
+                  else
+                    changeset
+                  end
 
       case Repo.update(changeset) do
         {:ok, ds} ->
@@ -112,7 +114,7 @@ defmodule Registro.UsersController do
     end
   end
 
-  def associate_request(conn, params) do
+  def associate_request(conn, _params) do
     current_user = Coherence.current_user(conn)
     datasheet = current_user.datasheet
     changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested" })

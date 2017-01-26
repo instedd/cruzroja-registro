@@ -241,12 +241,23 @@ defmodule Registro.Datasheet do
     case {role, status} do
       { "volunteer", "approved" } ->
         a_year_ago = Timex.Date.today |> Timex.shift(years: -1)
-        {:ok, erl_date} = Ecto.Date.dump(volunteer_since)
 
-        Timex.to_date(erl_date)
+        volunteer_since
+        |> to_erl_date
+        |> Timex.to_date
         |> Timex.before?(a_year_ago)
       _ ->
         false
+    end
+  end
+
+  defp to_erl_date(date) do
+    case date do
+      %Date{} ->
+        Date.to_erl(date)
+      _ ->
+        {:ok, erl_date} = Ecto.Date.dump(date)
+        erl_date
     end
   end
 end

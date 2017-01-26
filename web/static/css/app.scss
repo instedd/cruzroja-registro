@@ -60,15 +60,15 @@ body {
   form {
     padding-top: 20px;
 
-    .form-group.actions {
-      margin-top: 30px;
-    }
-
     label {
       // allow error messages to occupy the whole width of the input
       width: 100%;
     }
 
+  }
+
+  .form-group.actions {
+    margin-top: 30px;
   }
 }
 

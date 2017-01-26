@@ -1,34 +1,30 @@
-<div class="row">
-  <div class="col s6 offset-s3">
-    <div class="content-main">
-      <h5>Bienvenido</h5>
+<%= single_column do %>
+  <h5>Bienvenido</h5>
 
-      <p>
-        Antes de continuar, por favor generá tu contraseña.
-      </p>
+  <p>
+    Antes de continuar, por favor generá tu contraseña.
+  </p>
 
-      <%= form_for @changeset, invitation_path(@conn, :create_user), fn f  -> %>
-        <%= if @changeset.action do %>
-          <%= set_generic_error_toast %>
-        <% end %>
+  <%= form_for @changeset, invitation_path(@conn, :create_user), fn f  -> %>
+    <%= if @changeset.action do %>
+      <%= set_generic_error_toast %>
+    <% end %>
 
-        <input type="hidden" name="token" value="<%= @token %>">
+    <input type="hidden" name="token" value="<%= @token %>">
 
-        <div class="input-field">
-          <%= validated_password_input(f, :password, [class: "form-control", required: ""]) %>
-          <%= validated_label(f, :password, [text: "Contraseña"], []) %>
-        </div>
-
-        <div class="input-field">
-          <%= validated_password_input(f, :password_confirmation, [class: "form-control", required: ""]) %>
-          <%= validated_label(f, :password_confirmation, [text: "Confirmación de contraseña"], []) %>
-        </div>
-
-        <div class="form-group actions">
-          <%= submit "Aceptar", class: "btn btn-primary" %>
-          <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
-        </div>
-      <% end %>
+    <div class="input-field">
+      <%= validated_password_input(f, :password, [class: "form-control", required: ""]) %>
+      <%= validated_label(f, :password, [text: "Contraseña"], []) %>
     </div>
-  </div>
-</div>
+
+    <div class="input-field">
+      <%= validated_password_input(f, :password_confirmation, [class: "form-control", required: ""]) %>
+      <%= validated_label(f, :password_confirmation, [text: "Confirmación de contraseña"], []) %>
+    </div>
+
+    <div class="form-group actions">
+      <%= submit "Aceptar", class: "btn btn-primary" %>
+      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+    </div>
+  <% end %>
+<% end %>

@@ -46,9 +46,7 @@ defmodule Registro.UsersController do
                   Datasheet.profile_filled_changeset(datasheet, %{ country_id: Registro.Country.default.id })
                 end
 
-    conn
-    |> load_datasheet_form_data
-    |> render("profile.html", changeset: changeset, filled: datasheet.filled)
+    render_profile(conn, changeset)
   end
 
   def update_profile(conn, %{"datasheet" => datasheet_params}) do
@@ -66,9 +64,7 @@ defmodule Registro.UsersController do
         |> put_flash(:info, "Tus datos fueron actualizados.")
         |> redirect(to: users_path(conn, :profile))
       {:error, changeset} ->
-        conn
-        |> load_datasheet_form_data
-        |> render("profile.html", changeset: changeset, filled: datasheet.filled)
+        render_profile(conn, changeset)
     end
   end
 
@@ -116,12 +112,16 @@ defmodule Registro.UsersController do
 
   def associate_request(conn, params) do
     datasheet = Coherence.current_user(conn).datasheet
+    changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested" })
 
-    Datasheet.changeset(datasheet, %{ status: "associate_requested" })
-    |> Repo.update!
-
-    conn
-    |> redirect(to: users_path(conn, :profile))
+    case Repo.update(changeset) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:info, "Se registró tu solicitud.")
+        |> redirect(to: users_path(conn, :profile))
+      {:error, _} ->
+        render_profile(conn, changeset)
+    end
   end
 
   def show(conn, params) do
@@ -384,6 +384,12 @@ defmodule Registro.UsersController do
       _ ->
         false
     end
+  end
+
+  defp render_profile(conn, changeset) do
+    conn
+    |> load_datasheet_form_data
+    |> render("profile.html", changeset: changeset, filled: changeset.data.filled)
   end
 
   defp load_datasheet_form_data(conn) do

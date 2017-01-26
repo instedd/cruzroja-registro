@@ -1,4 +1,4 @@
-<div class="content-main">
+<%= single_column do %>
   <h5>Invitación para crear cuenta</h5>
 
   <%= form_for @changeset, invitation_path(@conn, :create), [as: :invitation], fn f  -> %>
@@ -74,4 +74,4 @@
     </div>
   <% end %>
   <% end %>
-</div>
+<% end %>

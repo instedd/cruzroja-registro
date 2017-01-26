@@ -18,9 +18,15 @@ defmodule Registro.UsersControllerTest do
     create_branch_admin("branch_admin2@instedd.org", branch2)
     create_branch_admin("branch_admin3@instedd.org", branch3)
 
-    create_volunteer("volunteer1@example.com", branch1.id)
-    create_volunteer("volunteer2@example.com", branch2.id)
-    create_volunteer("volunteer3@example.com", branch3.id)
+    volunteer1 = create_volunteer("volunteer1@example.com", branch1.id)
+    volunteer2 = create_volunteer("volunteer2@example.com", branch2.id)
+    volunteer3 = create_volunteer("volunteer3@example.com", branch3.id)
+
+    # TODO: pass the desired status when creating the user
+    # These asserts are here because status change specs assume volunteers start in "at_start" state
+    assert volunteer1.datasheet.status == "at_start"
+    assert volunteer2.datasheet.status == "at_start"
+    assert volunteer3.datasheet.status == "at_start"
 
     {:ok, Map.merge(%{ some_country: country, some_branch: branch1 }, context)}
   end
@@ -323,21 +329,33 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "at_start"
     end
 
-    def try_approve(conn, current_user_email, target_user_email) do
-      volunteer = get_user_by_email(target_user_email)
+    test "a super_admin is allowed to approve requests from volunteers to become associates", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
 
-      assert volunteer.datasheet.status == "at_start"
+      volunteer = User.changeset(volunteer, :update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+                |> Repo.update!
 
+      {_conn, user} = try_approve(conn, "admin@instedd.org", volunteer)
+
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.status == "approved"
+    end
+
+    def try_approve(conn, current_user_email, %User{} = volunteer) do
       params = %{
-          email: target_user_email,
+          email: volunteer.email,
+          flow_action: "approve",
           datasheet: %{
             id: volunteer.datasheet.id,
-            status: "approved"
           }}
 
       {conn, volunteer} = update_user(conn, current_user_email, volunteer, params)
 
       {conn, volunteer}
+    end
+    def try_approve(conn, current_user_email, target_user_email) do
+      volunteer = get_user_by_email(target_user_email)
+      try_approve(conn, current_user_email, volunteer)
     end
   end
 

@@ -71,9 +71,11 @@ defmodule Registro.UsersController do
   def update(conn, params) do
     datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
-    %{"datasheet" => datasheet_params} = params
-                             |> set_branch_id_from_branch_name
-                             |> set_status_if_creating_colaboration(datasheet)
+    datasheet_params = params["datasheet"]
+                     |> set_state_changes(params["flow_action"], datasheet)
+                     |> set_branch_id_from_branch_name(params["branch_name"])
+                     |> set_status_if_creating_colaboration(datasheet)
+
     email = params["email"]
     current_user = Coherence.current_user(conn)
 
@@ -326,42 +328,58 @@ defmodule Registro.UsersController do
     end
   end
 
-  defp set_branch_id_from_branch_name(params) do
-    case params["branch_name"] do
-      nil ->
-        params
-      "" ->
-        params
-      branch_name ->
-        [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
+  defp set_state_changes(datasheet_params, flow_action, datasheet) do
+    case {datasheet.status, flow_action} do
+      { "at_start", "approve" } ->
+        Map.put(datasheet_params, "status", "approved")
 
-        update_in(params, ["datasheet"], fn(dp) ->
-          Map.put(dp, "branch_id", branch_id)
-        end)
+      { "at_start", "reject" } ->
+        Map.put(datasheet_params, "status", "reject")
+
+      { "associate_requested", "approve" } ->
+        datasheet_params
+        |> Map.put("role", "associate")
+        |> Map.put("status", "approved")
+
+      { "associate_requested", "reject" } ->
+        datasheet_params
+        |> Map.put("role", "volunteer")
+        |> Map.put("status", "approved")
+      _ ->
+        datasheet_params
     end
   end
 
-  defp set_status_if_creating_colaboration(params, datasheet) do
+  defp set_branch_id_from_branch_name(datasheet_params, branch_name) do
+    case branch_name do
+      nil ->
+        datasheet_params
+      "" ->
+        datasheet_params
+      branch_name ->
+        [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
+
+        Map.put(datasheet_params, "branch_id", branch_id)
+    end
+  end
+
+  defp set_status_if_creating_colaboration(datasheet_params, datasheet) do
     # if the user doesn't have a current colaboration in a branch
     # and both brach_id and role are set, this means that a superadmin
     # is assigning a user to a branch as a colaborator. the change is
     # assumed to be approved.
 
-    %{"datasheet" => datasheet_params} = params
-
     if !Datasheet.is_colaborator?(datasheet) do
       case {datasheet_params["branch_id"], datasheet_params["role"]} do
         {nil, _} ->
-          params
+          datasheet_params
         {_, nil} ->
-          params
+          datasheet_params
         _ ->
-          update_in(params, ["datasheet"], fn(dp) ->
-            Map.put(dp, "status", "approved")
-          end)
+          Map.put(datasheet_params, "status", "approved")
       end
     else
-      params
+      datasheet_params
     end
   end
 

@@ -92,6 +92,10 @@ defmodule Registro.Datasheet do
     datasheet.status == "at_start"
   end
 
+  def associate_requested?(datasheet) do
+    datasheet.status == "associate_requested"
+  end
+
   def status_label(status) do
     case status do
       "at_start" -> "Pendiente"

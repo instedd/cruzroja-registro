@@ -89,11 +89,7 @@ defmodule Registro.Datasheet do
   end
 
   def pending_approval?(datasheet) do
-    datasheet.status == "at_start"
-  end
-
-  def associate_requested?(datasheet) do
-    datasheet.status == "associate_requested"
+    datasheet.status == "at_start" || datasheet.status == "associate_requested"
   end
 
   def status_label(status) do

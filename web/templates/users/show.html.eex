@@ -1,6 +1,6 @@
 <% current_user = Coherence.current_user(@conn) %>
 <% datasheet = @changeset.data %>
-<% pending_confirmation = Registro.Datasheet.pending_approval?(datasheet) || Registro.Datasheet.associate_requested?(datasheet) %>
+<% pending_confirmation = Registro.Datasheet.pending_approval?(datasheet) %>
 
 <%= if @changeset.action do %>
   <%= set_generic_error_toast %>
@@ -102,7 +102,7 @@
             </div>
           </div>
 
-          <div class="form-group actions">
+          <div class="form-group actions right-align">
             <%=
             if pending_confirmation do
               [ content_tag(:button, "Aprobar", class: "btn", type: "submit", name: "flow_action", value: "approve"),

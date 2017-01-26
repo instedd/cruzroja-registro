@@ -358,6 +358,15 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "approved"
     end
 
+    test "an audit entry is created when the user requests to become associate", %{conn: conn, some_branch: branch} do
+      {_conn, user} = create_approved_volunteer(branch, a_year_ago)
+                    |> request_volunteer_update(conn)
+
+      audit_entries = Registro.UserAuditLogEntry.for(user.datasheet, "associate_requested")
+
+      assert Enum.count(audit_entries) == 1
+    end
+
     def request_volunteer_update(volunteer, conn) do
       conn = conn
       |> log_in(volunteer)

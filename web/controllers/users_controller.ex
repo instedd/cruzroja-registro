@@ -111,11 +111,14 @@ defmodule Registro.UsersController do
   end
 
   def associate_request(conn, params) do
-    datasheet = Coherence.current_user(conn).datasheet
+    current_user = Coherence.current_user(conn)
+    datasheet = current_user.datasheet
     changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested" })
 
     case Repo.update(changeset) do
       {:ok, _} ->
+        UserAuditLogEntry.add(datasheet.id, current_user, :associate_requested)
+
         conn
         |> put_flash(:info, "Se registró tu solicitud.")
         |> redirect(to: users_path(conn, :profile))

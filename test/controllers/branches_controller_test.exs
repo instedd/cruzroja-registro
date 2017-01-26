@@ -114,12 +114,9 @@ defmodule Registro.BranchesControllerTest do
 
       user = Repo.get_by!(User, email: "mary@example.com") |> Repo.preload(:datasheet)
 
-      entries = UserAuditLogEntry
-              |> where([e], e.action == "branch_admin_granted")
-              |> where([e], e.target_datasheet_id == ^user.datasheet.id)
-              |> Repo.all
+      audit_entries = UserAuditLogEntry.for(user.datasheet, "branch_admin_granted")
 
-      assert Enum.count(entries) == 1
+      assert Enum.count(audit_entries) == 1
     end
 
     test "allows to remove other admins", %{conn: conn} do
@@ -143,12 +140,9 @@ defmodule Registro.BranchesControllerTest do
 
       user = Repo.get_by!(User, email: "branch_admin2@instedd.org") |> Repo.preload(:datasheet)
 
-      entries = UserAuditLogEntry
-      |> where([e], e.action == "branch_admin_revoked")
-      |> where([e], e.target_datasheet_id == ^user.datasheet.id)
-      |> Repo.all
+      audit_entries = UserAuditLogEntry.for(user.datasheet, "branch_admin_revoked")
 
-      assert Enum.count(entries) == 1
+      assert Enum.count(audit_entries) == 1
     end
 
     test "fails if user is trying to remove himself as branch admin", %{conn: conn} do

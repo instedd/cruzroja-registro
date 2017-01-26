@@ -63,8 +63,8 @@ defmodule Registro.User do
     |> validate_coherence(params)
   end
 
-  def preload_datasheet(user) do
-    Repo.preload(user, [datasheet: [:branch, :admin_branches, :country]])
+  def preload_datasheet(user, opts \\ []) do
+    Repo.preload(user, [datasheet: [:branch, :admin_branches, :country]], opts)
   end
 
   def query_with_datasheet do

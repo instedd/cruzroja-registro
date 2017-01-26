@@ -124,7 +124,7 @@ defmodule Registro.UsersController do
         conn
         |> put_flash(:info, "Se registró tu solicitud.")
         |> redirect(to: users_path(conn, :profile))
-      {:error, _} ->
+      {:error, changeset} ->
         render_profile(conn, changeset)
     end
   end

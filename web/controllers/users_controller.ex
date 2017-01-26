@@ -3,6 +3,7 @@ defmodule Registro.UsersController do
 
   alias __MODULE__
   alias Registro.{
+    Authorization,
     Country,
     Pagination,
     User,
@@ -14,10 +15,11 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
-  plug Registro.Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
-  plug Registro.Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
-  plug Registro.Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
+  plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
+  plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
+  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
+  plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
+  plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
   def index(conn, _params) do
     query = listing_page_query(conn, 1)
@@ -44,9 +46,7 @@ defmodule Registro.UsersController do
                   Datasheet.profile_filled_changeset(datasheet, %{ country_id: Registro.Country.default.id })
                 end
 
-    conn
-    |> load_datasheet_form_data
-    |> render("profile.html", changeset: changeset, filled: datasheet.filled)
+    render_profile(conn, changeset)
   end
 
   def update_profile(conn, %{"datasheet" => datasheet_params}) do
@@ -64,18 +64,18 @@ defmodule Registro.UsersController do
         |> put_flash(:info, "Tus datos fueron actualizados.")
         |> redirect(to: users_path(conn, :profile))
       {:error, changeset} ->
-        conn
-        |> load_datasheet_form_data
-        |> render("profile.html", changeset: changeset, filled: datasheet.filled)
+        render_profile(conn, changeset)
     end
   end
 
   def update(conn, params) do
     datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
-    %{"datasheet" => datasheet_params} = params
-                             |> set_branch_id_from_branch_name
-                             |> set_status_if_creating_colaboration(datasheet)
+    datasheet_params = params["datasheet"]
+                     |> set_state_changes(params["flow_action"], datasheet)
+                     |> set_branch_id_from_branch_name(params["branch_name"])
+                     |> set_status_if_creating_colaboration(datasheet)
+
     email = params["email"]
     current_user = Coherence.current_user(conn)
 
@@ -87,7 +87,7 @@ defmodule Registro.UsersController do
                 end
 
     if forbidden do
-      Registro.Authorization.handle_unauthorized(conn)
+      Authorization.handle_unauthorized(conn)
     else
       changeset = Datasheet.changeset(datasheet, datasheet_params)
       if email && email != "" do
@@ -109,6 +109,23 @@ defmodule Registro.UsersController do
           |> load_datasheet_form_data
           |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, datasheet: datasheet, branch_name: branch_name)
       end
+    end
+  end
+
+  def associate_request(conn, params) do
+    current_user = Coherence.current_user(conn)
+    datasheet = current_user.datasheet
+    changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested" })
+
+    case Repo.update(changeset) do
+      {:ok, _} ->
+        UserAuditLogEntry.add(datasheet.id, current_user, :associate_requested)
+
+        conn
+        |> put_flash(:info, "Se registró tu solicitud.")
+        |> redirect(to: users_path(conn, :profile))
+      {:error, _} ->
+        render_profile(conn, changeset)
     end
   end
 
@@ -289,6 +306,10 @@ defmodule Registro.UsersController do
     end
   end
 
+  def authorize_associate_request(_conn, %User{ datasheet: datasheet }) do
+    Datasheet.can_ask_to_become_associate?(datasheet)
+  end
+
   defp listing_page_query(conn, page_number) do
     (from d in Datasheet,
       left_join: u in User, on: u.datasheet_id == d.id,
@@ -307,42 +328,58 @@ defmodule Registro.UsersController do
     end
   end
 
-  defp set_branch_id_from_branch_name(params) do
-    case params["branch_name"] do
-      nil ->
-        params
-      "" ->
-        params
-      branch_name ->
-        [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
+  defp set_state_changes(datasheet_params, flow_action, datasheet) do
+    case {datasheet.status, flow_action} do
+      { "at_start", "approve" } ->
+        Map.put(datasheet_params, "status", "approved")
 
-        update_in(params, ["datasheet"], fn(dp) ->
-          Map.put(dp, "branch_id", branch_id)
-        end)
+      { "at_start", "reject" } ->
+        Map.put(datasheet_params, "status", "reject")
+
+      { "associate_requested", "approve" } ->
+        datasheet_params
+        |> Map.put("role", "associate")
+        |> Map.put("status", "approved")
+
+      { "associate_requested", "reject" } ->
+        datasheet_params
+        |> Map.put("role", "volunteer")
+        |> Map.put("status", "approved")
+      _ ->
+        datasheet_params
     end
   end
 
-  defp set_status_if_creating_colaboration(params, datasheet) do
+  defp set_branch_id_from_branch_name(datasheet_params, branch_name) do
+    case branch_name do
+      nil ->
+        datasheet_params
+      "" ->
+        datasheet_params
+      branch_name ->
+        [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
+
+        Map.put(datasheet_params, "branch_id", branch_id)
+    end
+  end
+
+  defp set_status_if_creating_colaboration(datasheet_params, datasheet) do
     # if the user doesn't have a current colaboration in a branch
     # and both brach_id and role are set, this means that a superadmin
     # is assigning a user to a branch as a colaborator. the change is
     # assumed to be approved.
 
-    %{"datasheet" => datasheet_params} = params
-
     if !Datasheet.is_colaborator?(datasheet) do
       case {datasheet_params["branch_id"], datasheet_params["role"]} do
         {nil, _} ->
-          params
+          datasheet_params
         {_, nil} ->
-          params
+          datasheet_params
         _ ->
-          update_in(params, ["datasheet"], fn(dp) ->
-            Map.put(dp, "status", "approved")
-          end)
+          Map.put(datasheet_params, "status", "approved")
       end
     else
-      params
+      datasheet_params
     end
   end
 
@@ -368,6 +405,12 @@ defmodule Registro.UsersController do
       _ ->
         false
     end
+  end
+
+  defp render_profile(conn, changeset) do
+    conn
+    |> load_datasheet_form_data
+    |> render("profile.html", changeset: changeset, filled: changeset.data.filled)
   end
 
   defp load_datasheet_form_data(conn) do

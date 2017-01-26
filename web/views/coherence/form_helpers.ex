@@ -1,5 +1,4 @@
-defmodule Registro.ViewHelpers do
-
+defmodule Registro.FormHelpers do
   use Phoenix.HTML
 
   def set_generic_error_toast do
@@ -105,4 +104,5 @@ defmodule Registro.ViewHelpers do
         Keyword.put(attrs, :class, "#{attrs[:class]} #{class}")
     end
   end
+
 end

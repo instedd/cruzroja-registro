@@ -5,6 +5,17 @@ defmodule Registro.UserAuditLogEntry do
   alias Registro.Repo
   alias Registro.UserAuditLogEntry
 
+  @valid_actions ["create",
+                  "update",
+                  "approve",
+                  "reject",
+                  "associate_requested",
+                  "invite_send",
+                  "invite_confirm",
+                  "branch_admin_granted",
+                  "branch_admin_revoked"
+                 ]
+
   schema "user_audit_log_entries" do
     field :action, :string
     belongs_to :user, Registro.Datasheet, foreign_key: :target_datasheet_id
@@ -16,10 +27,13 @@ defmodule Registro.UserAuditLogEntry do
     model
     |> cast(params, [:target_datasheet_id, :actor_datasheet_id, :action])
     |> validate_required([:target_datasheet_id, :actor_datasheet_id, :action])
+    |> validate_action
   end
 
-  def add(datasheet_id, actor, action) do
-    changeset = changeset(%UserAuditLogEntry{}, %{actor_datasheet_id: actor.datasheet_id, target_datasheet_id: datasheet_id, action: Atom.to_string(action)})
+  def add(target_datasheet_id, actor, action) do
+    changeset = changeset(%UserAuditLogEntry{}, %{ actor_datasheet_id: actor.datasheet_id,
+                                                   target_datasheet_id: target_datasheet_id,
+                                                   action: Atom.to_string(action) })
 
     case Repo.insert(changeset) do
       {:ok, _entry} ->
@@ -35,6 +49,14 @@ defmodule Registro.UserAuditLogEntry do
             where: e.target_datasheet_id == ^id,
             preload: [:user, :actor]
   end
+
+  def for(datasheet, action) do
+    Registro.UserAuditLogEntry
+    |> where([e], e.action == ^action)
+    |> where([e], e.target_datasheet_id == ^datasheet.id)
+    |> Repo.all
+  end
+
 
   def description(entry) do
     actor = Datasheet.full_name(entry.actor)
@@ -62,6 +84,9 @@ defmodule Registro.UserAuditLogEntry do
       "reject" ->
         actor <> " rechazó su solicitud" <> date
 
+      "associate_requested" ->
+        "Solicitó ser asociado" <> date
+
       "invite_send" ->
         actor <> " le envió una invitación a registrarse " <> date
 
@@ -73,6 +98,15 @@ defmodule Registro.UserAuditLogEntry do
 
       "branch_admin_revoked" ->
         actor <> " lo removió como administrador de una filial" <> date
+    end
+  end
+
+  defp validate_action(changeset) do
+    action = Ecto.Changeset.get_field(changeset, :action)
+    if !Enum.member?(@valid_actions, action) do
+      changeset |> Ecto.Changeset.add_error(:action, "is invalid")
+    else
+      changeset
     end
   end
 

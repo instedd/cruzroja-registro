@@ -56,6 +56,7 @@ defmodule Registro.Router do
     get "/usuarios/filter", UsersController, :filter
     get "/usuarios/descargar", UsersController, :download_csv
     put  "/perfil", UsersController, :update_profile
+    post "/perfil/pedir_asociado", UsersController, :associate_request
     resources "/usuarios", UsersController, only: [:index, :show, :update]
     get "/perfil", UsersController, :profile
   end

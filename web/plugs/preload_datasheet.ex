@@ -16,7 +16,7 @@ defmodule Registro.PreloadDatasheet do
           nil ->
             conn
           _ ->
-            user_with_datasheet = User.preload_datasheet(current_user)
+            user_with_datasheet = User.preload_datasheet(current_user, force: true)
             assign(conn, :current_user, user_with_datasheet)
         end
     end

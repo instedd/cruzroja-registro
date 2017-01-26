@@ -1,6 +1,6 @@
 <% current_user = Coherence.current_user(@conn) %>
 <% datasheet = @changeset.data %>
-<% pending_approval = Registro.Datasheet.pending_approval?(datasheet) %>
+<% pending_confirmation = Registro.Datasheet.pending_approval?(datasheet) %>
 
 <%= if @changeset.action do %>
   <%= set_generic_error_toast %>
@@ -57,6 +57,20 @@
             ] %>
           </div>
 
+          <%= if current_user.datasheet.is_super_admin do %>
+            <div class="section">
+              <h3>Permisos de administración</h3>
+              <div class="row">
+                <div class="input_field col s12">
+                  <%= checkbox fd, :is_super_admin, class: "form-control" %>
+                  <%= label fd, :is_super_admin, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
+                </div>
+              </div>
+            </div>
+          <% else %>
+            <%= hidden_input fd, :is_super_admin, disabled: "" %>
+          <% end %>
+
           <div class="section">
             <h3>Colaboración en filial</h3>
             <div class="row">
@@ -78,78 +92,26 @@
                 <% end %>
               </div>
 
-              <%= if pending_approval do %>
-                <%#
-                display the role selected when registering, without allowing changes.
-                this field can be modified later by an administrator, once the user is approved.
-                %>
-                <div class="input-field col s3">
-                  <%= label fd, :role, "Rol", class: "control-label" %>
-                  <%= tag(:input,
-                          class: "form-control", name: "", type: "text", disabled: "",
-                          value: "#{Registro.Role.label(@datasheet.role)}",
-                          ) %>
-                  <%= hidden_input fd, :role, class: "form-control", disabled: "" %>
-                </div>
-                <%#
-                if pending approval, the status will be set depending on which
-                button is pressed. (see form actions below).
-                %>
-                <div class="input-field col s3">
-                  <%= label fd, :status, "Estado", class: "control-label" %>
-                  <%= tag(:input,
-                          class: "form-control", name: "", type: "text", disabled: "",
-                          value: "Pendiente",
-                          ) %>
-                </div>
-              <% else %>
-                <div class="input-field col s3">
-                  <%= label fd, :role, "Rol", class: "control-label active" %>
-                  <%= role_selector("datasheet[role]", datasheet.role) %>
-                  <%= error_tag fd, :role %>
-                </div>
-                  <%= if datasheet.status do %>
-                    <%#
-                    display the user status without allowing changes.
-
-                    if a user doesn't have status then any change to {branch_id, role}
-                    will automatically mark the status as "approved", so the user is not
-                    required to select the status when marking a user as a colaborator
-                    of a branch.
-                    %>
-                    <div class="input-field col s3">
-                      <%= label fd, :status, "Estado", class: "control-label" %>
-                      <%= tag(:input,
-                              class: "form-control", name: "", type: "text", disabled: "",
-                              value: Registro.Datasheet.status_label(datasheet.status),
-                              ) %>
-                    </div>
-                  <%= end %>
-              </div>
+              <%=
+              if pending_confirmation do
+                readonly_colaboration_controls(fd, @datasheet)
+              else
+                editable_colaboration_controls(fd, @datasheet)
+              end
+              %>
             </div>
+          </div>
 
-            <%= if current_user.datasheet.is_super_admin do %>
-              <div class="section">
-                <h3>Permisos de administración</h3>
-                <div class="row">
-                  <div class="input_field col s12">
-                    <%= checkbox fd, :is_super_admin, class: "form-control" %>
-                    <%= label fd, :is_super_admin, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
-                  </div>
-                </div>
-              </div>
-            <% else %>
-              <%= hidden_input fd, :is_super_admin, disabled: "" %>
-            <% end %>
-          <% end %>
-
-          <div class="form-group actions">
-          <%= if pending_approval do %>
-            <button class="btn" type="submit" name="datasheet[status]" value="approved">Aprobar</button>
-            <button class="btn red" type="submit" name="datasheet[status]" value="rejected">Rechazar</button>
-          <% else %>
-            <%= submit "Actualizar", class: "btn btn-large btn-primary" %>
-          <% end %>
+          <div class="form-group actions right-align">
+            <%=
+            if pending_confirmation do
+              [ content_tag(:button, "Aprobar", class: "btn", type: "submit", name: "flow_action", value: "approve"),
+                content_tag(:button, "Rechazar", class: "btn red", type: "submit", name: "flow_action", value: "reject"),
+              ]
+            else
+              submit("Actualizar", class: "btn btn-large btn-primary")
+            end
+            %>
           </div>
         <% end %>
       </div>

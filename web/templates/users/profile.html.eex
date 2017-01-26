@@ -1,78 +1,86 @@
 <div id="profile">
-  <div class="row">
-    <div class="col s6 offset-s3">
-      <div class="content-main">
-        <h5>Datos personales</h5>
+  <%= single_column do %>
+    <h5>Datos personales</h5>
 
-        <%= if !@filled do %>
-          <p>Por favor, completá los siguientes datos antes de continuar.</p>
+    <%= if !@filled do %>
+      <p>Por favor, completá los siguientes datos antes de continuar.</p>
+    <% end %>
+
+    <%= form_for @changeset, users_path(@conn, :update_profile), [id: "profileForm"], fn fd  -> %>
+    <%= inputs_for fd, :user, fn fu -> %>
+
+    <%= if @changeset.action do %>
+      <%= set_generic_error_toast %>
+    <% end %>
+
+    <%= form_rows [
+      [ validated_field(fu, :email, text: "Email", required: true, autofocus: true)
+      ],
+
+      [ validated_field(fd, :first_name, text: "Nombre", required: true, disabled: @filled)
+      ],
+
+      [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: @filled)
+      ],
+
+      [ label(fd, :birth_date, "Fecha de nacimiento"),
+        date_picker(fd, :birth_date, disabled: @filled)
+      ],
+
+      [ select(fd, :country_id, @conn.assigns[:countries], [class: "form-control", required: ""] ++ (if @filled, do: [disabled: ""], else: [])),
+        label(fd, :country_id, "Nacionalidad")
+      ],
+
+      [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], [class: "form-control", required: ""] ++ (if @filled, do: [disabled: ""], else: [])),
+        label(fd, :legal_id_ind, "Tipo de documento")
+      ],
+
+      [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true, disabled: @filled)
+      ],
+
+      [ validated_field(fd, :phone_number, text: "Teléfono", required: true)
+      ],
+
+      [ validated_field(fd, :address, text: "Domicilio", required: true)
+      ],
+
+      [ validated_field(fd, :occupation, text: "Ocupación", required: true)
+      ],
+    ] %>
+
+    <%= if Registro.Datasheet.is_colaborator?(@current_user.datasheet) do %>
+      <div class="section">
+        <h3>Colaboración en Filial</h3>
+        <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
+          <% desired_state = if @current_user.datasheet.status == "associate_requested" do
+                               "asociado"
+                             else
+                               Registro.Datasheet.role_label(@current_user.datasheet)
+                             end %>
+            Actualmente tu trámite se encuentra en estado
+            <b>PENDIENTE</b>
+            para ser <%= desired_state %>
+            de la filial <%= branch_label(@current_user.datasheet) %>.
+        <% else %>
+            Estás registrado como
+            <b><%= String.upcase Registro.Role.label(@current_user.datasheet.role) %></b>
+            en la filial
+            <%= branch_label(@current_user.datasheet) %>.
         <% end %>
-
-        <%= form_for @changeset, users_path(@conn, :update_profile), fn fd  -> %>
-        <%= inputs_for fd, :user, fn fu -> %>
-
-        <%= if @changeset.action do %>
-          <%= set_generic_error_toast %>
-        <% end %>
-
-        <%= form_rows [
-          [ validated_field(fu, :email, text: "Email", required: true, autofocus: true)
-          ],
-
-          [ validated_field(fd, :first_name, text: "Nombre", required: true, disabled: @filled)
-          ],
-
-          [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: @filled)
-          ],
-
-          [ label(fd, :birth_date, "Fecha de nacimiento"),
-            date_picker(fd, :birth_date, disabled: @filled)
-          ],
-
-          [ select(fd, :country_id, @conn.assigns[:countries], [class: "form-control", required: ""] ++ (if @filled, do: [disabled: ""], else: [])),
-            label(fd, :country_id, "Nacionalidad")
-          ],
-
-          [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], [class: "form-control", required: ""] ++ (if @filled, do: [disabled: ""], else: [])),
-            label(fd, :legal_id_ind, "Tipo de documento")
-          ],
-
-          [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true, disabled: @filled)
-          ],
-
-          [ validated_field(fd, :phone_number, text: "Teléfono", required: true)
-          ],
-
-          [ validated_field(fd, :address, text: "Domicilio", required: true)
-          ],
-
-          [ validated_field(fd, :occupation, text: "Ocupación", required: true)
-          ],
-        ] %>
-
-       <%= if Registro.Datasheet.is_colaborator?(@current_user.datasheet) do %>
-         <p class="user-status">
-         <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
-             Actualmente tu trámite se encuentra en estado
-             <b><%= String.upcase Registro.Datasheet.status_label(@current_user.datasheet.status) %></b>
-             para ser <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
-             de la filial <%= branch_label(@current_user.datasheet) %>.
-         <% else %>
-             Estás registrado como
-             <%= String.downcase Registro.Role.label(@current_user.datasheet.role) %>
-             en la filial
-             <%= branch_label(@current_user.datasheet) %>.
-         <% end %>
-         </p>
-       <% end %>
-       <% end %>
-
-        <div class="form-group actions">
-          <%=  submit "Guardar", class: "btn btn-large btn-primary" %>
-        </div>
-
-       <% end %>
       </div>
+    <% end %>
+
+    <% end %>
+    <% end %>
+
+    <div class="form-group actions right-align">
+      <%= if Registro.Datasheet.can_ask_to_become_associate?(@current_user.datasheet) do %>
+        <%= form_tag(users_path(@conn, :associate_request), method: :post, style: "display:inline-block") do %>
+        <%= submit "Solicitar pase a asociado", class: "btn btn-large btn-flat" %>
+        <% end %>
+      <% end %>
+
+      <%=  submit "Guardar", class: "btn btn-large btn-primary", form: "profileForm" %>
     </div>
-  </div>
+  <% end %>
 </div>

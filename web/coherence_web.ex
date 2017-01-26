@@ -14,7 +14,8 @@ defmodule Registro.Coherence.Web do
       import Registro.Gettext
       import Registro.Coherence.ViewHelpers
 
-      import Registro.ViewHelpers
+      import Registro.FormHelpers
+      import Registro.LayoutHelpers
     end
   end
 

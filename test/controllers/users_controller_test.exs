@@ -18,9 +18,15 @@ defmodule Registro.UsersControllerTest do
     create_branch_admin("branch_admin2@instedd.org", branch2)
     create_branch_admin("branch_admin3@instedd.org", branch3)
 
-    create_volunteer("volunteer1@example.com", branch1.id)
-    create_volunteer("volunteer2@example.com", branch2.id)
-    create_volunteer("volunteer3@example.com", branch3.id)
+    volunteer1 = create_volunteer("volunteer1@example.com", branch1.id)
+    volunteer2 = create_volunteer("volunteer2@example.com", branch2.id)
+    volunteer3 = create_volunteer("volunteer3@example.com", branch3.id)
+
+    # TODO: pass the desired status when creating the user
+    # These asserts are here because status change specs assume volunteers start in "at_start" state
+    assert volunteer1.datasheet.status == "at_start"
+    assert volunteer2.datasheet.status == "at_start"
+    assert volunteer3.datasheet.status == "at_start"
 
     {:ok, Map.merge(%{ some_country: country, some_branch: branch1 }, context)}
   end
@@ -323,21 +329,88 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "at_start"
     end
 
-    def try_approve(conn, current_user_email, target_user_email) do
-      volunteer = get_user_by_email(target_user_email)
+    test "a super_admin is allowed to approve requests from volunteers to become associates", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
 
-      assert volunteer.datasheet.status == "at_start"
+      volunteer = User.changeset(volunteer, :update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+                |> Repo.update!
 
+      {_conn, user} = try_approve(conn, "admin@instedd.org", volunteer)
+
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.status == "approved"
+    end
+
+    def try_approve(conn, current_user_email, %User{} = volunteer) do
       params = %{
-          email: target_user_email,
+          email: volunteer.email,
+          flow_action: "approve",
           datasheet: %{
             id: volunteer.datasheet.id,
-            status: "approved"
           }}
 
       {conn, volunteer} = update_user(conn, current_user_email, volunteer, params)
 
       {conn, volunteer}
+    end
+    def try_approve(conn, current_user_email, target_user_email) do
+      volunteer = get_user_by_email(target_user_email)
+      try_approve(conn, current_user_email, volunteer)
+    end
+  end
+
+  describe "volunteer transition to associate" do
+    test "someone who has been a volunteer for more than a year can ask to become an associate", %{conn: conn, some_branch: branch} do
+      {conn, user} = create_approved_volunteer(branch, a_year_ago)
+                    |> request_volunteer_update(conn)
+
+      assert redirected_to(conn) == users_path(Registro.Endpoint, :profile)
+      assert user.datasheet.status == "associate_requested"
+    end
+
+    test "volunteers with less than a year cannot ask", %{conn: conn, some_branch: branch} do
+      {conn, user} = create_approved_volunteer(branch, less_than_a_year_ago)
+                   |> request_volunteer_update(conn)
+
+      assert_unauthorized(conn)
+      assert user.datasheet.status == "approved"
+    end
+
+    test "an audit entry is created when the user requests to become associate", %{conn: conn, some_branch: branch} do
+      {_conn, user} = create_approved_volunteer(branch, a_year_ago)
+                    |> request_volunteer_update(conn)
+
+      audit_entries = Registro.UserAuditLogEntry.for(user.datasheet, "associate_requested")
+
+      assert Enum.count(audit_entries) == 1
+    end
+
+    def request_volunteer_update(volunteer, conn) do
+      conn = conn
+      |> log_in(volunteer)
+      |> post(users_path(Registro.Endpoint, :associate_request))
+
+      updated_volunteer = Repo.get(User.query_with_datasheet, volunteer.id)
+
+      {conn, updated_volunteer}
+    end
+
+    def create_approved_volunteer(branch, volunteer_since) do
+      user = create_volunteer("approved_volunteer@example.com", branch.id)
+
+      user
+      |> Ecto.Changeset.change
+      |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, volunteer_since: volunteer_since, status: "approved"  })
+      |> Repo.update!
+    end
+
+    def a_year_ago do
+      { date, _time } = Timex.Date.today |> Timex.shift(years: -1, days: -1) |> Timex.to_erlang_datetime
+      Ecto.Date.from_erl(date)
+    end
+
+    def less_than_a_year_ago do
+      Ecto.Date.utc
     end
   end
 

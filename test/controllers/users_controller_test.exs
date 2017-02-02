@@ -349,10 +349,9 @@ defmodule Registro.UsersControllerTest do
             id: volunteer.datasheet.id,
           }}
 
-      {conn, volunteer} = update_user(conn, current_user_email, volunteer, params)
-
-      {conn, volunteer}
+      update_user(conn, current_user_email, volunteer, params)
     end
+
     def try_approve(conn, current_user_email, target_user_email) do
       volunteer = get_user_by_email(target_user_email)
       try_approve(conn, current_user_email, volunteer)
@@ -360,24 +359,16 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "volunteer transition to associate" do
-    test "someone who has been a volunteer for more than a year can ask to become an associate", %{conn: conn, some_branch: branch} do
-      {conn, user} = create_approved_volunteer(branch, a_year_ago)
+    test "an approved volunteer can ask to become associate", %{conn: conn, some_branch: branch} do
+      {conn, user} = create_approved_volunteer(branch)
                     |> request_volunteer_update(conn)
 
       assert redirected_to(conn) == users_path(Registro.Endpoint, :profile)
       assert user.datasheet.status == "associate_requested"
     end
 
-    test "volunteers with less than a year cannot ask", %{conn: conn, some_branch: branch} do
-      {conn, user} = create_approved_volunteer(branch, less_than_a_year_ago)
-                   |> request_volunteer_update(conn)
-
-      assert_unauthorized(conn)
-      assert user.datasheet.status == "approved"
-    end
-
     test "an audit entry is created when the user requests to become associate", %{conn: conn, some_branch: branch} do
-      {_conn, user} = create_approved_volunteer(branch, a_year_ago)
+      {_conn, user} = create_approved_volunteer(branch)
                     |> request_volunteer_update(conn)
 
       audit_entries = Registro.UserAuditLogEntry.for(user.datasheet, "associate_requested")
@@ -395,12 +386,12 @@ defmodule Registro.UsersControllerTest do
       {conn, updated_volunteer}
     end
 
-    def create_approved_volunteer(branch, volunteer_since) do
+    def create_approved_volunteer(branch) do
       user = create_volunteer("approved_volunteer@example.com", branch.id)
 
       user
       |> Ecto.Changeset.change
-      |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, volunteer_since: volunteer_since, status: "approved"  })
+      |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, status: "approved"  })
       |> Repo.update!
     end
 

@@ -18,7 +18,6 @@ defmodule Registro.Datasheet do
 
     field :status, :string
     field :role, :string
-    field :volunteer_since, :date
     field :is_super_admin, :boolean
 
     field :filled, :boolean
@@ -52,7 +51,6 @@ defmodule Registro.Datasheet do
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
-    |> track_volunteer_confirmation
     |> validate_required(@required_fields)
     |> validate_colaboration
   end
@@ -196,18 +194,6 @@ defmodule Registro.Datasheet do
     end
   end
 
-  defp track_volunteer_confirmation(changeset) do
-    role = get_field(changeset, :role)
-    status_change = changeset.changes[:status]
-
-    case {role, status_change} do
-      { "volunteer", "approved" } ->
-        put_change(changeset, :volunteer_since, Ecto.Date.utc())
-      _ ->
-        changeset
-    end
-  end
-
   defp valid_status?(status) do
     Enum.member? ["at_start", "approved", "rejected", "associate_requested"], status
   end
@@ -237,27 +223,12 @@ defmodule Registro.Datasheet do
     Registro.Repo.preload(ds, [:branch, :admin_branches, :country, :user])
   end
 
-  def can_ask_to_become_associate?(%Datasheet{ role: role, status: status, volunteer_since: volunteer_since }) do
+  def can_ask_to_become_associate?(%Datasheet{ role: role, status: status }) do
     case {role, status} do
       { "volunteer", "approved" } ->
-        a_year_ago = Timex.Date.today |> Timex.shift(years: -1)
-
-        volunteer_since
-        |> to_erl_date
-        |> Timex.to_date
-        |> Timex.before?(a_year_ago)
+        true
       _ ->
         false
-    end
-  end
-
-  defp to_erl_date(date) do
-    case date do
-      %Date{} ->
-        Date.to_erl(date)
-      _ ->
-        {:ok, erl_date} = Ecto.Date.dump(date)
-        erl_date
     end
   end
 end

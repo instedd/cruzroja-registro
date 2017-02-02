@@ -5,7 +5,6 @@ defmodule Registro.DatasheetTest do
 
   alias Registro.Country
   alias Registro.Datasheet
-  alias Registro.User
 
   setup do
     country = Country.changeset(%Country{}, %{ name: "Argentina" })
@@ -106,53 +105,4 @@ defmodule Registro.DatasheetTest do
     assert Datasheet.is_admin_of?(datasheet, branch2)
     refute Datasheet.is_admin_of?(datasheet, branch3)
   end
-
-  describe "tracking volunteer dates" do
-    test "the date of volunteer confirmation is being tracked" do
-      branch = create_branch(name: "Branch")
-
-      %User{ datasheet: datasheet } = create_volunteer("user@example.com", branch.id)
-
-      assert datasheet.role == "volunteer"
-      assert datasheet.status == "at_start"
-      assert is_nil(datasheet.volunteer_since)
-
-      updated_datasheet = Datasheet.changeset(datasheet, %{ role: "volunteer", status: "approved" })
-                        |> Repo.update!
-
-      assert updated_datasheet.volunteer_since == Ecto.Date.utc()
-    end
-
-    test "volunteer confirmation date is not set when colaboration is rejected" do
-      branch = create_branch(name: "Branch")
-
-      %User{ datasheet: datasheet } = create_volunteer("user@example.com", branch.id)
-
-      assert datasheet.role == "volunteer"
-      assert datasheet.status == "at_start"
-      assert is_nil(datasheet.volunteer_since)
-
-      updated_datasheet = Datasheet.changeset(datasheet, %{ role: "volunteer", status: "rejected" })
-                        |> Repo.update!
-
-      assert is_nil(updated_datasheet.volunteer_since)
-    end
-
-    test "volunteer confirmation date is not set approval is granted to associated" do
-      branch = create_branch(name: "Branch")
-
-      datasheet = create_volunteer("user@example.com", branch.id).datasheet
-                  |> Datasheet.changeset(%{ role: "associate" })
-                  |> Repo.update!
-
-      assert is_nil(datasheet.volunteer_since)
-
-      updated_datasheet = datasheet
-                        |> Datasheet.changeset(%{ status: "approved" })
-                        |> Repo.update!
-
-      assert is_nil(updated_datasheet.volunteer_since)
-    end
-  end
-
 end

@@ -32,8 +32,8 @@ config :registro, Registro.Repo,
 # Configure coherence mailer
 config :coherence, Registro.Coherence.Mailer,
   adapter: Swoosh.Adapters.SMTP,
-  relay: System.get_env("SMTP_RELAY"),
-  username: System.get_env("SMTP_USER"),
-  password: System.get_env("SMTP_PASS"),
+  relay: {:system, "SMTP_RELAY"},
+  username: {:system, "SMTP_USER"},
+  password: {:system, "SMTP_PASS"},
   tls: :always,
   auth: :always

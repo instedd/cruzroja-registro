@@ -305,25 +305,30 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "status changes" do
-    test "an super_admin is allowed to change the status of any volunteer", %{conn: conn} do
-      {_conn, user} = try_approve(conn, "admin@instedd.org", "volunteer1@example.com")
+    test "an super_admin is allowed to approve any volunteer", %{conn: conn} do
+      {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :approve)
       assert user.datasheet.status == "approved"
     end
 
+    test "an super_admin is allowed to reject any volunteer", %{conn: conn} do
+      {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :reject)
+      assert user.datasheet.status == "rejected"
+    end
+
     test "a branch admin is allowed to change the status of volunteers of his administrated branches", %{conn: conn} do
-      {_conn, user} = try_approve(conn, "branch_admin1@instedd.org", "volunteer1@example.com")
+      {_conn, user} = update_state(conn, "branch_admin1@instedd.org", "volunteer1@example.com", :approve)
       assert user.datasheet.status == "approved"
     end
 
     test "a branch admin is not allowed to change the status of volunteers of branches he doesn't adminstrate", %{conn: conn} do
-      {conn, user} = try_approve(conn, "branch_admin2@instedd.org", "volunteer1@example.com")
+      {conn, user} = update_state(conn, "branch_admin2@instedd.org", "volunteer1@example.com", :approve)
 
       assert_unauthorized(conn)
       assert user.datasheet.status == "at_start"
     end
 
     test "a volunteer is not allowed to change his status", %{conn: conn} do
-      {conn, user} = try_approve(conn, "volunteer1@example.com", "volunteer1@example.com")
+      {conn, user} = update_state(conn, "volunteer1@example.com", "volunteer1@example.com", :approve)
 
       assert_unauthorized(conn)
       assert user.datasheet.status == "at_start"
@@ -335,16 +340,16 @@ defmodule Registro.UsersControllerTest do
       volunteer = User.changeset(volunteer, :update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
                 |> Repo.update!
 
-      {_conn, user} = try_approve(conn, "admin@instedd.org", volunteer)
+      {_conn, user} = update_state(conn, "admin@instedd.org", volunteer, :approve)
 
       assert user.datasheet.role == "associate"
       assert user.datasheet.status == "approved"
     end
 
-    def try_approve(conn, current_user_email, %User{} = volunteer) do
+    def update_state(conn, current_user_email, %User{} = volunteer, action) do
       params = %{
           email: volunteer.email,
-          flow_action: "approve",
+          flow_action: (to_string action),
           datasheet: %{
             id: volunteer.datasheet.id,
           }}
@@ -352,9 +357,9 @@ defmodule Registro.UsersControllerTest do
       update_user(conn, current_user_email, volunteer, params)
     end
 
-    def try_approve(conn, current_user_email, target_user_email) do
+    def update_state(conn, current_user_email, target_user_email, action) do
       volunteer = get_user_by_email(target_user_email)
-      try_approve(conn, current_user_email, volunteer)
+      update_state(conn, current_user_email, volunteer, action)
     end
   end
 

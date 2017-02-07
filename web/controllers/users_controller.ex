@@ -336,7 +336,7 @@ defmodule Registro.UsersController do
         Map.put(datasheet_params, "status", "approved")
 
       { "at_start", "reject" } ->
-        Map.put(datasheet_params, "status", "reject")
+        Map.put(datasheet_params, "status", "rejected")
 
       { "associate_requested", "approve" } ->
         datasheet_params

@@ -431,10 +431,10 @@ defmodule Registro.UsersController do
   defp send_email_on_status_change(conn, changeset, email, ds) do
     ds = Repo.preload(ds, :branch)
     if action_for(changeset) == :approve do
-      Registro.Coherence.UserEmail.approve(ds, users_path(conn, :profile), email)
+      Registro.Coherence.UserEmail.approve(ds, users_url(conn, :profile), email)
     end
     if action_for(changeset) == :reject do
-      Registro.Coherence.UserEmail.reject(ds, users_path(conn, :profile), email)
+      Registro.Coherence.UserEmail.reject(ds, users_url(conn, :profile), email)
     end
   end
 end

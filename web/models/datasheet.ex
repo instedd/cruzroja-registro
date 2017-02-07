@@ -104,8 +104,6 @@ defmodule Registro.Datasheet do
     datasheet = Registro.Repo.preload(datasheet, :admin_branches)
 
     cond do
-      datasheet.is_super_admin -> "Administrador de Sede Central"
-      Datasheet.is_branch_admin?(datasheet) -> "Administrador de Filial"
       Datasheet.is_volunteer?(datasheet) -> "Voluntario"
       Datasheet.is_associate?(datasheet) -> "Asociado"
       true -> ""

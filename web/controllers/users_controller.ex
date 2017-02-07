@@ -191,7 +191,7 @@ defmodule Registro.UsersController do
         d.occupation,
         d.address,
         if(d.branch == nil, do: "", else: d.branch.name),
-        if(d.role == nil, do: "", else: Datasheet.role_label(d)),
+        Datasheet.role_label(d),
         Datasheet.status_label(d.status)
       ]
     end

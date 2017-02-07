@@ -105,4 +105,32 @@ defmodule Registro.DatasheetTest do
     assert Datasheet.is_admin_of?(datasheet, branch2)
     refute Datasheet.is_admin_of?(datasheet, branch3)
   end
+
+  test "a super admin can filter by branch", %{minimal_params: params} do
+    datasheet = Map.merge(params, %{is_super_admin: true})
+    |> create_datasheet
+
+    assert Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "a branch admin with one branch cannot filter by branch", %{minimal_params: params} do
+    branch = create_branch(name: "Branch 1")
+
+    datasheet = create_datasheet(params)
+              |> Datasheet.make_admin_changeset([branch])
+              |> Repo.update!
+
+    refute Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "a branch admin with multiple branches can filter by branch", %{minimal_params: params} do
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+
+    datasheet = create_datasheet(params)
+              |> Datasheet.make_admin_changeset([branch1, branch2])
+              |> Repo.update!
+
+    assert Datasheet.can_filter_by_branch?(datasheet)
+  end
 end

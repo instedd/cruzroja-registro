@@ -22,13 +22,13 @@ defmodule Registro.UsersController do
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
   def index(conn, _params) do
+    current_user = Coherence.current_user(conn)
     query = listing_page_query(conn, 1)
     datasheets = Repo.all(query)
     total_count = Repo.aggregate(query, :count, :id)
 
-    conn
-    |> assign(:branches, Branch.all)
-    |> render("index.html",
+    render(conn, "index.html",
+      branches: Branch.accessible_by(current_user.datasheet),
       datasheets: datasheets,
       page: 1,
       page_count: Pagination.page_count(total_count),

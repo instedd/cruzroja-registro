@@ -144,6 +144,10 @@ defmodule Registro.Datasheet do
     |> Enum.any?(&(&1.id == branch_id))
   end
 
+  def can_filter_by_branch?(datasheet) do
+    datasheet.is_super_admin || Enum.count(datasheet.admin_branches) > 1
+  end
+
   def email(datasheet) do
     datasheet = Registro.Repo.preload(datasheet, [:user, :invitation])
 

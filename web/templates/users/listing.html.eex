@@ -1,3 +1,5 @@
+<% can_view_branch = Registro.Datasheet.can_filter_by_branch?(Coherence.current_user(@conn).datasheet) %>
+
 <div id="replaceable" class="content-main table listing clickable">
     <table class="bordered responsive-table highlight">
       <thead>
@@ -6,7 +8,7 @@
             <th data-field="email">Email</th>
             <th data-field="role">Rol</th>
             <th data-field="status">Estado</th>
-            <%= if Coherence.current_user(@conn).datasheet.is_super_admin do %>
+            <%= if can_view_branch do %>
             <th data-field="branch">Filial</th>
             <% end %>
         </tr>
@@ -19,8 +21,8 @@
             <td><%= if d.user, do: d.user.email, else: "" %></td>
             <td><%= Registro.Datasheet.role_label(d) %></td>
             <td><%= Registro.Datasheet.status_label(d.status) %></td>
-            <%= if Coherence.current_user(@conn).datasheet.is_super_admin do %>
-              <td><%= branch_label(d) %></td>
+            <%= if can_view_branch do %>
+            <td><%= branch_label(d) %></td>
             <% end %>
           </tr>
         <% end %>

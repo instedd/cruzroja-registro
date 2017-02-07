@@ -36,4 +36,12 @@ defmodule Registro.Branch do
   def count do
     Registro.Repo.one(from b in Registro.Branch, select: count(b.id))
   end
+
+  def accessible_by(datasheet) do
+    if datasheet.is_super_admin do
+      all
+    else
+      datasheet.admin_branches
+    end
+  end
 end

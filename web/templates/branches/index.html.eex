@@ -1,14 +1,15 @@
 <div id="branches" class="content-main table listing">
-  <div class="floating-actions">
-    <ul>
-      <li>
-        <a class="btn-floating btn-large waves-effect waves-light red" href="<%= branches_path(@conn, :new) %>">
-          <i class="material-icons">add</i>
-        </a>
-      </li>
-    </ul>
-  </div>
-
+  <%= if @current_user.datasheet.is_super_admin do %>
+    <div class="floating-actions">
+      <ul>
+        <li>
+          <a class="btn-floating btn-large waves-effect waves-light red" href="<%= branches_path(@conn, :new) %>">
+            <i class="material-icons">add</i>
+          </a>
+        </li>
+      </ul>
+    </div>
+  <% end %>
 
   <%= render "listing.html", conn: @conn, branches: @branches, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
 </div>

@@ -183,7 +183,7 @@ defmodule Registro.UsersController do
       [
         d.last_name,
         d.first_name,
-        d.user.email,
+        (if d.user, do: d.user.email, else: d.invitation.email),
         Datasheet.legal_id_kind(d).label,
         d.legal_id_number,
         d.country.name,
@@ -196,16 +196,13 @@ defmodule Registro.UsersController do
       ]
     end
 
-    query = from d in Datasheet.full_query(Registro.Datasheet),
-      join: u in assoc(d, :user),
-      order_by: [d.last_name, d.first_name, d.id],
-      preload: [:country]
-
-    datasheets = query
-          |> apply_filters(params)
-          |> restrict_to_visible_users(conn)
-          |> Repo.all
-          |> Enum.map(format)
+    datasheets = listing_query(conn)
+               |> order_by([d], [d.last_name, d.first_name, d.id])
+               |> preload(:country)
+               |> preload(:invitation)
+               |> apply_filters(params)
+               |> Repo.all
+               |> Enum.map(format)
 
     csv_content = [ header | datasheets]
                 |> CSV.encode
@@ -312,14 +309,18 @@ defmodule Registro.UsersController do
     Datasheet.can_ask_to_become_associate?(datasheet)
   end
 
+  defp listing_query(conn) do
+    q = from d in Datasheet.full_query,
+        left_join: u in User, on: u.datasheet_id == d.id,
+        where: d.filled == true
+
+    restrict_to_visible_users(q, conn)
+  end
+
   defp listing_page_query(conn, page_number) do
-    (from d in Datasheet,
-      left_join: u in User, on: u.datasheet_id == d.id,
-      order_by: d.last_name,
-      where: d.filled == true)
-      |> Datasheet.full_query
+    listing_query(conn)
+      |> order_by([d], d.last_name)
       |> Pagination.query(page_number: page_number)
-      |> restrict_to_visible_users(conn)
   end
 
   defp action_for(changeset) do

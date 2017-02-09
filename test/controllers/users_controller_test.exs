@@ -3,7 +3,7 @@ defmodule Registro.UsersControllerTest do
   import Registro.ModelTestHelpers
   import Registro.ControllerTestHelpers
 
-  alias Registro.{User, Datasheet, Branch}
+  alias Registro.{User, Datasheet, Branch, Invitation}
 
   setup(context) do
     country = create_country("Argentina")
@@ -579,6 +579,59 @@ defmodule Registro.UsersControllerTest do
       Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
       Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
       """
+    end
+
+    # regression test for https://github.com/instedd/cruzroja-registro/issues/59
+    test "non-filled datasheets with associated users are ignored", %{conn: conn} do
+      datasheet = Datasheet.new_empty_changeset |> Repo.insert!
+      invite = %Invitation{ email: "foo@example.com", datasheet_id: datasheet.id } |> Repo.preload(:datasheet)
+
+      User.changeset(:create_from_invitation, invite, %{ "password" => "1234", "password_confiramtion" => "1234" })
+      |> Repo.insert!
+
+      conn = conn
+      |> log_in("admin@instedd.org")
+      |> get(users_path(Registro.Endpoint, :download_csv))
+
+      response = response(conn, 200)
+
+      assert csv_entry_count(response) == (Repo.count(Datasheet) - 1)
+    end
+
+    test "filled datasheets with no associated user are included", %{conn: conn, some_country: country} do
+      datasheet = create_datasheet(%{first_name: "John",
+                                     last_name: "Dow",
+                                     legal_id_kind: "DNI",
+                                     legal_id_number: "1",
+                                     birth_date: ~D[1980-01-01],
+                                     occupation: "-",
+                                     address: "-",
+                                     phone_number: "+1222222",
+                                     country_id: country.id,
+                                     filled: true })
+
+      %Invitation{ email: "datasheet_invitation_email@example.com", datasheet_id: datasheet.id } |> Repo.preload(:datasheet)
+      |> Repo.insert!
+
+      conn = conn
+      |> log_in("admin@instedd.org")
+      |> get(users_path(Registro.Endpoint, :download_csv))
+
+      response = response(conn, 200)
+
+      matches = response
+              |> String.split("\n")
+              |> Enum.filter(&(String.contains?(&1, "datasheet_invitation_email@example.com")))
+              |> Enum.count
+
+      assert matches == 1
+    end
+
+    defp csv_entry_count(response) do
+      (response
+      |> String.split("\n")
+      |> Enum.filter(&(&1 != "")) # trailing newline
+      |> Enum.count) - 1
     end
   end
 

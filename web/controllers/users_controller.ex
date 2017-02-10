@@ -17,7 +17,8 @@ defmodule Registro.UsersController do
 
   plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
   plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
-  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
+  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show]
+  plug Authorization, [ check: &UsersController.authorize_update/2 ] when action in [:update]
   plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
@@ -249,24 +250,21 @@ defmodule Registro.UsersController do
       where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
-  defp restrict_to_visible_users(query, conn, from_user \\ false) do
+  defp restrict_to_visible_users(query, conn) do
     user = conn.assigns[:current_user]
     datasheet = user.datasheet
 
     cond do
       datasheet.is_super_admin ->
         query
-      Datasheet.is_branch_admin?(datasheet) ->
-        administrated_branch_ids = Enum.map(datasheet.admin_branches, &(&1.id))
 
-        if from_user do
-          from u in query,
-          join: d in Datasheet, on: u.datasheet_id == d.id,
-          where: d.branch_id in ^administrated_branch_ids
-        else
-          from d in query,
-          where: d.branch_id in ^administrated_branch_ids
-        end
+      Datasheet.has_branch_access?(datasheet) ->
+        branch_ids = Branch.accessible_by(datasheet) |> Enum.map(&(&1.id))
+
+        from d in query, where: d.branch_id in ^branch_ids
+
+      true ->
+        from d in query, where: false
     end
   end
 
@@ -280,19 +278,40 @@ defmodule Registro.UsersController do
 
   def authorize_listing(_conn, current_user) do
     datasheet = current_user.datasheet
-
-    datasheet.is_super_admin || Datasheet.is_branch_admin?(datasheet)
+    Datasheet.is_staff?(datasheet)
   end
 
   def authorize_detail(conn, %User{datasheet: datasheet}) do
-    if Datasheet.is_admin?(datasheet) do
-      user_id = String.to_integer(conn.params["id"])
+    user_id = String.to_integer(conn.params["id"])
 
-      (from d in Datasheet, where: d.id == ^user_id)
-      |> restrict_to_visible_users(conn)
-      |> Repo.exists?
-    else
-      false
+    target_datasheet = (from d in Datasheet, where: d.id == ^user_id)
+                     |> restrict_to_visible_users(conn)
+                     |> Repo.one
+
+    cond do
+      is_nil(target_datasheet) ->
+        false
+
+      datasheet.is_super_admin ->
+        {true, [:view, :update]}
+
+      Datasheet.is_admin_of?(datasheet, target_datasheet.branch_id) ->
+        {true, [:view, :update]}
+
+      Datasheet.is_clerk_of?(datasheet, target_datasheet.branch_id) ->
+        {true, [:view]}
+
+      true ->
+        false
+    end
+  end
+
+  def authorize_update(conn, user) do
+    case authorize_detail(conn, user) do
+      {true, abilities} ->
+        Enum.member?(abilities, :update)
+      _ ->
+        false
     end
   end
 

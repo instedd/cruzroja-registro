@@ -2,8 +2,7 @@
 
 <%= menu_item(@conn, users_path(@conn, :profile), "Perfil") %>
 
-<%= if datasheet.filled do %>
-  <%= if Registro.Datasheet.is_admin?(datasheet) do %>
+<%= if datasheet.filled && Registro.Datasheet.is_staff?(datasheet) do %>
     <%= menu_item(@conn, users_path(@conn, :index), "Usuarios") %>
 
     <%= if datasheet.is_super_admin do %>
@@ -15,7 +14,6 @@
         <%= menu_item(@conn, branches_path(@conn, :index), "Mis filiales") %>
       <% end %>
     <% end %>
-  <% end %>
 <% end %>
 
 <li>

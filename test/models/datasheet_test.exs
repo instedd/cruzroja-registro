@@ -117,8 +117,8 @@ defmodule Registro.DatasheetTest do
     branch = create_branch(name: "Branch 1")
 
     datasheet = create_datasheet(params)
-              |> Datasheet.make_admin_changeset([branch])
-              |> Repo.update!
+    |> Datasheet.make_admin_changeset([branch])
+    |> Repo.update!
 
     refute Datasheet.can_filter_by_branch?(datasheet)
   end
@@ -128,7 +128,28 @@ defmodule Registro.DatasheetTest do
     branch2 = create_branch(name: "Branch 2")
 
     datasheet = create_datasheet(params)
-              |> Datasheet.make_admin_changeset([branch1, branch2])
+    |> Datasheet.make_admin_changeset([branch1, branch2])
+    |> Repo.update!
+
+    assert Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "a branch clerk with one branch cannot filter by branch", %{minimal_params: params} do
+    branch = create_branch(name: "Branch 1")
+
+    datasheet = create_datasheet(params)
+              |> Datasheet.make_clerk_changeset([branch])
+              |> Repo.update!
+
+    refute Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "a branch clerk with multiple branches can filter by branch", %{minimal_params: params} do
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+
+    datasheet = create_datasheet(params)
+              |> Datasheet.make_clerk_changeset([branch1, branch2])
               |> Repo.update!
 
     assert Datasheet.can_filter_by_branch?(datasheet)

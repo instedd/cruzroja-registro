@@ -18,16 +18,19 @@ defmodule Registro.BranchesControllerTest do
     branch1 = create_branch(name: "Branch 1")
     branch2 = create_branch(name: "Branch 2")
 
-    create_volunteer("mary@example.com", branch1.id)
+    volunteer = create_volunteer("mary@example.com", branch1.id)
 
     super_admin = create_super_admin("admin@instedd.org")
 
-    create_branch_admin("branch_admin1@instedd.org", branch1, country_id: some_country.id)
-    create_branch_admin("branch_admin2@instedd.org", branch1, country_id: some_country.id)
+    create_branch_admin("branch_admin1@instedd.org", branch1, %{country_id: some_country.id})
+    create_branch_admin("branch_admin2@instedd.org", branch1, %{country_id: some_country.id})
+
+    create_branch_clerk("branch_clerk1@instedd.org", branch1, %{country_id: some_country.id})
 
     {:ok, Map.merge(context, %{ super_admin: super_admin,
                                 branch1: branch1,
                                 branch2: branch2,
+                                volunteer: volunteer,
                               })}
   end
 
@@ -66,17 +69,78 @@ defmodule Registro.BranchesControllerTest do
 
       assert branch_names == ["Branch 1"]
     end
+
+    test "branch clerk can only see his administrated branches", %{conn: conn} do
+      conn = conn
+      |> log_in("branch_clerk1@instedd.org")
+      |> get("/filiales")
+
+      assert html_response(conn, 200)
+
+      branch_names = conn.assigns[:branches]
+      |> Enum.map(&(&1.name))
+
+      assert branch_names == ["Branch 1"]
+    end
   end
 
-  test "a branch admin cannot access a branch he doesn't administrate", %{conn: conn, branch2: branch2} do
-    conn = conn
-         |> log_in("branch_admin1@instedd.org")
-         |> get(branches_path(conn, :show, branch2))
+  describe "detail" do
+    test "a branch admin has edit only access to his branches", %{conn: conn, branch1: branch1} do
+      conn = conn
+           |> log_in("branch_admin1@instedd.org")
+           |> get(branches_path(conn, :show, branch1))
 
-    assert_unauthorized(conn)
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view, :update]
+    end
+
+    test "a branch admin cannot access a branch he doesn't administrate", %{conn: conn, branch2: branch2} do
+      conn = conn
+           |> log_in("branch_admin1@instedd.org")
+           |> get(branches_path(conn, :show, branch2))
+
+      assert_unauthorized(conn)
+    end
+
+    test "a branch clerk has read only access to his branches", %{conn: conn, branch1: branch1} do
+      conn = conn
+           |> log_in("branch_clerk1@instedd.org")
+           |> get(branches_path(conn, :show, branch1))
+
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view]
+    end
+
+    test "a branch clerk cannot other non accessible branches", %{conn: conn, branch2: branch2} do
+      conn = conn
+           |> log_in("branch_clerk1@instedd.org")
+           |> get(branches_path(conn, :show, branch2))
+
+      assert_unauthorized(conn)
+    end
+
+    test "a volunteer cannot access a branch's detail", %{conn: conn, branch1: branch1, volunteer: volunteer} do
+      conn = conn
+           |> log_in(volunteer)
+           |> get(branches_path(conn, :show, branch1))
+
+      assert_unauthorized(conn)
+    end
   end
 
   describe "update" do
+    test "branch clerk cannot update his branch's details", %{conn: conn, branch1: branch} do
+      params = %{ admin_emails: "branch_admin1@instedd.org",
+                  branch: %{
+                    name: "Updated name",
+                    address: "Updated address" }}
+      conn = conn
+           |> log_in("branch_clerk1@instedd.org")
+           |> patch(branches_path(conn, :update, branch), params)
+
+      assert_unauthorized(conn)
+    end
+
     test "allows to update a branch's name and address", %{conn: conn, branch1: branch} do
       params = %{ admin_emails: "branch_admin1@instedd.org|branch_admin2@instedd.org",
                   branch: %{

@@ -11,53 +11,52 @@ defmodule Registro.BranchesController do
                   Invitation,
                   UserAuditLogEntry}
 
-  plug Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show, :update]
+  plug Authorization, [ check: &BranchesController.authorize_detail/2 ] when action in [:show]
+  plug Authorization, [ check: &BranchesController.authorize_update/2 ] when action in [:update]
   plug Authorization, [ check: &BranchesController.authorize_creation/2 ] when action in [:new, :create]
 
   def index(conn, params) do
-    authorized = Datasheet.is_admin?(Coherence.current_user(conn).datasheet)
+    datasheet = Coherence.current_user(conn).datasheet
+    authorized = Datasheet.is_staff?(datasheet)
     render_raw = params["raw"] != nil
 
-    case {authorized, render_raw} do
-      { true, _ } ->
-        import Ecto.Query
+    if authorized do
+      import Ecto.Query
 
-        datasheet = Coherence.current_user(conn).datasheet
+      query = if datasheet.is_super_admin do
+        from b in Branch
+      else
+        # TODO: here we are using the full list to build the paginated query,
+        # which doesn't seem to make a lot of sense. We expect non-super-admins
+        # to only be allowed to access a few branches at most, so it shouldn't be
+        # that bad.
+        branch_ids = Branch.accessible_by(datasheet) |> Enum.map(&(&1.id))
 
-        query = if datasheet.is_super_admin do
-                  from b in Branch
-                else
-                  branch_ids = datasheet.admin_branches |> Enum.map(&(&1.id))
+        from b in Branch, where: b.id in ^branch_ids
+      end
 
-                  from b in Branch, where: b.id in ^branch_ids
-                end
+      query = from b in query, order_by: :name
 
-        query = from b in query, order_by: :name
+      page = Pagination.requested_page(params)
+      total_count = Repo.aggregate(query, :count, :id)
+      page_count = Pagination.page_count(total_count)
+      branches = Pagination.all(query, page_number: page)
 
-        page = Pagination.requested_page(params)
-        total_count = Repo.aggregate(query, :count, :id)
-        page_count = Pagination.page_count(total_count)
-        branches = Pagination.all(query, page_number: page)
+      {template, conn} = if render_raw do
+        { "listing.html", put_layout(conn, false) }
+      else
+        { "index.html", conn }
+      end
 
-        {template, conn} = if render_raw do
-                             { "listing.html", put_layout(conn, false) }
-                           else
-                             { "index.html", conn }
-                           end
-
-        render(conn, template,
-          branches: branches,
-          page: page,
-          page_count: page_count,
-          page_size: Pagination.default_page_size,
-          total_count: total_count
-        )
-
-      { false, false } ->
-        Authorization.handle_unauthorized(conn, redirect: true)
-
-      { false, true } ->
-        Authorization.handle_unauthorized(conn, redirect: false)
+      render(conn, template,
+        branches: branches,
+        page: page,
+        page_count: page_count,
+        page_size: Pagination.default_page_size,
+        total_count: total_count
+      )
+    else
+      Authorization.handle_unauthorized(conn, redirect: !render_raw)
     end
   end
 
@@ -132,7 +131,28 @@ defmodule Registro.BranchesController do
   def authorize_detail(conn, %User{datasheet: datasheet}) do
     branch_id = String.to_integer(conn.params["id"])
 
-    datasheet.is_super_admin || Datasheet.is_admin_of?(datasheet, branch_id)
+    cond do
+      datasheet.is_super_admin ->
+        {true, [:view, :update]}
+
+      Datasheet.is_admin_of?(datasheet, branch_id) ->
+        {true, [:view, :update]}
+
+      Datasheet.is_clerk_of?(datasheet, branch_id) ->
+        {true, [:view]}
+
+      true ->
+        false
+    end
+  end
+
+  def authorize_update(conn, user) do
+    case authorize_detail(conn, user) do
+      {true, abilities} ->
+        Enum.member?(abilities, :update)
+      _ ->
+        false
+    end
   end
 
   def authorize_creation(_conn, %User{datasheet: datasheet}) do

@@ -16,6 +16,10 @@ defmodule Registro.Branch do
     many_to_many :admins, Registro.Datasheet,
       join_through: "branches_admins",
       on_replace: :delete # allow to delete admins by updating the branch
+
+    many_to_many :clerks, Registro.Datasheet,
+      join_through: "branches_clerks",
+      on_replace: :delete # allow to delete admins by updating the branch
   end
 
   def changeset(model, params \\ %{}) do
@@ -41,7 +45,7 @@ defmodule Registro.Branch do
     if datasheet.is_super_admin do
       all
     else
-      datasheet.admin_branches
+      datasheet.admin_branches ++ datasheet.clerk_branches
     end
   end
 end

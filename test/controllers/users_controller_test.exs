@@ -18,6 +18,8 @@ defmodule Registro.UsersControllerTest do
     create_branch_admin("branch_admin2@instedd.org", branch2)
     create_branch_admin("branch_admin3@instedd.org", branch3)
 
+    create_branch_clerk("branch_clerk1@instedd.org", [branch1, branch3])
+
     volunteer1 = create_volunteer("volunteer1@example.com", branch1.id)
     volunteer2 = create_volunteer("volunteer2@example.com", branch2.id)
     volunteer3 = create_volunteer("volunteer3@example.com", branch3.id)
@@ -59,18 +61,72 @@ defmodule Registro.UsersControllerTest do
       assert result_count == all_users_count
     end
 
+    test "a super_admin can filter by all branches", %{conn: conn} do
+      conn = conn
+      |> log_in("admin@instedd.org")
+      |> get("/usuarios")
+
+      assert Enum.count(conn.assigns[:branches]) == Repo.count(Branch)
+    end
+
+    test "a branch admin can filter by his accessible branches", %{conn: conn} do
+      conn = conn
+      |> log_in("branch_admin1@instedd.org")
+      |> get("/usuarios")
+
+      assert visible_branches(conn) == ["Branch 1", "Branch 3"]
+    end
+
+    test "a branch clerk can filter by his accessible branches", %{conn: conn} do
+      conn = conn
+           |> log_in("branch_clerk1@instedd.org")
+           |> get("/usuarios")
+
+      assert visible_branches(conn) == ["Branch 1", "Branch 3"]
+    end
+
     test "branch admin can only see colaborators of his administrated branches", %{conn: conn} do
       conn = conn
       |> log_in("branch_admin1@instedd.org")
       |> get("/usuarios")
 
+      assert visible_datasheets(conn) == ["volunteer1@example.com", "volunteer3@example.com"]
+    end
+
+    test "branch clerk can only see colaborators of his administrated branches", %{conn: conn} do
+      conn = conn
+           |> log_in("branch_clerk1@instedd.org")
+           |> get("/usuarios")
+
+      assert visible_datasheets(conn) == ["volunteer1@example.com", "volunteer3@example.com"]
+    end
+
+    test "a user that is admin and clerk of different branches can see users from both", %{conn: conn} do
+      user = get_user_by_email("branch_clerk1@instedd.org")
+      other_branch = Repo.get_by!(Branch, name: "Branch 2")
+
+      user.datasheet
+      |> Datasheet.make_admin_changeset([other_branch])
+      |> Repo.update!
+
+      conn = conn
+           |> log_in(user)
+           |> get("/usuarios")
+
+      assert visible_datasheets(conn) == ["volunteer1@example.com", "volunteer2@example.com", "volunteer3@example.com"]
+    end
+
+    defp visible_datasheets(conn) do
       assert html_response(conn, 200)
 
-      user_emails = Enum.map conn.assigns[:datasheets], &(&1.user.email)
+      Enum.map(conn.assigns[:datasheets], &(&1.user.email))
+      |> Enum.sort
+    end
 
-      assert Enum.sort(user_emails) == ["volunteer1@example.com",
-                                        "volunteer3@example.com"
-                                       ]
+    defp visible_branches(conn) do
+      assert html_response(conn, 200)
+
+      Enum.map(conn.assigns[:branches], &(&1.name)) |> Enum.sort
     end
   end
 
@@ -302,6 +358,23 @@ defmodule Registro.UsersControllerTest do
 
       assert_unauthorized(conn)
     end
+
+    test "a branch clerk can't update users of the same branch", %{conn: conn} do
+      u1 = get_user_by_email("branch_clerk1@instedd.org")
+      u2 = get_user_by_email("volunteer1@example.com")
+
+      assert u2.datasheet.role == "volunteer"
+
+      params = %{ :datasheet => %{
+                id: u2.datasheet.id,
+                role: "associate",
+                status: u2.datasheet.status }}
+
+      {conn, updated_u2} = update_user(conn, u1, u2, params)
+
+      assert_unauthorized(conn)
+      assert u2 == updated_u2
+    end
   end
 
   describe "status changes" do
@@ -490,7 +563,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "detail" do
-    test "an admin can access any users detail", %{conn: conn} do
+    test "a super_admin can access any users detail", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -500,7 +573,7 @@ defmodule Registro.UsersControllerTest do
       assert html_response(conn, 200)
     end
 
-    test "a branch admin can access details of colaborators of administrated branches", %{conn: conn} do
+    test "a branch admin can access and edit details of colaborators of administrated branches", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -508,6 +581,18 @@ defmodule Registro.UsersControllerTest do
       |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view, :update]
+    end
+
+    test "a branch clerk can access details of colaborators of administrated branches", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      conn = conn
+      |> log_in("branch_clerk1@instedd.org")
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
+
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view]
     end
 
     test "a branch admin can not access details of other admins of administrated branches", %{conn: conn} do
@@ -575,6 +660,7 @@ defmodule Registro.UsersControllerTest do
       Doe,branch_admin1,branch_admin1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_clerk1,branch_clerk1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
       Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
       Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r

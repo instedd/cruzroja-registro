@@ -15,6 +15,7 @@ defmodule Registro.InvitationsControllerTest do
     branch2 = create_branch(name: "Branch 2")
 
     branch1_admin = create_branch_admin("branch1@instedd.org", branch1)
+    branch1_clerk = create_branch_clerk("branch1_clerk@instedd.org", branch1)
     branch1_volunteer = create_volunteer("mary@example.com", branch1.id)
 
     {:ok, Map.merge(context, %{
@@ -22,6 +23,7 @@ defmodule Registro.InvitationsControllerTest do
                       branch1: branch1,
                       branch2: branch2,
                       branch1_admin: branch1_admin,
+                      branch1_clerk: branch1_clerk,
                       branch1_volunteer: branch1_volunteer,
                     })}
   end
@@ -40,6 +42,15 @@ defmodule Registro.InvitationsControllerTest do
       conn = conn
       |> log_in(branch1_admin)
       |> get("/usuarios/alta")
+
+      assert html_response(conn, 200)
+      assert branches_names(conn) == ["Branch 1"]
+    end
+
+    test "renders invitation form with accessible branches for branch clerk", %{conn: conn, branch1_clerk: branch1_clerk} do
+      conn = conn
+            |> log_in(branch1_clerk)
+            |> get("/usuarios/alta")
 
       assert html_response(conn, 200)
       assert branches_names(conn) == ["Branch 1"]
@@ -83,11 +94,34 @@ defmodule Registro.InvitationsControllerTest do
       verify_invitation(params)
     end
 
+    test "branch clerk can send invitations for the same branch", %{conn: conn, branch1: branch, branch1_clerk: branch_clerk} do
+      params = invitation_params(branch.id)
+
+      conn = conn
+      |> log_in(branch_clerk)
+      |> post("/usuarios/alta", params)
+
+      assert html_response(conn, 302)
+
+      verify_invitation(params)
+    end
+
     test "branch admin can not send invitations for other branches", %{conn: conn, branch2: branch2, branch1_admin: branch1_admin} do
       params = invitation_params(branch2.id)
 
       conn = conn
       |> log_in(branch1_admin)
+      |> post("/usuarios/alta", params)
+
+      assert_unauthorized(conn)
+      assert Invitation.count == 0
+    end
+
+    test "branch clerk can not send invitations for other branches", %{conn: conn, branch2: branch2, branch1_clerk: branch1_clerk} do
+      params = invitation_params(branch2.id)
+
+      conn = conn
+      |> log_in(branch1_clerk)
       |> post("/usuarios/alta", params)
 
       assert_unauthorized(conn)

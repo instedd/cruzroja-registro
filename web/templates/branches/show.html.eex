@@ -1,5 +1,12 @@
 <div id="branch-details">
   <div class="content-main">
-    <%= render "form.html", conn: @conn, changeset: @changeset, admin_emails: @admin_emails, action: branches_path(@conn, :update, @branch) %>
+    <%= render "form.html",
+                conn: @conn,
+                changeset: @changeset,
+                admin_emails: @admin_emails,
+                clerk_emails: @clerk_emails,
+                readonly: !has_ability?(@conn, :update),
+                action: branches_path(@conn, :update, @branch)
+    %>
   </div>
 </div>

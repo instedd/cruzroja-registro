@@ -158,7 +158,7 @@ defmodule Registro.Datasheet do
     do: is_clerk_of?(datasheet, branch_id)
 
   def is_clerk_of?(datasheet, branch_id) do
-    datasheet = Registro.Repo.preload(datasheet, :admin_branches)
+    datasheet = Registro.Repo.preload(datasheet, :clerk_branches)
 
     datasheet.clerk_branches
     |> Enum.any?(&(&1.id == branch_id))

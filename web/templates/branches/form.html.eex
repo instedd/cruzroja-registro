@@ -1,73 +1,67 @@
-<% readonly = !has_ability?(@conn, :update) %>
-
 <%= form_for @changeset, @action, fn f -> %>
   <div class="row">
     <div class="input-field col s12">
-      <%= validated_input f, :name, [requied: true, disabled: readonly], class: "form-control", required: "" %>
+      <%= validated_input f, :name, [requied: true, disabled: @readonly], class: "form-control", required: "" %>
       <%= validated_label f, :name, [text: "Nombre", required: true], class: "control-label" %>
     </div>
   </div>
 
-  <%= if !readonly do %>
-  <div class="section">
-    <h3>Administradores</h3>
-    <script>
-     var branchAdmins = <%= raw Poison.encode!(@admin_emails) %>;
-    </script>
-    <input name="admin_emails" type="hidden" value=""/>
-    <div class="input-field">
-      <div class="admin-chips"></div>
-    </div>
-    <div class="input-instructions">Agregar emails y presionar Enter. Se enviará una invitación a las direcciones que no tengan una cuenta asociada.</div>
-  </div>
+  <%= if !@readonly do %>
+  <script>
+    var branchAdmins = <%= raw Poison.encode!(@admin_emails) %>;
+    var branchClerks = <%= raw Poison.encode!(@clerk_emails) %>;
+  </script>
+
+  <%= chip_selector("Administradores", "admins-selector", "admin_emails") %>
+  <%= chip_selector("Staff", "clerks-selector", "clerk_emails") %>
   <% end %>
 
   <div class="section">
     <h3>Datos de contacto</h3>
     <div class="row">
       <div class="input-field col s12">
-        <%= validated_input f, :address, [disabled: readonly], class: "form-control" %>
+        <%= validated_input f, :address, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :address, [text: "Dirección"], class: "control-label" %>
       </div>
     </div>
 
     <div class="row">
       <div class="input-field col s12">
-        <%= validated_input f, :phone_number, [disabled: readonly], class: "form-control" %>
+        <%= validated_input f, :phone_number, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :phone_number, [text: "Teléfono"], class: "control-label" %>
       </div>
     </div>
 
     <div class="row">
       <div class="input-field col s12">
-        <%= validated_input f, :cell_phone_number, [disabled: readonly], class: "form-control" %>
+        <%= validated_input f, :cell_phone_number, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :cell_phone_number, [text: "Celular"], class: "control-label" %>
       </div>
     </div>
 
     <div class="row">
       <div class="input-field col s12">
-        <%= validated_input f, :email, [disabled: readonly], class: "form-control" %>
+        <%= validated_input f, :email, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :email, [text: "Email"], class: "control-label" %>
       </div>
     </div>
 
     <div class="row">
       <div class="input-field col s12">
-        <%= validated_input f, :president, [disabled: readonly], class: "form-control" %>
+        <%= validated_input f, :president, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :president, [text: "Presidente"], class: "control-label" %>
       </div>
     </div>
 
     <div class="row">
       <div class="input-field col s12">
-        <%= validated_input f, :authorities, [disabled: readonly], class: "form-control" %>
+        <%= validated_input f, :authorities, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :authorities, [text: "Interventores"], class: "control-label" %>
       </div>
     </div>
   </div>
 
-  <%= if !readonly do %>
+  <%= if !@readonly do %>
   <%= submit "Actualizar", class: "btn btn-large btn-primary" %>
   <% end %>
 <% end %>

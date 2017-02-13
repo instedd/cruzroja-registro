@@ -13,7 +13,9 @@ defmodule Registro.UserAuditLogEntry do
                   "invite_send",
                   "invite_confirm",
                   "branch_admin_granted",
-                  "branch_admin_revoked"
+                  "branch_admin_revoked",
+                  "branch_clerk_granted",
+                  "branch_clerk_revoked",
                  ]
 
   schema "user_audit_log_entries" do
@@ -98,6 +100,12 @@ defmodule Registro.UserAuditLogEntry do
 
       "branch_admin_revoked" ->
         actor <> " lo removió como administrador de una filial" <> date
+
+      "branch_clerk_granted" ->
+        actor <> " lo hizo participante de una filial" <> date
+
+      "branch_clerk_revoked" ->
+        actor <> " lo removió como participante de una filial" <> date
     end
   end
 

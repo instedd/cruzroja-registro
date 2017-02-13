@@ -1,6 +1,6 @@
 import { Listings } from "./listings";
 
-var initAdminSelector = () => {
+var initAdminSelector = (containerId, initialData) => {
   var encodeChips = (chips) => {
     return chips.map(c => c.tag).join("|")
   }
@@ -12,13 +12,13 @@ var initAdminSelector = () => {
     formInput.val(encodedData)
   }
 
-  if (!branchAdmins) {
-    throw "Expected global 'branchAdmins' variable to initialize admins selector"
+  if (!initialData) {
+    throw `Invalid initial data for ${containerId} selector`
   }
 
-  var initialData = branchAdmins.map(email => { return { tag: email }})
-  var chipContainer = $('.admin-chips')
-  var formInput = $("input[name='admin_emails']")
+  var container = $(`#${containerId}`)
+  var chipContainer = $(container).find('.selector-chips')
+  var formInput = $(container).find("input")
 
   if (!chipContainer.length || !formInput.length) {
     throw "Invalid markup for chip container"
@@ -27,7 +27,7 @@ var initAdminSelector = () => {
   chipContainer.material_chip({
     secondaryPlaceholder: '+Email',
     placeholder: ' +Email',
-    data: initialData
+    data: initialData.map(email => { return { tag: email }})
   });
 
   chipContainer.on('chip.add', syncChips);
@@ -51,6 +51,12 @@ export var Branches = {
    )
 
    $("#branch-details").each(() => {
-     initAdminSelector()
+     if (window.branchAdmins) {
+       initAdminSelector('admins-selector', branchAdmins)
+     }
+
+     if (window.branchClerks) {
+       initAdminSelector('clerks-selector', branchClerks)
+     }
    });
   }};

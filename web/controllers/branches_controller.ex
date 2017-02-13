@@ -149,7 +149,11 @@ defmodule Registro.BranchesController do
   def authorize_update(conn, user) do
     case authorize_detail(conn, user) do
       {true, abilities} ->
-        Enum.member?(abilities, :update)
+        if Enum.member?(abilities, :update) do
+          {true, abilities}
+        else
+          false
+        end
       _ ->
         false
     end

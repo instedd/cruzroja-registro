@@ -116,6 +116,8 @@ defmodule Seed do
     Enum.map(users, &insert_user/1)
 
     mark_as_branch_admin("amartinez@cruzroja.org.ar", branch1)
+    mark_as_branch_clerk("amartinez@cruzroja.org.ar", branch2)
+
     mark_as_branch_admin("rmarquez@cruzroja.org.ar", branch2)
   end
 
@@ -150,11 +152,23 @@ defmodule Seed do
     import Ecto.Query
 
     user = User
+    |> preload(:datasheet)
+    |> Repo.get_by!(email: email)
+
+    user.datasheet
+    |> Datasheet.make_admin_changeset([branch])
+    |> Repo.update!
+  end
+
+  def mark_as_branch_clerk(email, branch) do
+    import Ecto.Query
+
+    user = User
          |> preload(:datasheet)
          |> Repo.get_by!(email: email)
 
     user.datasheet
-    |> Datasheet.make_admin_changeset([branch])
+    |> Datasheet.make_clerk_changeset([branch])
     |> Repo.update!
   end
 

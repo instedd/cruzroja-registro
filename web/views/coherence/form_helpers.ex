@@ -105,4 +105,10 @@ defmodule Registro.FormHelpers do
     end
   end
 
+  def attributes(opts, attrs) do
+    attrs = if opts[:disabled], do: [{:disabled, ""} | attrs], else: attrs
+    attrs = if opts[:required], do: [{:required, ""} | attrs], else: attrs
+
+    attrs
+  end
 end

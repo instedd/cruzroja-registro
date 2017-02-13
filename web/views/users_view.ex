@@ -2,6 +2,8 @@ defmodule Registro.UsersView do
   use Registro.Web, :view
 
   import Registro.ListingsHelpers
+  import Registro.ViewHelpers
+  import Registro.FormHelpers
 
   def branch_label(datasheet) do
     case datasheet.branch do

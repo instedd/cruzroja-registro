@@ -70,6 +70,8 @@ defmodule Registro.UsersController do
   end
 
   def update(conn, params) do
+    current_user = Coherence.current_user(conn)
+
     datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
     datasheet_params = params["datasheet"]
@@ -77,19 +79,32 @@ defmodule Registro.UsersController do
                      |> set_branch_id_from_branch_name(params["branch_name"])
                      |> set_status_if_creating_colaboration(datasheet)
 
-    email = params["email"]
-    current_user = Coherence.current_user(conn)
+    is_super_admin = Datasheet.is_super_admin?(current_user.datasheet)
+    is_global_admin = Datasheet.is_global_admin?(current_user.datasheet)
+    global_grant_changed = global_grant_changed(datasheet_params, datasheet)
 
-    forbidden = if Datasheet.is_super_admin?(current_user.datasheet) && datasheet.user do
-                  #don't allow a super user to revoke his own permissions
-                  (datasheet.user.id == current_user.id) && super_admin_changed(datasheet_params, datasheet)
-                else
-                  branch_updated(datasheet_params, datasheet) || super_admin_changed(datasheet_params, datasheet)
-                end
+    super_admin_revoking_own_access =
+      is_super_admin &&
+      datasheet.user &&
+      datasheet.user.id == current_user.id &&
+      global_grant_changed
+
+    non_super_admin_changing_global_grant =
+      !is_super_admin && global_grant_changed
+
+    non_global_admin_updating_branch =
+      !is_global_admin && branch_updated(datasheet_params, datasheet)
+
+    forbidden =
+      super_admin_revoking_own_access ||
+      non_super_admin_changing_global_grant ||
+      non_global_admin_updating_branch
 
     if forbidden do
       Authorization.handle_unauthorized(conn)
     else
+      email = params["email"]
+
       changeset = Datasheet.changeset(datasheet, datasheet_params)
       changeset = if email && email != "" do
                     user = User.changeset(datasheet.user, :update, %{email: email})
@@ -255,7 +270,7 @@ defmodule Registro.UsersController do
     datasheet = user.datasheet
 
     cond do
-      Datasheet.is_super_admin?(datasheet) ->
+      Datasheet.is_global_admin?(datasheet) ->
         query
 
       Datasheet.has_branch_access?(datasheet) ->
@@ -292,7 +307,7 @@ defmodule Registro.UsersController do
       is_nil(target_datasheet) ->
         false
 
-      Datasheet.is_super_admin?(datasheet) ->
+      Datasheet.is_global_admin?(datasheet) ->
         {true, [:view, :update]}
 
       Datasheet.is_admin_of?(datasheet, target_datasheet.branch_id) ->
@@ -414,7 +429,7 @@ defmodule Registro.UsersController do
     end
   end
 
-  def super_admin_changed(datasheet_params, target_datasheet) do
+  def global_grant_changed(datasheet_params, target_datasheet) do
     case Map.fetch(datasheet_params, "global_grant") do
       {:ok, new_value} ->
         new_value != target_datasheet.global_grant

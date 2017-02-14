@@ -99,7 +99,7 @@ defmodule Registro.BranchManagement do
   end
 
   defp validate_admin_not_removing_himself(changeset, current_user) do
-    if Datasheet.is_super_admin?(current_user.datasheet) do
+    if Datasheet.is_global_admin?(current_user.datasheet) do
       changeset
     else
       admin_emails = Ecto.Changeset.get_field(changeset, :admins) |> Enum.map(&Datasheet.email/1)

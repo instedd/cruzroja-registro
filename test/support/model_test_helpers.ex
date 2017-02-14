@@ -51,6 +51,11 @@ defmodule Registro.ModelTestHelpers do
     |> Repo.insert!
   end
 
+  def create_admin(email) do
+    user_changeset(email, %{global_grant: "admin"})
+    |> Repo.insert!
+  end
+
   def create_datasheet(params) do
     Datasheet.changeset(%Datasheet{}, params)
     |> Repo.insert!

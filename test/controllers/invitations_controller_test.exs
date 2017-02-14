@@ -9,7 +9,8 @@ defmodule Registro.InvitationsControllerTest do
   setup(context) do
     create_country("Argentina")
 
-    super_admin = create_super_admin("admin@instedd.org")
+    super_admin = create_super_admin("super_admin@instedd.org")
+    admin = create_admin("admin@instedd.org")
 
     branch1 = create_branch(name: "Branch 1")
     branch2 = create_branch(name: "Branch 2")
@@ -20,6 +21,7 @@ defmodule Registro.InvitationsControllerTest do
 
     {:ok, Map.merge(context, %{
                       super_admin: super_admin,
+                      admin: admin,
                       branch1: branch1,
                       branch2: branch2,
                       branch1_admin: branch1_admin,
@@ -29,13 +31,15 @@ defmodule Registro.InvitationsControllerTest do
   end
 
   describe "form rendering" do
-    test "renders invitation form with all branches for super_admin", %{conn: conn, super_admin: super_admin} do
-      conn = conn
-      |> log_in(super_admin)
-      |> get("/usuarios/alta")
+    test "renders invitation form with all branches for global admins", %{conn: conn, super_admin: super_admin, admin: admin} do
+      Enum.each([super_admin, admin], fn user ->
+        conn = conn
+        |> log_in(user)
+        |> get("/usuarios/alta")
 
-      assert html_response(conn, 200)
-      assert branches_names(conn) == ["Branch 1", "Branch 2"]
+        assert html_response(conn, 200)
+        assert branches_names(conn) == ["Branch 1", "Branch 2"]
+      end)
     end
 
     test "renders invitation form with administrated branches for branch admin", %{conn: conn, branch1_admin: branch1_admin} do
@@ -70,7 +74,19 @@ defmodule Registro.InvitationsControllerTest do
   end
 
   describe "sending invitations" do
-    test "invitation creation with associated datasheet", %{conn: conn, branch1: branch, super_admin: super_admin} do
+    test "global admin can send invitations for any branch", %{conn: conn, branch1: branch, admin: admin} do
+      params = invitation_params(branch.id)
+
+      conn = conn
+      |> log_in(admin)
+      |> post("/usuarios/alta", params)
+
+      assert html_response(conn, 302)
+
+      verify_invitation(params)
+    end
+
+    test "super admin can send invitations for any branch", %{conn: conn, branch1: branch, super_admin: super_admin} do
       params = invitation_params(branch.id)
 
       conn = conn

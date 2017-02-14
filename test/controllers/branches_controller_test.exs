@@ -20,7 +20,8 @@ defmodule Registro.BranchesControllerTest do
 
     volunteer = create_volunteer("mary@example.com", branch1.id)
 
-    super_admin = create_super_admin("admin@instedd.org")
+    super_admin = create_super_admin("super_admin@instedd.org")
+    admin = create_admin("admin@instedd.org")
 
     create_branch_admin("branch_admin1@instedd.org", branch1, %{country_id: some_country.id})
     create_branch_admin("branch_admin2@instedd.org", branch1, %{country_id: some_country.id})
@@ -29,6 +30,7 @@ defmodule Registro.BranchesControllerTest do
     create_branch_clerk("branch_clerk2@instedd.org", branch2, %{country_id: some_country.id})
 
     {:ok, Map.merge(context, %{ super_admin: super_admin,
+                                admin: admin,
                                 branch1: branch1,
                                 branch2: branch2,
                                 volunteer: volunteer,
@@ -49,7 +51,16 @@ defmodule Registro.BranchesControllerTest do
       assert_unauthorized(conn)
     end
 
-    test "displays all branches to super_admin user", %{conn: conn, super_admin: super_admin} do
+    test "displays all branches to global admin", %{conn: conn, admin: admin} do
+      conn = conn
+      |> log_in(admin)
+      |> get("/filiales")
+
+      assert html_response(conn, 200)
+      assert (Enum.count conn.assigns[:branches]) == 2
+    end
+
+    test "displays all branches to super admin", %{conn: conn, super_admin: super_admin} do
       conn = conn
       |> log_in(super_admin)
       |> get("/filiales")
@@ -86,6 +97,17 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "detail" do
+    test "a global admin has edit only access to his branches", %{conn: conn, branch1: branch1} do
+      Enum.each(["admin@instedd.org", "super_admin@instedd.org"], fn email ->
+        conn = conn
+        |> log_in(email)
+        |> get(branches_path(conn, :show, branch1))
+
+        assert html_response(conn, 200)
+        assert conn.assigns[:abilities] == [:view, :update]
+      end)
+    end
+
     test "a branch admin has edit only access to his branches", %{conn: conn, branch1: branch1} do
       conn = conn
            |> log_in("branch_admin1@instedd.org")
@@ -200,7 +222,7 @@ defmodule Registro.BranchesControllerTest do
 
     test "allows to remove all admins", %{conn: conn, branch1: branch} do
       # test encoding/decoding of empty list
-      admins_update(conn, "admin@instedd.org", branch, [])
+      admins_update(conn, "super_admin@instedd.org", branch, [])
 
       updated_admins = updated_admins(branch) |> classify
       assert updated_admins == []
@@ -303,15 +325,30 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "creation" do
-    test "a super_admin can create new branches", %{conn: conn, super_admin: super_admin} do
+    test "a global admin can create new branches", %{conn: conn, admin: admin} do
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch" }}
+
+      conn
+      |> log_in(admin)
+      |> post("/filiales", params)
+
+      branch = Repo.one!(from b in Branch,
+                         where: b.name == "NewBranch",
+                         preload: :admins)
+
+      assert branch.admins == []
+    end
+
+    test "a super admin can create new branches", %{conn: conn, super_admin: super_admin} do
       params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch" }}
 
       conn
       |> log_in(super_admin)
       |> post("/filiales", params)
 
-      branch = (from b in Branch, where: b.name == "NewBranch", preload: :admins)
-             |> Repo.one
+      branch = Repo.one!(from b in Branch,
+                         where: b.name == "NewBranch",
+                         preload: :admins)
 
       assert branch.admins == []
     end

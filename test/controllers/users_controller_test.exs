@@ -12,7 +12,8 @@ defmodule Registro.UsersControllerTest do
     branch2 = create_branch(name: "Branch 2")
     branch3 = create_branch(name: "Branch 3")
 
-    create_super_admin("admin@instedd.org")
+    create_super_admin("super_admin@instedd.org")
+    create_admin("admin@instedd.org")
 
     create_branch_admin("branch_admin1@instedd.org", [branch1, branch3])
     create_branch_admin("branch_admin2@instedd.org", branch2)
@@ -50,18 +51,31 @@ defmodule Registro.UsersControllerTest do
 
     test "super_admin can see all users", %{conn: conn} do
       conn = conn
-            |> log_in("admin@instedd.org")
-            |> get("/usuarios")
+      |> log_in("super_admin@instedd.org")
+      |> get("/usuarios")
 
       assert html_response(conn, 200)
+      assert Enum.count(conn.assigns[:datasheets]) == Repo.count(User)
+    end
 
-      result_count = Enum.count conn.assigns[:datasheets]
-      all_users_count = Repo.aggregate(User, :count, :id)
+    test "global admin can see all users", %{conn: conn} do
+      conn = conn
+      |> log_in("admin@instedd.org")
+      |> get("/usuarios")
 
-      assert result_count == all_users_count
+      assert html_response(conn, 200)
+      assert Enum.count(conn.assigns[:datasheets]) == Repo.count(User)
     end
 
     test "a super_admin can filter by all branches", %{conn: conn} do
+      conn = conn
+      |> log_in("super_admin@instedd.org")
+      |> get("/usuarios")
+
+      assert Enum.count(conn.assigns[:branches]) == Repo.count(Branch)
+    end
+
+    test "a global admin can filter by all branches", %{conn: conn} do
       conn = conn
       |> log_in("admin@instedd.org")
       |> get("/usuarios")
@@ -296,7 +310,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "updating managed datasheets" do
-    test "a super_admin can update a user's branch", %{conn: conn} do
+    test "a global admin can update a user's branch", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
@@ -307,6 +321,22 @@ defmodule Registro.UsersControllerTest do
       }
 
       {_conn, volunteer} = update_user(conn, "admin@instedd.org", volunteer, params)
+
+      assert volunteer.datasheet.role == "associate"
+      assert volunteer.datasheet.branch.name == "Branch 2"
+    end
+
+    test "a super admin can update a user's branch", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
+
+      params = %{
+        branch_name: "Branch 2",
+        datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
+      }
+
+      {_conn, volunteer} = update_user(conn, "super_admin@instedd.org", volunteer, params)
 
       assert volunteer.datasheet.role == "associate"
       assert volunteer.datasheet.branch.name == "Branch 2"
@@ -378,13 +408,23 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "status changes" do
-    test "an super_admin is allowed to approve any volunteer", %{conn: conn} do
+    test "a global admin is allowed to approve any volunteer", %{conn: conn} do
       {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :approve)
       assert user.datasheet.status == "approved"
     end
 
-    test "an super_admin is allowed to reject any volunteer", %{conn: conn} do
+    test "a super admin is allowed to approve any volunteer", %{conn: conn} do
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :approve)
+      assert user.datasheet.status == "approved"
+    end
+
+    test "a global admin is allowed to reject any volunteer", %{conn: conn} do
       {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :reject)
+      assert user.datasheet.status == "rejected"
+    end
+
+    test "a super admin is allowed to reject any volunteer", %{conn: conn} do
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :reject)
       assert user.datasheet.status == "rejected"
     end
 
@@ -407,13 +447,29 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "at_start"
     end
 
-    test "a super_admin is allowed to approve requests from volunteers to become associates", %{conn: conn} do
+    test "a global admin is allowed to approve requests from volunteers to become associates", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      volunteer = User.changeset(volunteer, :update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
-                |> Repo.update!
+      volunteer =
+        volunteer
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+        |> Repo.update!
 
       {_conn, user} = update_state(conn, "admin@instedd.org", volunteer, :approve)
+
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.status == "approved"
+    end
+
+    test "a super admin is allowed to approve requests from volunteers to become associates", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      volunteer =
+        volunteer
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+        |> Repo.update!
+
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", volunteer, :approve)
 
       assert user.datasheet.role == "associate"
       assert user.datasheet.status == "approved"
@@ -498,7 +554,7 @@ defmodule Registro.UsersControllerTest do
           datasheet: %{ id: user.datasheet.id, branch_id: branch2.id, role: "volunteer" }
         }
 
-      {_conn, user} = update_user(conn, "admin@instedd.org", user, params)
+      {_conn, user} = update_user(conn, "super_admin@instedd.org", user, params)
 
       assert user.datasheet.branch_id == branch2.id
       assert user.datasheet.role == "volunteer"
@@ -510,31 +566,20 @@ defmodule Registro.UsersControllerTest do
     test "a super_admin can grant super_admin permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      {_conn, user} = update_user(conn, "admin@instedd.org", volunteer, datasheet: %{
-                                                                            id: volunteer.datasheet.id,
-                                                                            global_grant: "super_admin" })
+      {_conn, user} = update_user(conn, "super_admin@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
+                                                                                            global_grant: "super_admin" })
 
       assert Datasheet.is_super_admin?(user.datasheet)
     end
 
-    test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
-      other_admin = create_super_admin("admin2@instedd.org")
+    test "a regular global admin can not grant super_admin permissions to other users", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
 
-      {_conn, other_admin} = update_user(conn, "admin@instedd.org", other_admin, datasheet: %{
-                                                                                    id: other_admin.datasheet.id,
-                                                                                    global_grant: nil})
+      {conn, user} = update_user(conn, "admin@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
+                                                                                     global_grant: "super_admin" })
 
-      refute Datasheet.is_super_admin?(other_admin.datasheet)
-    end
-
-    test "a super_admin cannot revoke his own super_admin permissions", %{conn: conn} do
-      admin = get_user_by_email("admin@instedd.org")
-
-      {_conn, admin} = update_user(conn, admin, admin, datasheet: %{
-                                                                  id: admin.datasheet.id,
-                                                                  global_grant: nil })
-
-      assert Datasheet.is_super_admin?(admin.datasheet)
+      assert_unauthorized(conn)
+      refute Datasheet.is_super_admin?(user.datasheet)
     end
 
     test "a branch admin cannot grant super_admin permission", %{conn: conn} do
@@ -545,10 +590,29 @@ defmodule Registro.UsersControllerTest do
 
       refute Datasheet.is_super_admin?(user.datasheet)
     end
+
+    test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
+      other_admin = create_super_admin("admin2@instedd.org")
+
+      {_conn, other_admin} = update_user(conn, "super_admin@instedd.org", other_admin, datasheet: %{
+                                                                                    id: other_admin.datasheet.id,
+                                                                                    global_grant: nil})
+
+      refute Datasheet.is_super_admin?(other_admin.datasheet)
+    end
+
+    test "a super_admin cannot revoke his own super_admin permissions", %{conn: conn} do
+      admin = get_user_by_email("super_admin@instedd.org")
+
+      {_conn, admin} = update_user(conn, admin, admin, datasheet: %{ id: admin.datasheet.id,
+                                                                     global_grant: nil })
+
+      assert Datasheet.is_super_admin?(admin.datasheet)
+    end
   end
 
   describe "detail" do
-    test "a super_admin can access any users detail", %{conn: conn} do
+    test "a global admin can access and edit any users detail", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -556,6 +620,7 @@ defmodule Registro.UsersControllerTest do
       |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view, :update]
     end
 
     test "a branch admin can access and edit details of colaborators of administrated branches", %{conn: conn} do
@@ -603,7 +668,7 @@ defmodule Registro.UsersControllerTest do
 
   describe "own profile" do
     test "renders admin's own profile", %{conn: conn} do
-      user = get_user_by_email("admin@instedd.org")
+      user = get_user_by_email("super_admin@instedd.org")
 
       conn = conn
       |> log_in(user)
@@ -634,7 +699,7 @@ defmodule Registro.UsersControllerTest do
   describe "CSV download" do
     test "it allows downloading all users' information as CSV", %{conn: conn} do
       conn = conn
-      |> log_in("admin@instedd.org")
+      |> log_in("super_admin@instedd.org")
       |> get(users_path(Registro.Endpoint, :download_csv))
 
       response = response(conn, 200)
@@ -646,6 +711,7 @@ defmodule Registro.UsersControllerTest do
       Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,branch_clerk1,branch_clerk1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,super_admin,super_admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
       Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
       Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
@@ -661,7 +727,7 @@ defmodule Registro.UsersControllerTest do
       |> Repo.insert!
 
       conn = conn
-      |> log_in("admin@instedd.org")
+      |> log_in("super_admin@instedd.org")
       |> get(users_path(Registro.Endpoint, :download_csv))
 
       response = response(conn, 200)
@@ -685,7 +751,7 @@ defmodule Registro.UsersControllerTest do
       |> Repo.insert!
 
       conn = conn
-      |> log_in("admin@instedd.org")
+      |> log_in("super_admin@instedd.org")
       |> get(users_path(Registro.Endpoint, :download_csv))
 
       response = response(conn, 200)

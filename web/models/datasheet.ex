@@ -136,7 +136,7 @@ defmodule Registro.Datasheet do
   end
 
   def is_staff?(datasheet) do
-    is_super_admin?(datasheet) || is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
+    is_global_admin?(datasheet) || is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
   end
 
   def has_branch_access?(datasheet) do
@@ -187,7 +187,7 @@ defmodule Registro.Datasheet do
   def can_filter_by_branch?(datasheet) do
     datasheet = Registro.Repo.preload(datasheet, [:admin_branches, :clerk_branches])
 
-    is_super_admin?(datasheet)
+    is_global_admin?(datasheet)
     || Enum.count(datasheet.admin_branches) > 1
     || Enum.count(datasheet.clerk_branches) > 1
   end

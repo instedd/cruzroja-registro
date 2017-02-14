@@ -22,11 +22,11 @@ defmodule Registro.BranchesController do
     if authorized do
       import Ecto.Query
 
-      query = if Datasheet.is_super_admin?(datasheet) do
+      query = if Datasheet.is_global_admin?(datasheet) do
         from b in Branch
       else
         # TODO: here we are using the full list to build the paginated query,
-        # which doesn't seem to make a lot of sense. We expect non-super-admins
+        # which doesn't seem to make a lot of sense. We expect non-global-admins
         # to only be allowed to access a few branches at most, so it shouldn't be
         # that bad.
         branch_ids = Branch.accessible_by(datasheet) |> Enum.map(&(&1.id))
@@ -143,7 +143,7 @@ defmodule Registro.BranchesController do
     branch_id = String.to_integer(conn.params["id"])
 
     cond do
-      Datasheet.is_super_admin?(datasheet) ->
+      Datasheet.is_global_admin?(datasheet) ->
         {true, [:view, :update]}
 
       Datasheet.is_admin_of?(datasheet, branch_id) ->
@@ -171,7 +171,7 @@ defmodule Registro.BranchesController do
   end
 
   def authorize_creation(_conn, %User{datasheet: datasheet}) do
-    Datasheet.is_super_admin?(datasheet)
+    Datasheet.is_global_admin?(datasheet)
   end
 
   defp decode_email_list(encoded_emails) do

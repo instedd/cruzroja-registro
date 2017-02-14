@@ -193,7 +193,7 @@ defmodule Registro.Coherence.InvitationController do
     if is_protected_action do
       datasheet = current_user.datasheet
 
-      if Datasheet.is_super_admin?(datasheet) do
+      if Datasheet.is_global_admin?(datasheet) do
         true
       else
         case action do

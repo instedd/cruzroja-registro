@@ -74,6 +74,18 @@ defmodule Registro.DatasheetTest do
     refute changeset.("something_else").valid?
   end
 
+  test "global_grant can not have arbitrary values", %{minimal_params: params} do
+    changeset = fn(global_grant) ->
+      params = Map.merge(params, %{ global_grant: global_grant })
+
+      Datasheet.changeset(%Datasheet{}, params)
+    end
+
+    assert changeset.("super_admin").valid?
+    assert changeset.("admin").valid?
+    refute changeset.("something_else").valid?
+  end
+
   test "a volunteer cannot have empty status", %{minimal_params: params} do
     branch = create_branch(name: "Branch")
 

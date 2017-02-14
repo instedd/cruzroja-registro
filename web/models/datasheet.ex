@@ -58,6 +58,7 @@ defmodule Registro.Datasheet do
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
     |> validate_colaboration
+    |> validate_global_grant
   end
 
   def profile_filled_changeset(model, params \\ %{}) do
@@ -142,6 +143,10 @@ defmodule Registro.Datasheet do
     is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
   end
 
+  def is_global_admin?(datasheet) do
+    datasheet.global_grant == "super_admin" || datasheet.global_grant == "admin"
+  end
+
   def is_super_admin?(datasheet) do
     datasheet.global_grant == "super_admin"
   end
@@ -213,6 +218,17 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
+    end
+  end
+
+  defp validate_global_grant(changeset) do
+    valid_values = ["super_admin", "admin", nil]
+    grant = Ecto.Changeset.get_field(changeset, :global_grant)
+
+    if Enum.member?(valid_values, grant) do
+      changeset
+    else
+      changeset |> Ecto.Changeset.add_error(:global_grant, "is invalid")
     end
   end
 

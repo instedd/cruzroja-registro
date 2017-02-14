@@ -62,12 +62,30 @@
           <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
             <%# TODO! %>
             <div class="section">
-              <h3>Permisos de administración</h3>
+              <h3>Acceso global</h3>
               <div class="row">
                 <div class="input_field col s12">
-                  <%=  %>
-                  <%= checkbox fd, :global_grant, checked_value: "super_admin", unchecked_value: nil, class: "form-control" %>
-                  <%= label fd, :global_grant, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, nil, class: "with-gap") %>
+                      <label for="datasheet_global_grant_">Deshabilitado</label>
+                    </p>
+                    <div class="radio-description">Acceder solamente a información de las filiales en las que participa.</div>
+                  </div>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, "admin", class: "with-gap") %>
+                      <label for="datasheet_global_grant_admin">Administrador</label>
+                    </p>
+                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios.</div>
+                  </div>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, "super_admin", class: "with-gap") %>
+                      <label for="datasheet_global_grant_super_admin">Super administrador</label>
+                    </p>
+                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios, y otorgar permisos globales a otros usuarios.</div>
+                  </div>
                 </div>
               </div>
             </div>

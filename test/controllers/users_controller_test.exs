@@ -243,7 +243,7 @@ defmodule Registro.UsersControllerTest do
       user = Repo.get_by!(User, email: "branch_admin1@instedd.org")
            |> User.preload_datasheet
 
-      params = %{datasheet: %{ first_name: "This cannot be changed", is_super_admin: true }}
+      params = %{datasheet: %{ first_name: "This cannot be changed", global_grant: "super_admin" }}
 
       {conn, updated_user} = update_profile(conn, user, params)
 
@@ -512,9 +512,9 @@ defmodule Registro.UsersControllerTest do
 
       {_conn, user} = update_user(conn, "admin@instedd.org", volunteer, datasheet: %{
                                                                             id: volunteer.datasheet.id,
-                                                                            is_super_admin: true })
+                                                                            global_grant: "super_admin" })
 
-      assert user.datasheet.is_super_admin
+      assert Datasheet.is_super_admin?(user.datasheet)
     end
 
     test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
@@ -522,9 +522,9 @@ defmodule Registro.UsersControllerTest do
 
       {_conn, other_admin} = update_user(conn, "admin@instedd.org", other_admin, datasheet: %{
                                                                                     id: other_admin.datasheet.id,
-                                                                                    is_super_admin: false })
+                                                                                    global_grant: nil})
 
-      refute other_admin.datasheet.is_super_admin
+      refute Datasheet.is_super_admin?(other_admin.datasheet)
     end
 
     test "a super_admin cannot revoke his own super_admin permissions", %{conn: conn} do
@@ -532,33 +532,18 @@ defmodule Registro.UsersControllerTest do
 
       {_conn, admin} = update_user(conn, admin, admin, datasheet: %{
                                                                   id: admin.datasheet.id,
-                                                                  is_super_admin: false })
+                                                                  global_grant: nil })
 
-      assert admin.datasheet.is_super_admin
-    end
-
-    test "a super_admin can edit his own fields", %{conn: conn} do
-      # bugfix: value for is_super_admin reaches the controller
-      # as the string "true" instead of the boolean value.
-      # this caused problems when checking if the flag changed.
-      admin = get_user_by_email("admin@instedd.org")
-
-      {_conn, admin} = update_user(conn, admin, admin, datasheet: %{
-                                                                  id: admin.datasheet.id,
-                                                                  first_name: "foo",
-                                                                  is_super_admin: "true" })
-
-      assert admin.datasheet.is_super_admin
-      assert admin.datasheet.first_name == "foo"
+      assert Datasheet.is_super_admin?(admin.datasheet)
     end
 
     test "a branch admin cannot grant super_admin permission", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      params = %{ datasheet: %{ id: volunteer.datasheet.id, is_super_admin: true } }
+      params = %{ datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" } }
       {_conn, user} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
 
-      refute user.datasheet.is_super_admin
+      refute Datasheet.is_super_admin?(user.datasheet)
     end
   end
 

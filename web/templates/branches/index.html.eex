@@ -1,5 +1,5 @@
 <div id="branches" class="content-main table listing">
-  <%= if @current_user.datasheet.is_super_admin do %>
+  <%= if Registro.Datasheet.is_super_admin?(@current_user.datasheet) do %>
     <div class="floating-actions">
       <ul>
         <li>

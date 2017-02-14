@@ -59,18 +59,20 @@
             ] %>
           </div>
 
-          <%= if current_user.datasheet.is_super_admin do %>
+          <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
+            <%# TODO! %>
             <div class="section">
               <h3>Permisos de administración</h3>
               <div class="row">
                 <div class="input_field col s12">
-                  <%= checkbox fd, :is_super_admin, class: "form-control" %>
-                  <%= label fd, :is_super_admin, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
+                  <%=  %>
+                  <%= checkbox fd, :global_grant, checked_value: "super_admin", unchecked_value: nil, class: "form-control" %>
+                  <%= label fd, :global_grant, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
                 </div>
               </div>
             </div>
           <% else %>
-            <%= hidden_input fd, :is_super_admin, disabled: "" %>
+            <%= hidden_input fd, :global_grant, disabled: "" %>
           <% end %>
 
           <div class="section">
@@ -78,7 +80,7 @@
             <div class="row">
               <div class="input-field col s6">
                 <label class="control-label" for="user_datasheet_branch_name">Filial</label>
-                <%= if current_user.datasheet.is_super_admin do %>
+                <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
                   <%= tag(:input,
                     type: "text",
                     id: "user_datasheet_branch_name",

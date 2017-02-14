@@ -107,7 +107,7 @@ defmodule Registro.DatasheetTest do
   end
 
   test "a super admin can filter by branch", %{minimal_params: params} do
-    datasheet = Map.merge(params, %{is_super_admin: true})
+    datasheet = Map.merge(params, %{global_grant: "super_admin"})
     |> create_datasheet
 
     assert Datasheet.can_filter_by_branch?(datasheet)

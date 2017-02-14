@@ -5,7 +5,7 @@
 <%= if datasheet.filled && Registro.Datasheet.is_staff?(datasheet) do %>
     <%= menu_item(@conn, users_path(@conn, :index), "Usuarios") %>
 
-    <%= if datasheet.is_super_admin do %>
+    <%= if Registro.Datasheet.is_super_admin?(datasheet) do %>
       <%= menu_item(@conn, branches_path(@conn, :index), "Filiales") %>
     <% else %>
       <% accessible_branches = Registro.Branch.accessible_by(datasheet) %>

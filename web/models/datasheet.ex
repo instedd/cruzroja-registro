@@ -20,7 +20,7 @@ defmodule Registro.Datasheet do
 
     field :status, :string
     field :role, :string
-    field :is_super_admin, :boolean
+    field :global_grant, :string
 
     field :filled, :boolean
 
@@ -52,7 +52,7 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :is_super_admin])
+    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :global_grant])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
@@ -135,11 +135,15 @@ defmodule Registro.Datasheet do
   end
 
   def is_staff?(datasheet) do
-    datasheet.is_super_admin || is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
+    is_super_admin?(datasheet) || is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
   end
 
   def has_branch_access?(datasheet) do
     is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
+  end
+
+  def is_super_admin?(datasheet) do
+    datasheet.global_grant == "super_admin"
   end
 
   def is_branch_admin?(datasheet) do
@@ -178,7 +182,7 @@ defmodule Registro.Datasheet do
   def can_filter_by_branch?(datasheet) do
     datasheet = Registro.Repo.preload(datasheet, [:admin_branches, :clerk_branches])
 
-    datasheet.is_super_admin
+    is_super_admin?(datasheet)
     || Enum.count(datasheet.admin_branches) > 1
     || Enum.count(datasheet.clerk_branches) > 1
   end

@@ -22,7 +22,7 @@ defmodule Registro.BranchesController do
     if authorized do
       import Ecto.Query
 
-      query = if datasheet.is_super_admin do
+      query = if Datasheet.is_super_admin?(datasheet) do
         from b in Branch
       else
         # TODO: here we are using the full list to build the paginated query,
@@ -143,7 +143,7 @@ defmodule Registro.BranchesController do
     branch_id = String.to_integer(conn.params["id"])
 
     cond do
-      datasheet.is_super_admin ->
+      Datasheet.is_super_admin?(datasheet) ->
         {true, [:view, :update]}
 
       Datasheet.is_admin_of?(datasheet, branch_id) ->
@@ -171,7 +171,7 @@ defmodule Registro.BranchesController do
   end
 
   def authorize_creation(_conn, %User{datasheet: datasheet}) do
-    datasheet.is_super_admin
+    Datasheet.is_super_admin?(datasheet)
   end
 
   defp decode_email_list(encoded_emails) do

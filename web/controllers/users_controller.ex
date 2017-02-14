@@ -80,7 +80,7 @@ defmodule Registro.UsersController do
     email = params["email"]
     current_user = Coherence.current_user(conn)
 
-    forbidden = if current_user.datasheet.is_super_admin && datasheet.user do
+    forbidden = if Datasheet.is_super_admin?(current_user.datasheet) && datasheet.user do
                   #don't allow a super user to revoke his own permissions
                   (datasheet.user.id == current_user.id) && super_admin_changed(datasheet_params, datasheet)
                 else
@@ -255,7 +255,7 @@ defmodule Registro.UsersController do
     datasheet = user.datasheet
 
     cond do
-      datasheet.is_super_admin ->
+      Datasheet.is_super_admin?(datasheet) ->
         query
 
       Datasheet.has_branch_access?(datasheet) ->
@@ -292,7 +292,7 @@ defmodule Registro.UsersController do
       is_nil(target_datasheet) ->
         false
 
-      datasheet.is_super_admin ->
+      Datasheet.is_super_admin?(datasheet) ->
         {true, [:view, :update]}
 
       Datasheet.is_admin_of?(datasheet, target_datasheet.branch_id) ->
@@ -415,15 +415,9 @@ defmodule Registro.UsersController do
   end
 
   def super_admin_changed(datasheet_params, target_datasheet) do
-    case Map.fetch(datasheet_params, "is_super_admin") do
+    case Map.fetch(datasheet_params, "global_grant") do
       {:ok, new_value} ->
-        new_value = case new_value do
-                      "true" -> true
-                      "false" -> false
-                      _ -> new_value
-                    end
-
-        new_value != target_datasheet.is_super_admin
+        new_value != target_datasheet.global_grant
       _ ->
         false
     end

@@ -47,7 +47,7 @@ defmodule Registro.ModelTestHelpers do
   end
 
   def create_super_admin(email) do
-    user_changeset(email, %{is_super_admin: true})
+    user_changeset(email, %{global_grant: "super_admin"})
     |> Repo.insert!
   end
 
@@ -101,7 +101,7 @@ defmodule Registro.ModelTestHelpers do
                      address: "-",
                      phone_number: "+1222222",
                      country_id: country_id,
-                     is_super_admin: false }
+                     global_grant: nil }
 
     Map.merge(base_params, overrides)
   end

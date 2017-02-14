@@ -35,7 +35,7 @@ defmodule Seed do
           occupation: "Administrador de Cruz Roja",
           address: "-",
           phone_number: "+54 11111111",
-          is_super_admin: true
+          global_grant: "super_admin"
         }
        },
       %{email: "amartinez@cruzroja.org.ar",

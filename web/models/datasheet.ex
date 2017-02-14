@@ -136,7 +136,11 @@ defmodule Registro.Datasheet do
   end
 
   def is_staff?(datasheet) do
-    is_global_admin?(datasheet) || is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
+    has_global_access?(datasheet) || has_branch_access?(datasheet)
+  end
+
+  def has_global_access?(datasheet) do
+    is_global_admin?(datasheet) || is_global_reader?(datasheet)
   end
 
   def has_branch_access?(datasheet) do
@@ -145,6 +149,10 @@ defmodule Registro.Datasheet do
 
   def is_global_admin?(datasheet) do
     datasheet.global_grant == "super_admin" || datasheet.global_grant == "admin"
+  end
+
+  def is_global_reader?(datasheet) do
+    datasheet.global_grant == "reader"
   end
 
   def is_super_admin?(datasheet) do
@@ -187,7 +195,7 @@ defmodule Registro.Datasheet do
   def can_filter_by_branch?(datasheet) do
     datasheet = Registro.Repo.preload(datasheet, [:admin_branches, :clerk_branches])
 
-    is_global_admin?(datasheet)
+    has_global_access?(datasheet)
     || Enum.count(datasheet.admin_branches) > 1
     || Enum.count(datasheet.clerk_branches) > 1
   end
@@ -222,7 +230,7 @@ defmodule Registro.Datasheet do
   end
 
   defp validate_global_grant(changeset) do
-    valid_values = ["super_admin", "admin", nil]
+    valid_values = ["super_admin", "admin", "reader", nil]
     grant = Ecto.Changeset.get_field(changeset, :global_grant)
 
     if Enum.member?(valid_values, grant) do

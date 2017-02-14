@@ -83,6 +83,7 @@ defmodule Registro.DatasheetTest do
 
     assert changeset.("super_admin").valid?
     assert changeset.("admin").valid?
+    assert changeset.("reader").valid?
     refute changeset.("something_else").valid?
   end
 
@@ -118,11 +119,14 @@ defmodule Registro.DatasheetTest do
     refute Datasheet.is_admin_of?(datasheet, branch3)
   end
 
-  test "a super admin can filter by branch", %{minimal_params: params} do
-    datasheet = Map.merge(params, %{global_grant: "super_admin"})
-    |> create_datasheet
+  test "users with global access can filter by branch", %{minimal_params: params} do
+    Enum.each(["super_admin", "admin", "reader"], fn grant ->
+      datasheet =
+        Map.merge(params, %{global_grant: grant})
+        |> create_datasheet
 
-    assert Datasheet.can_filter_by_branch?(datasheet)
+      assert Datasheet.can_filter_by_branch?(datasheet)
+    end)
   end
 
   test "a branch admin with one branch cannot filter by branch", %{minimal_params: params} do

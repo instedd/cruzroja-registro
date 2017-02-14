@@ -4,6 +4,7 @@ defmodule Registro.Role do
     case role do
       "volunteer" -> "Voluntario"
       "associate" -> "Asociado"
+      nil -> ""
     end
   end
 

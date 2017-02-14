@@ -73,6 +73,13 @@
                   </div>
                   <div>
                     <p>
+                      <%= radio_button(fd, :global_grant, "reader", class: "with-gap") %>
+                      <label for="datasheet_global_grant_reader">Lector</label>
+                    </p>
+                    <div class="radio-description">Ver información de todas las filiales y sus voluntarios.</div>
+                  </div>
+                  <div>
+                    <p>
                       <%= radio_button(fd, :global_grant, "admin", class: "with-gap") %>
                       <label for="datasheet_global_grant_admin">Administrador</label>
                     </p>

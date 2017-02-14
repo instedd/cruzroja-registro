@@ -22,6 +22,7 @@ defmodule Registro.BranchesControllerTest do
 
     super_admin = create_super_admin("super_admin@instedd.org")
     admin = create_admin("admin@instedd.org")
+    reader = create_reader("reader@instedd.org")
 
     create_branch_admin("branch_admin1@instedd.org", branch1, %{country_id: some_country.id})
     create_branch_admin("branch_admin2@instedd.org", branch1, %{country_id: some_country.id})
@@ -31,6 +32,7 @@ defmodule Registro.BranchesControllerTest do
 
     {:ok, Map.merge(context, %{ super_admin: super_admin,
                                 admin: admin,
+                                reader: reader,
                                 branch1: branch1,
                                 branch2: branch2,
                                 volunteer: volunteer,
@@ -54,6 +56,15 @@ defmodule Registro.BranchesControllerTest do
     test "displays all branches to global admin", %{conn: conn, admin: admin} do
       conn = conn
       |> log_in(admin)
+      |> get("/filiales")
+
+      assert html_response(conn, 200)
+      assert (Enum.count conn.assigns[:branches]) == 2
+    end
+
+    test "displays all branches to global reader", %{conn: conn, reader: reader} do
+      conn = conn
+      |> log_in(reader)
       |> get("/filiales")
 
       assert html_response(conn, 200)
@@ -97,7 +108,7 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "detail" do
-    test "a global admin has edit only access to his branches", %{conn: conn, branch1: branch1} do
+    test "a global admin has edit access to his branches", %{conn: conn, branch1: branch1} do
       Enum.each(["admin@instedd.org", "super_admin@instedd.org"], fn email ->
         conn = conn
         |> log_in(email)
@@ -108,10 +119,32 @@ defmodule Registro.BranchesControllerTest do
       end)
     end
 
-    test "a branch admin has edit only access to his branches", %{conn: conn, branch1: branch1} do
+    test "a global reader has read only access to his branches", %{conn: conn, branch1: branch1} do
+      conn = conn
+      |> log_in("reader@instedd.org")
+      |> get(branches_path(conn, :show, branch1))
+
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view]
+    end
+
+    test "a branch admin has edit access to his branches", %{conn: conn, branch1: branch1} do
       conn = conn
            |> log_in("branch_admin1@instedd.org")
            |> get(branches_path(conn, :show, branch1))
+
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view, :update]
+    end
+
+    test "a global admin has edit access to branches he administrates", %{conn: conn, reader: reader, branch1: branch} do
+      reader.datasheet
+      |> Datasheet.make_admin_changeset([branch])
+      |> Repo.update!
+
+      conn = conn
+      |> log_in(reader)
+      |> get(branches_path(conn, :show, branch))
 
       assert html_response(conn, 200)
       assert conn.assigns[:abilities] == [:view, :update]
@@ -152,6 +185,18 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "update" do
+    test "a global reader cannot update a branch", %{conn: conn, branch1: branch} do
+      params = %{ admin_emails: "branch_admin1@instedd.org",
+                  branch: %{
+                    name: "Updated name",
+                    address: "Updated address" }}
+      conn = conn
+      |> log_in("reader@instedd.org")
+      |> patch(branches_path(conn, :update, branch), params)
+
+      assert_unauthorized(conn)
+    end
+
     test "branch clerk cannot update his branch's details", %{conn: conn, branch1: branch} do
       params = %{ admin_emails: "branch_admin1@instedd.org",
                   branch: %{
@@ -347,10 +392,22 @@ defmodule Registro.BranchesControllerTest do
       |> post("/filiales", params)
 
       branch = Repo.one!(from b in Branch,
-                         where: b.name == "NewBranch",
-                         preload: :admins)
+        where: b.name == "NewBranch",
+        preload: :admins)
 
       assert branch.admins == []
+    end
+
+    test "a global reader can not create new branches", %{conn: conn, reader: reader} do
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch" }}
+
+      conn =
+        conn
+        |> log_in(reader)
+        |> post("/filiales", params)
+
+      assert_unauthorized(conn)
+      assert Repo.one(from b in Branch, where: b.name == "NewBranch", preload: :admins) == nil
     end
 
     test "branch admins are not allowed to create branches", %{conn: conn} do

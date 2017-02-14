@@ -46,7 +46,7 @@ defmodule Registro.Branch do
   end
 
   def accessible_by(datasheet) do
-    if Registro.Datasheet.is_global_admin?(datasheet) do
+    if Registro.Datasheet.has_global_access?(datasheet) do
       all
     else
       datasheet.admin_branches ++ datasheet.clerk_branches

@@ -11,6 +11,7 @@ defmodule Registro.InvitationsControllerTest do
 
     super_admin = create_super_admin("super_admin@instedd.org")
     admin = create_admin("admin@instedd.org")
+    reader = create_reader("reader@instedd.org")
 
     branch1 = create_branch(name: "Branch 1")
     branch2 = create_branch(name: "Branch 2")
@@ -22,6 +23,7 @@ defmodule Registro.InvitationsControllerTest do
     {:ok, Map.merge(context, %{
                       super_admin: super_admin,
                       admin: admin,
+                      reader: reader,
                       branch1: branch1,
                       branch2: branch2,
                       branch1_admin: branch1_admin,
@@ -40,6 +42,15 @@ defmodule Registro.InvitationsControllerTest do
         assert html_response(conn, 200)
         assert branches_names(conn) == ["Branch 1", "Branch 2"]
       end)
+    end
+
+    test "doesn't renders invitation form for global readers", %{conn: conn, reader: reader} do
+      conn =
+        conn
+        |> log_in(reader)
+        |> get("/usuarios/alta")
+
+      assert_unauthorized(conn)
     end
 
     test "renders invitation form with administrated branches for branch admin", %{conn: conn, branch1_admin: branch1_admin} do
@@ -96,6 +107,16 @@ defmodule Registro.InvitationsControllerTest do
       assert html_response(conn, 302)
 
       verify_invitation(params)
+    end
+
+    test "global reader can not send invitations", %{conn: conn, branch1: branch, reader: reader} do
+      params = invitation_params(branch.id)
+
+      conn = conn
+      |> log_in(reader)
+      |> post("/usuarios/alta", params)
+
+      assert_unauthorized(conn)
     end
 
     test "branch admin can send invitations for the same branch", %{conn: conn, branch1: branch, branch1_admin: branch_admin} do

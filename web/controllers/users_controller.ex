@@ -248,7 +248,7 @@ defmodule Registro.UsersController do
     datasheet = user.datasheet
 
     cond do
-      Datasheet.is_global_admin?(datasheet) ->
+      Datasheet.has_global_access?(datasheet) ->
         query
 
       Datasheet.has_branch_access?(datasheet) ->
@@ -290,6 +290,9 @@ defmodule Registro.UsersController do
 
       Datasheet.is_admin_of?(datasheet, target_datasheet.branch_id) ->
         {true, [:view, :update]}
+
+      Datasheet.is_global_reader?(datasheet) ->
+        {true, [:view]}
 
       Datasheet.is_clerk_of?(datasheet, target_datasheet.branch_id) ->
         {true, [:view]}

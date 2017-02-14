@@ -22,7 +22,7 @@ defmodule Registro.BranchesController do
     if authorized do
       import Ecto.Query
 
-      query = if Datasheet.is_global_admin?(datasheet) do
+      query = if Datasheet.has_global_access?(datasheet) do
         from b in Branch
       else
         # TODO: here we are using the full list to build the paginated query,
@@ -148,6 +148,9 @@ defmodule Registro.BranchesController do
 
       Datasheet.is_admin_of?(datasheet, branch_id) ->
         {true, [:view, :update]}
+
+      Datasheet.is_global_reader?(datasheet) ->
+        {true, [:view]}
 
       Datasheet.is_clerk_of?(datasheet, branch_id) ->
         {true, [:view]}

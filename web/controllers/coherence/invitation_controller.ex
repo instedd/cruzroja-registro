@@ -198,7 +198,8 @@ defmodule Registro.Coherence.InvitationController do
       else
         case action do
           :new ->
-            Datasheet.is_staff?(datasheet)
+            # global readers cannot send invites
+            Datasheet.is_global_admin?(datasheet) || Datasheet.has_branch_access?(datasheet)
           _ ->
             branch_id = target_branch_id(conn.params)
             Datasheet.is_admin_of?(datasheet, branch_id) || Datasheet.is_clerk_of?(datasheet, branch_id)

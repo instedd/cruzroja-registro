@@ -56,6 +56,11 @@ defmodule Registro.ModelTestHelpers do
     |> Repo.insert!
   end
 
+  def create_reader(email) do
+    user_changeset(email, %{global_grant: "reader"})
+    |> Repo.insert!
+  end
+
   def create_datasheet(params) do
     Datasheet.changeset(%Datasheet{}, params)
     |> Repo.insert!

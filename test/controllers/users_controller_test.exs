@@ -14,6 +14,7 @@ defmodule Registro.UsersControllerTest do
 
     create_super_admin("super_admin@instedd.org")
     create_admin("admin@instedd.org")
+    create_reader("reader@instedd.org")
 
     create_branch_admin("branch_admin1@instedd.org", [branch1, branch3])
     create_branch_admin("branch_admin2@instedd.org", branch2)
@@ -49,38 +50,27 @@ defmodule Registro.UsersControllerTest do
       assert_unauthorized(conn)
     end
 
-    test "super_admin can see all users", %{conn: conn} do
-      conn = conn
-      |> log_in("super_admin@instedd.org")
-      |> get("/usuarios")
+    test "users with global access can see all users", %{conn: conn} do
+      Enum.each(["super_admin@instedd.org", "admin@instedd.org", "reader@instedd.org"], fn login_email ->
+        conn =
+          conn
+          |> log_in(login_email)
+          |> get("/usuarios")
 
-      assert html_response(conn, 200)
-      assert Enum.count(conn.assigns[:datasheets]) == Repo.count(User)
+        assert html_response(conn, 200)
+        assert Enum.count(conn.assigns[:datasheets]) == Repo.count(User)
+      end)
     end
 
-    test "global admin can see all users", %{conn: conn} do
-      conn = conn
-      |> log_in("admin@instedd.org")
-      |> get("/usuarios")
+    test "users with global access can filter by all branches", %{conn: conn} do
+      Enum.each(["super_admin@instedd.org", "admin@instedd.org", "reader@instedd.org"], fn login_email ->
+        conn =
+          conn
+          |> log_in(login_email)
+          |> get("/usuarios")
 
-      assert html_response(conn, 200)
-      assert Enum.count(conn.assigns[:datasheets]) == Repo.count(User)
-    end
-
-    test "a super_admin can filter by all branches", %{conn: conn} do
-      conn = conn
-      |> log_in("super_admin@instedd.org")
-      |> get("/usuarios")
-
-      assert Enum.count(conn.assigns[:branches]) == Repo.count(Branch)
-    end
-
-    test "a global admin can filter by all branches", %{conn: conn} do
-      conn = conn
-      |> log_in("admin@instedd.org")
-      |> get("/usuarios")
-
-      assert Enum.count(conn.assigns[:branches]) == Repo.count(Branch)
+        assert Enum.count(conn.assigns[:branches]) == Repo.count(Branch)
+      end)
     end
 
     test "a branch admin can filter by his accessible branches", %{conn: conn} do
@@ -315,10 +305,8 @@ defmodule Registro.UsersControllerTest do
 
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
-      params = %{
-        branch_name: "Branch 2",
-        datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
-      }
+      params = %{ branch_name: "Branch 2",
+                  datasheet: %{ id: volunteer.datasheet.id, role: "associate" } }
 
       {_conn, volunteer} = update_user(conn, "admin@instedd.org", volunteer, params)
 
@@ -331,15 +319,27 @@ defmodule Registro.UsersControllerTest do
 
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
-      params = %{
-        branch_name: "Branch 2",
-        datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
-      }
+      params = %{ branch_name: "Branch 2",
+                  datasheet: %{ id: volunteer.datasheet.id, role: "associate" } }
 
       {_conn, volunteer} = update_user(conn, "super_admin@instedd.org", volunteer, params)
 
       assert volunteer.datasheet.role == "associate"
       assert volunteer.datasheet.branch.name == "Branch 2"
+    end
+
+    test "a global reader can not update a user's branch", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
+
+      params = %{ branch_name: "Branch 2",
+                  datasheet: %{ id: volunteer.datasheet.id, role: "associate" } }
+
+      {conn, updated_volunteer} = update_user(conn, "reader@instedd.org", volunteer, params)
+
+      assert_unauthorized(conn)
+      assert volunteer == updated_volunteer
     end
 
     test "a branch admin cannot update a user's branch", %{conn: conn} do
@@ -418,6 +418,12 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "approved"
     end
 
+    test "a global reader is not allowed to approve any volunteer", %{conn: conn} do
+      {conn, user} = update_state(conn, "reader@instedd.org", "volunteer1@example.com", :approve)
+      assert_unauthorized(conn)
+      assert user.datasheet.status == "at_start"
+    end
+
     test "a global admin is allowed to reject any volunteer", %{conn: conn} do
       {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :reject)
       assert user.datasheet.status == "rejected"
@@ -473,6 +479,21 @@ defmodule Registro.UsersControllerTest do
 
       assert user.datasheet.role == "associate"
       assert user.datasheet.status == "approved"
+    end
+
+    test "a global reader is not allowed to approve requests from volunteers to become associates", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      volunteer =
+        volunteer
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+        |> Repo.update!
+
+      {conn, user} = update_state(conn, "reader@instedd.org", volunteer, :approve)
+
+      assert_unauthorized(conn)
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.status == "associate_requested"
     end
 
     def update_state(conn, current_user_email, %User{} = volunteer, action) do
@@ -563,7 +584,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "granting super_admin permissions" do
-    test "a super_admin can grant super_admin permissions to other users", %{conn: conn} do
+    test "a super_admin can grant global permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       {_conn, user} = update_user(conn, "super_admin@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
@@ -572,7 +593,7 @@ defmodule Registro.UsersControllerTest do
       assert Datasheet.is_super_admin?(user.datasheet)
     end
 
-    test "a regular global admin can not grant super_admin permissions to other users", %{conn: conn} do
+    test "a regular global admin can not grant global permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       {conn, user} = update_user(conn, "admin@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
@@ -582,7 +603,17 @@ defmodule Registro.UsersControllerTest do
       refute Datasheet.is_super_admin?(user.datasheet)
     end
 
-    test "a branch admin cannot grant super_admin permission", %{conn: conn} do
+    test "a global reader can not grant global permissions to other users", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      {conn, user} = update_user(conn, "reader@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
+                                                                                     global_grant: "super_admin" })
+
+      assert_unauthorized(conn)
+      refute Datasheet.is_super_admin?(user.datasheet)
+    end
+
+    test "a branch admin cannot grant global permission", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       params = %{ datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" } }
@@ -612,7 +643,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "detail" do
-    test "a global admin can access and edit any users detail", %{conn: conn} do
+    test "a global admin can access and edit any user's detail", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
@@ -623,11 +654,38 @@ defmodule Registro.UsersControllerTest do
       assert conn.assigns[:abilities] == [:view, :update]
     end
 
+    test "a global reader can access any user's detail", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      conn = conn
+      |> log_in("reader@instedd.org")
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
+
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view]
+    end
+
     test "a branch admin can access and edit details of colaborators of administrated branches", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
       conn = conn
       |> log_in("branch_admin1@instedd.org")
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
+
+      assert html_response(conn, 200)
+      assert conn.assigns[:abilities] == [:view, :update]
+    end
+
+    test "a global reader can edit profiles of users of a branch he administrates", %{conn: conn} do
+      reader = get_user_by_email("reader@instedd.org")
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      reader.datasheet
+      |> Datasheet.make_admin_changeset([volunteer.datasheet.branch])
+      |> Repo.update!
+
+      conn = conn
+      |> log_in("reader@instedd.org")
       |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert html_response(conn, 200)
@@ -711,6 +769,7 @@ defmodule Registro.UsersControllerTest do
       Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,branch_clerk1,branch_clerk1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,reader,reader@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,super_admin,super_admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
       Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
       Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r

@@ -16,6 +16,10 @@ defmodule Registro.Branch do
     many_to_many :admins, Registro.Datasheet,
       join_through: "branches_admins",
       on_replace: :delete # allow to delete admins by updating the branch
+
+    many_to_many :clerks, Registro.Datasheet,
+      join_through: "branches_clerks",
+      on_replace: :delete # allow to delete admins by updating the branch
   end
 
   def changeset(model, params \\ %{}) do
@@ -29,6 +33,10 @@ defmodule Registro.Branch do
     Ecto.Changeset.put_assoc(changeset, :admins, admin_datasheets)
   end
 
+  def update_clerks(changeset, clerk_datasheets) do
+    Ecto.Changeset.put_assoc(changeset, :clerks, clerk_datasheets)
+  end
+
   def all do
     Registro.Repo.all(from b in Registro.Branch, select: b, order_by: :name)
   end
@@ -38,10 +46,10 @@ defmodule Registro.Branch do
   end
 
   def accessible_by(datasheet) do
-    if datasheet.is_super_admin do
+    if Registro.Datasheet.has_global_access?(datasheet) do
       all
     else
-      datasheet.admin_branches
+      datasheet.admin_branches ++ datasheet.clerk_branches
     end
   end
 end

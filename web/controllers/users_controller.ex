@@ -17,7 +17,7 @@ defmodule Registro.UsersController do
 
   plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
   plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
-  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
+  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show]
   plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
@@ -69,6 +69,7 @@ defmodule Registro.UsersController do
   end
 
   def update(conn, params) do
+    current_user = Coherence.current_user(conn)
     datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
     datasheet_params = params["datasheet"]
@@ -76,19 +77,12 @@ defmodule Registro.UsersController do
                      |> set_branch_id_from_branch_name(params["branch_name"])
                      |> set_status_if_creating_colaboration(datasheet)
 
-    email = params["email"]
-    current_user = Coherence.current_user(conn)
 
-    forbidden = if current_user.datasheet.is_super_admin && datasheet.user do
-                  #don't allow a super user to revoke his own permissions
-                  (datasheet.user.id == current_user.id) && super_admin_changed(datasheet_params, datasheet)
-                else
-                  branch_updated(datasheet_params, datasheet) || super_admin_changed(datasheet_params, datasheet)
-                end
-
-    if forbidden do
+    if !authorize_update(conn, datasheet, datasheet_params) do
       Authorization.handle_unauthorized(conn)
     else
+      email = params["email"]
+
       changeset = Datasheet.changeset(datasheet, datasheet_params)
       changeset = if email && email != "" do
                     user = User.changeset(datasheet.user, :update, %{email: email})
@@ -99,7 +93,7 @@ defmodule Registro.UsersController do
 
       case Repo.update(changeset) do
         {:ok, ds} ->
-          UserAuditLogEntry.add(datasheet.id, Coherence.current_user(conn), action_for(changeset))
+          UserAuditLogEntry.add(datasheet.id, current_user, action_for(changeset))
           send_email_on_status_change(conn, changeset, email, ds)
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
@@ -249,24 +243,21 @@ defmodule Registro.UsersController do
       where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
   end
 
-  defp restrict_to_visible_users(query, conn, from_user \\ false) do
+  defp restrict_to_visible_users(query, conn) do
     user = conn.assigns[:current_user]
     datasheet = user.datasheet
 
     cond do
-      datasheet.is_super_admin ->
+      Datasheet.has_global_access?(datasheet) ->
         query
-      Datasheet.is_branch_admin?(datasheet) ->
-        administrated_branch_ids = Enum.map(datasheet.admin_branches, &(&1.id))
 
-        if from_user do
-          from u in query,
-          join: d in Datasheet, on: u.datasheet_id == d.id,
-          where: d.branch_id in ^administrated_branch_ids
-        else
-          from d in query,
-          where: d.branch_id in ^administrated_branch_ids
-        end
+      Datasheet.has_branch_access?(datasheet) ->
+        branch_ids = Branch.accessible_by(datasheet) |> Enum.map(&(&1.id))
+
+        from d in query, where: d.branch_id in ^branch_ids
+
+      true ->
+        from d in query, where: false
     end
   end
 
@@ -280,19 +271,63 @@ defmodule Registro.UsersController do
 
   def authorize_listing(_conn, current_user) do
     datasheet = current_user.datasheet
-
-    datasheet.is_super_admin || Datasheet.is_branch_admin?(datasheet)
+    Datasheet.is_staff?(datasheet)
   end
 
   def authorize_detail(conn, %User{datasheet: datasheet}) do
-    if Datasheet.is_admin?(datasheet) do
-      user_id = String.to_integer(conn.params["id"])
+    user_id = String.to_integer(conn.params["id"])
 
-      (from d in Datasheet, where: d.id == ^user_id)
-      |> restrict_to_visible_users(conn)
-      |> Repo.exists?
-    else
-      false
+    target_datasheet = (from d in Datasheet, where: d.id == ^user_id)
+                     |> restrict_to_visible_users(conn)
+                     |> Repo.one
+
+    cond do
+      is_nil(target_datasheet) ->
+        false
+
+      Datasheet.is_global_admin?(datasheet) ->
+        {true, [:view, :update]}
+
+      Datasheet.is_admin_of?(datasheet, target_datasheet.branch_id) ->
+        {true, [:view, :update]}
+
+      Datasheet.is_global_reader?(datasheet) ->
+        {true, [:view]}
+
+      Datasheet.is_clerk_of?(datasheet, target_datasheet.branch_id) ->
+        {true, [:view]}
+
+      true ->
+        false
+    end
+  end
+
+  def authorize_update(conn, target_datasheet, datasheet_params) do
+    current_user = Coherence.current_user(conn)
+
+    case authorize_detail(conn, current_user) do
+      {true, abilities} ->
+        is_super_admin = Datasheet.is_super_admin?(current_user.datasheet)
+        is_global_admin = Datasheet.is_global_admin?(current_user.datasheet)
+        global_grant_changed = global_grant_changed(datasheet_params, target_datasheet)
+
+        super_admin_revoking_own_access =
+          is_super_admin &&
+          target_datasheet.user &&
+          target_datasheet.user.id == current_user.id &&
+          global_grant_changed
+
+        non_super_admin_changing_global_grant =
+          !is_super_admin && global_grant_changed
+
+        non_global_admin_updating_branch =
+          !is_global_admin && branch_updated(datasheet_params, target_datasheet)
+
+        forbidden_update = super_admin_revoking_own_access || non_super_admin_changing_global_grant || non_global_admin_updating_branch
+
+        Enum.member?(abilities, :update) && !forbidden_update
+      _ ->
+        false
     end
   end
 
@@ -395,16 +430,10 @@ defmodule Registro.UsersController do
     end
   end
 
-  def super_admin_changed(datasheet_params, target_datasheet) do
-    case Map.fetch(datasheet_params, "is_super_admin") do
+  def global_grant_changed(datasheet_params, target_datasheet) do
+    case Map.fetch(datasheet_params, "global_grant") do
       {:ok, new_value} ->
-        new_value = case new_value do
-                      "true" -> true
-                      "false" -> false
-                      _ -> new_value
-                    end
-
-        new_value != target_datasheet.is_super_admin
+        new_value != target_datasheet.global_grant
       _ ->
         false
     end

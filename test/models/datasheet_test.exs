@@ -74,6 +74,19 @@ defmodule Registro.DatasheetTest do
     refute changeset.("something_else").valid?
   end
 
+  test "global_grant can not have arbitrary values", %{minimal_params: params} do
+    changeset = fn(global_grant) ->
+      params = Map.merge(params, %{ global_grant: global_grant })
+
+      Datasheet.changeset(%Datasheet{}, params)
+    end
+
+    assert changeset.("super_admin").valid?
+    assert changeset.("admin").valid?
+    assert changeset.("reader").valid?
+    refute changeset.("something_else").valid?
+  end
+
   test "a volunteer cannot have empty status", %{minimal_params: params} do
     branch = create_branch(name: "Branch")
 
@@ -106,19 +119,22 @@ defmodule Registro.DatasheetTest do
     refute Datasheet.is_admin_of?(datasheet, branch3)
   end
 
-  test "a super admin can filter by branch", %{minimal_params: params} do
-    datasheet = Map.merge(params, %{is_super_admin: true})
-    |> create_datasheet
+  test "users with global access can filter by branch", %{minimal_params: params} do
+    Enum.each(["super_admin", "admin", "reader"], fn grant ->
+      datasheet =
+        Map.merge(params, %{global_grant: grant})
+        |> create_datasheet
 
-    assert Datasheet.can_filter_by_branch?(datasheet)
+      assert Datasheet.can_filter_by_branch?(datasheet)
+    end)
   end
 
   test "a branch admin with one branch cannot filter by branch", %{minimal_params: params} do
     branch = create_branch(name: "Branch 1")
 
     datasheet = create_datasheet(params)
-              |> Datasheet.make_admin_changeset([branch])
-              |> Repo.update!
+    |> Datasheet.make_admin_changeset([branch])
+    |> Repo.update!
 
     refute Datasheet.can_filter_by_branch?(datasheet)
   end
@@ -128,7 +144,28 @@ defmodule Registro.DatasheetTest do
     branch2 = create_branch(name: "Branch 2")
 
     datasheet = create_datasheet(params)
-              |> Datasheet.make_admin_changeset([branch1, branch2])
+    |> Datasheet.make_admin_changeset([branch1, branch2])
+    |> Repo.update!
+
+    assert Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "a branch clerk with one branch cannot filter by branch", %{minimal_params: params} do
+    branch = create_branch(name: "Branch 1")
+
+    datasheet = create_datasheet(params)
+              |> Datasheet.make_clerk_changeset([branch])
+              |> Repo.update!
+
+    refute Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "a branch clerk with multiple branches can filter by branch", %{minimal_params: params} do
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+
+    datasheet = create_datasheet(params)
+              |> Datasheet.make_clerk_changeset([branch1, branch2])
               |> Repo.update!
 
     assert Datasheet.can_filter_by_branch?(datasheet)

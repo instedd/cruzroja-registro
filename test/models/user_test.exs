@@ -49,7 +49,7 @@ defmodule Registro.UserTest do
     branch1 = create_branch(name: "Branch 1")
     branch2 = create_branch(name: "Branch 2")
 
-    user = create_branch_admin("john@example.com", branch1, country_id: country.id)
+    user = create_branch_admin("john@example.com", branch1, %{country_id: country.id})
 
     update_params = %{datasheet: %{
                          id: user.datasheet.id,

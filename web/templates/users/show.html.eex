@@ -1,5 +1,6 @@
 <% current_user = Coherence.current_user(@conn) %>
 <% datasheet = @changeset.data %>
+<% readonly = !has_ability?(@conn, :update) %>
 <% pending_confirmation = Registro.Datasheet.pending_approval?(datasheet) %>
 
 <%= if @changeset.action do %>
@@ -26,49 +27,76 @@
           <div class="section">
             <h3>Datos personales</h3>
             <label for="email">Email</label>
-            <%= tag(:input, type: "text", id: "datasheet_user_email", name: "email", value: (if @datasheet.user, do: @datasheet.user.email, else: "")) %>
+            <%= tag(:input, attributes([disabled: readonly], type: "text", id: "datasheet_user_email", name: "email", value: (if @datasheet.user, do: @datasheet.user.email, else: ""))) %>
+
             <%= form_rows [
-              [ validated_field(fd, :first_name, text: "Nombre", required: true)
+              [ validated_field(fd, :first_name, text: "Nombre", required: true, disabled: readonly)
               ],
-              [ validated_field(fd, :last_name, text: "Apellido", required: true)
+              [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: readonly)
               ],
               [ label(fd, :birth_date, "Fecha de nacimiento"),
-                date_picker(fd, :birth_date)
+                date_picker(fd, :birth_date, disabled: readonly)
               ],
-              [ select(fd, :country_id, @conn.assigns[:countries], class: "form-control", required: ""),
+              [ select(fd, :country_id, @conn.assigns[:countries], attributes([disabled: readonly, required: true], class: "form-control")),
                 label(fd, :country_id, "Nacionalidad")
               ],
 
-              [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], class: "form-control", required: ""),
+              [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], attributes([disabled: readonly, required: true], class: "form-control")),
                 label(fd, :legal_id_ind, "Tipo de documento")
               ],
 
-              [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true)
+              [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true, disabled: readonly)
               ],
 
-              [ validated_field(fd, :phone_number, text: "Teléfono", required: true)
+              [ validated_field(fd, :phone_number, text: "Teléfono", required: true, disabled: readonly)
               ],
 
-              [ validated_field(fd, :address, text: "Domicilio", required: true)
+              [ validated_field(fd, :address, text: "Domicilio", required: true, disabled: readonly)
               ],
 
-              [ validated_field(fd, :occupation, text: "Ocupación", required: true)
+              [ validated_field(fd, :occupation, text: "Ocupación", required: true, disabled: readonly)
               ],
             ] %>
           </div>
 
-          <%= if current_user.datasheet.is_super_admin do %>
+          <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
             <div class="section">
-              <h3>Permisos de administración</h3>
+              <h3>Acceso global</h3>
               <div class="row">
                 <div class="input_field col s12">
-                  <%= checkbox fd, :is_super_admin, class: "form-control" %>
-                  <%= label fd, :is_super_admin, "Otorgar a este usuario permisos de Super Admin para todo el sistema", class: "control-label" %>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, nil, class: "with-gap") %>
+                      <label for="datasheet_global_grant_">Deshabilitado</label>
+                    </p>
+                    <div class="radio-description">Acceder solamente a información de las filiales en las que participa.</div>
+                  </div>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, "reader", class: "with-gap") %>
+                      <label for="datasheet_global_grant_reader">Lector</label>
+                    </p>
+                    <div class="radio-description">Ver información de todas las filiales y sus voluntarios.</div>
+                  </div>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, "admin", class: "with-gap") %>
+                      <label for="datasheet_global_grant_admin">Administrador</label>
+                    </p>
+                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios.</div>
+                  </div>
+                  <div>
+                    <p>
+                      <%= radio_button(fd, :global_grant, "super_admin", class: "with-gap") %>
+                      <label for="datasheet_global_grant_super_admin">Super administrador</label>
+                    </p>
+                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios, y otorgar permisos globales a otros usuarios.</div>
+                  </div>
                 </div>
               </div>
             </div>
           <% else %>
-            <%= hidden_input fd, :is_super_admin, disabled: "" %>
+            <%= hidden_input fd, :global_grant, disabled: "" %>
           <% end %>
 
           <div class="section">
@@ -76,7 +104,7 @@
             <div class="row">
               <div class="input-field col s6">
                 <label class="control-label" for="user_datasheet_branch_name">Filial</label>
-                <%= if current_user.datasheet.is_super_admin do %>
+                <%= if Registro.Datasheet.is_global_admin?(current_user.datasheet) do %>
                   <%= tag(:input,
                     type: "text",
                     id: "user_datasheet_branch_name",
@@ -93,7 +121,7 @@
               </div>
 
               <%=
-              if pending_confirmation do
+              if readonly || pending_confirmation do
                 readonly_colaboration_controls(fd, @datasheet)
               else
                 editable_colaboration_controls(fd, @datasheet)
@@ -102,17 +130,19 @@
             </div>
           </div>
 
-          <div class="form-group actions right-align">
-            <%=
-            if pending_confirmation do
-              [ content_tag(:button, "Aprobar", class: "btn", type: "submit", name: "flow_action", value: "approve"),
-                content_tag(:button, "Rechazar", class: "btn red", type: "submit", name: "flow_action", value: "reject"),
-              ]
-            else
-              submit("Actualizar", class: "btn btn-large btn-primary")
-            end
-            %>
-          </div>
+          <%= if !readonly do %>
+            <div class="form-group actions right-align">
+              <%=
+              if pending_confirmation do
+                [ content_tag(:button, "Aprobar", class: "btn", type: "submit", name: "flow_action", value: "approve"),
+                  content_tag(:button, "Rechazar", class: "btn red", type: "submit", name: "flow_action", value: "reject"),
+                ]
+              else
+                submit("Actualizar", class: "btn btn-large btn-primary")
+              end
+              %>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </div>

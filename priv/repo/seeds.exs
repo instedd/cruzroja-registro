@@ -1,15 +1,6 @@
 # Script for populating the database. You can run it as:
 #
 #     mix run priv/repo/seeds.exs
-#
-# Inside the script, you can read and write to any of your
-# repositories directly:
-#
-#     Registro.Repo.insert!(%Registro.SomeModel{})
-#
-# We recommend using the bang functions (`insert!`, `update!`
-# and so on) as they will fail if something goes wrong.
-
 alias Registro.{
   Branch,
   Country,
@@ -17,6 +8,8 @@ alias Registro.{
   Repo,
   User
 }
+
+import Ecto.Query
 
 defmodule Seed do
   def run do
@@ -42,7 +35,7 @@ defmodule Seed do
           occupation: "Administrador de Cruz Roja",
           address: "-",
           phone_number: "+54 11111111",
-          is_super_admin: true
+          global_grant: "super_admin"
         }
        },
       %{email: "amartinez@cruzroja.org.ar",
@@ -116,6 +109,8 @@ defmodule Seed do
     Enum.map(users, &insert_user/1)
 
     mark_as_branch_admin("amartinez@cruzroja.org.ar", branch1)
+    mark_as_branch_clerk("amartinez@cruzroja.org.ar", branch2)
+
     mark_as_branch_admin("rmarquez@cruzroja.org.ar", branch2)
   end
 
@@ -147,15 +142,21 @@ defmodule Seed do
   end
 
   def mark_as_branch_admin(email, branch) do
-    import Ecto.Query
-
-    user = User
-         |> preload(:datasheet)
-         |> Repo.get_by!(email: email)
-
-    user.datasheet
+    get_user(email).datasheet
     |> Datasheet.make_admin_changeset([branch])
     |> Repo.update!
+  end
+
+  def mark_as_branch_clerk(email, branch) do
+    get_user(email).datasheet
+    |> Datasheet.make_clerk_changeset([branch])
+    |> Repo.update!
+  end
+
+  def get_user(email) do
+    User
+    |> preload(:datasheet)
+    |> Repo.get_by!(email: email)
   end
 
   def titleize(string) do

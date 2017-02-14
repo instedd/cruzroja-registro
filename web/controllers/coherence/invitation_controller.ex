@@ -170,8 +170,7 @@ defmodule Registro.Coherence.InvitationController do
 
   defp load_invitation_form_data(conn) do
     datasheet = Coherence.current_user(conn).datasheet
-    branches = if datasheet.is_super_admin, do: Registro.Branch.all, else: datasheet.admin_branches
-             |> Enum.sort_by(&(&1.name))
+    branches = Registro.Branch.accessible_by(datasheet) |> Enum.sort_by(fn b -> b.name end)
 
     conn
     |> assign(:branches, branches |> Enum.map(&{&1.name, &1.id }))
@@ -194,19 +193,17 @@ defmodule Registro.Coherence.InvitationController do
     if is_protected_action do
       datasheet = current_user.datasheet
 
-      cond do
-        datasheet.is_super_admin -> true
-
-        Datasheet.is_branch_admin?(datasheet) ->
-          case action do
-            :new ->
-              true
-            _ ->
-              Datasheet.is_admin_of?(datasheet, target_branch_id(conn.params))
-          end
-
-        true ->
-          false
+      if Datasheet.is_global_admin?(datasheet) do
+        true
+      else
+        case action do
+          :new ->
+            # global readers cannot send invites
+            Datasheet.is_global_admin?(datasheet) || Datasheet.has_branch_access?(datasheet)
+          _ ->
+            branch_id = target_branch_id(conn.params)
+            Datasheet.is_admin_of?(datasheet, branch_id) || Datasheet.is_clerk_of?(datasheet, branch_id)
+        end
       end
     else
       true

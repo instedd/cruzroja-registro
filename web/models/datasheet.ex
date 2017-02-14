@@ -6,6 +6,8 @@ defmodule Registro.Datasheet do
   alias Registro.Branch
   alias Registro.Invitation
 
+  @assocs [:branch, :admin_branches, :clerk_branches, :country, :user]
+
   schema "datasheets" do
     field :first_name, :string
     field :last_name, :string
@@ -18,7 +20,7 @@ defmodule Registro.Datasheet do
 
     field :status, :string
     field :role, :string
-    field :is_super_admin, :boolean
+    field :global_grant, :string
 
     field :filled, :boolean
 
@@ -32,6 +34,9 @@ defmodule Registro.Datasheet do
 
     # the branches in which the person acts as an administrator
     many_to_many :admin_branches, Registro.Branch, join_through: "branches_admins"
+
+    # the branches in which the person acts as a clerk
+    many_to_many :clerk_branches, Registro.Branch, join_through: "branches_clerks"
   end
 
   @required_fields [ :first_name,
@@ -47,12 +52,13 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :is_super_admin])
+    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :global_grant])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
     |> validate_colaboration
+    |> validate_global_grant
   end
 
   def profile_filled_changeset(model, params \\ %{}) do
@@ -75,6 +81,13 @@ defmodule Registro.Datasheet do
     |> Registro.Repo.preload(:admin_branches)
     |> Ecto.Changeset.change
     |> Ecto.Changeset.put_assoc(:admin_branches, branches)
+  end
+
+  def make_clerk_changeset(datasheet, branches) do
+    datasheet
+    |> Registro.Repo.preload(:clerk_branches)
+    |> Ecto.Changeset.change
+    |> Ecto.Changeset.put_assoc(:clerk_branches, branches)
   end
 
   @doc """
@@ -122,15 +135,50 @@ defmodule Registro.Datasheet do
     is_volunteer?(datasheet) or is_associate?(datasheet)
   end
 
-  def is_admin?(datasheet) do
-    datasheet.is_super_admin || is_branch_admin?(datasheet)
+  def is_staff?(datasheet) do
+    has_global_access?(datasheet) || has_branch_access?(datasheet)
+  end
+
+  def has_global_access?(datasheet) do
+    is_global_admin?(datasheet) || is_global_reader?(datasheet)
+  end
+
+  def has_branch_access?(datasheet) do
+    is_branch_admin?(datasheet) || is_branch_clerk?(datasheet)
+  end
+
+  def is_global_admin?(datasheet) do
+    datasheet.global_grant == "super_admin" || datasheet.global_grant == "admin"
+  end
+
+  def is_global_reader?(datasheet) do
+    datasheet.global_grant == "reader"
+  end
+
+  def is_super_admin?(datasheet) do
+    datasheet.global_grant == "super_admin"
   end
 
   def is_branch_admin?(datasheet) do
-    # load association if it hasn't been already loaded
     datasheet = Registro.Repo.preload(datasheet, :admin_branches)
 
     !Enum.empty?(datasheet.admin_branches)
+  end
+
+  def is_branch_clerk?(datasheet) do
+    datasheet = Registro.Repo.preload(datasheet, :clerk_branches)
+
+    !Enum.empty?(datasheet.clerk_branches)
+  end
+
+  def is_clerk_of?(datasheet, %Branch{ id: branch_id }),
+    do: is_clerk_of?(datasheet, branch_id)
+
+  def is_clerk_of?(datasheet, branch_id) do
+    datasheet = Registro.Repo.preload(datasheet, :clerk_branches)
+
+    datasheet.clerk_branches
+    |> Enum.any?(&(&1.id == branch_id))
   end
 
   def is_admin_of?(datasheet, %Branch{ id: branch_id }),
@@ -145,7 +193,11 @@ defmodule Registro.Datasheet do
   end
 
   def can_filter_by_branch?(datasheet) do
-    datasheet.is_super_admin || Enum.count(datasheet.admin_branches) > 1
+    datasheet = Registro.Repo.preload(datasheet, [:admin_branches, :clerk_branches])
+
+    has_global_access?(datasheet)
+    || Enum.count(datasheet.admin_branches) > 1
+    || Enum.count(datasheet.clerk_branches) > 1
   end
 
   def email(datasheet) do
@@ -174,6 +226,17 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
+    end
+  end
+
+  defp validate_global_grant(changeset) do
+    valid_values = ["super_admin", "admin", "reader", nil]
+    grant = Ecto.Changeset.get_field(changeset, :global_grant)
+
+    if Enum.member?(valid_values, grant) do
+      changeset
+    else
+      changeset |> Ecto.Changeset.add_error(:global_grant, "is invalid")
     end
   end
 
@@ -214,7 +277,7 @@ defmodule Registro.Datasheet do
 
   def full_query(q) do
     import Ecto.Query
-    from d in q, preload: [:branch, :admin_branches, :country, :user]
+    from d in q, preload: ^@assocs
   end
 
   def full_query do
@@ -222,7 +285,7 @@ defmodule Registro.Datasheet do
   end
 
   def preload_user(ds) do
-    Registro.Repo.preload(ds, [:branch, :admin_branches, :country, :user])
+    Registro.Repo.preload(ds, @assocs)
   end
 
   def can_ask_to_become_associate?(%Datasheet{ role: role, status: status }) do

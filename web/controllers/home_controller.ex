@@ -8,7 +8,7 @@ defmodule Registro.HomeController do
       _ ->
         user = conn.assigns[:current_user]
 
-        if Registro.Datasheet.is_admin?(user.datasheet) do
+        if Registro.Datasheet.is_staff?(user.datasheet) do
           redirect(conn, to: users_path(conn, :index))
         else
           redirect(conn, to: users_path(conn, :profile))

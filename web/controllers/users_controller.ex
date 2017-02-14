@@ -18,7 +18,6 @@ defmodule Registro.UsersController do
   plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
   plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
   plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show]
-  plug Authorization, [ check: &UsersController.authorize_update/2 ] when action in [:update]
   plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
@@ -71,7 +70,6 @@ defmodule Registro.UsersController do
 
   def update(conn, params) do
     current_user = Coherence.current_user(conn)
-
     datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
     datasheet_params = params["datasheet"]
@@ -79,28 +77,8 @@ defmodule Registro.UsersController do
                      |> set_branch_id_from_branch_name(params["branch_name"])
                      |> set_status_if_creating_colaboration(datasheet)
 
-    is_super_admin = Datasheet.is_super_admin?(current_user.datasheet)
-    is_global_admin = Datasheet.is_global_admin?(current_user.datasheet)
-    global_grant_changed = global_grant_changed(datasheet_params, datasheet)
 
-    super_admin_revoking_own_access =
-      is_super_admin &&
-      datasheet.user &&
-      datasheet.user.id == current_user.id &&
-      global_grant_changed
-
-    non_super_admin_changing_global_grant =
-      !is_super_admin && global_grant_changed
-
-    non_global_admin_updating_branch =
-      !is_global_admin && branch_updated(datasheet_params, datasheet)
-
-    forbidden =
-      super_admin_revoking_own_access ||
-      non_super_admin_changing_global_grant ||
-      non_global_admin_updating_branch
-
-    if forbidden do
+    if !authorize_update(conn, datasheet, datasheet_params) do
       Authorization.handle_unauthorized(conn)
     else
       email = params["email"]
@@ -115,7 +93,7 @@ defmodule Registro.UsersController do
 
       case Repo.update(changeset) do
         {:ok, ds} ->
-          UserAuditLogEntry.add(datasheet.id, Coherence.current_user(conn), action_for(changeset))
+          UserAuditLogEntry.add(datasheet.id, current_user, action_for(changeset))
           send_email_on_status_change(conn, changeset, email, ds)
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
@@ -321,10 +299,30 @@ defmodule Registro.UsersController do
     end
   end
 
-  def authorize_update(conn, user) do
-    case authorize_detail(conn, user) do
+  def authorize_update(conn, target_datasheet, datasheet_params) do
+    current_user = Coherence.current_user(conn)
+
+    case authorize_detail(conn, current_user) do
       {true, abilities} ->
-        Enum.member?(abilities, :update)
+        is_super_admin = Datasheet.is_super_admin?(current_user.datasheet)
+        is_global_admin = Datasheet.is_global_admin?(current_user.datasheet)
+        global_grant_changed = global_grant_changed(datasheet_params, target_datasheet)
+
+        super_admin_revoking_own_access =
+          is_super_admin &&
+          target_datasheet.user &&
+          target_datasheet.user.id == current_user.id &&
+          global_grant_changed
+
+        non_super_admin_changing_global_grant =
+          !is_super_admin && global_grant_changed
+
+        non_global_admin_updating_branch =
+          !is_global_admin && branch_updated(datasheet_params, target_datasheet)
+
+        forbidden_update = super_admin_revoking_own_access || non_super_admin_changing_global_grant || non_global_admin_updating_branch
+
+        Enum.member?(abilities, :update) && !forbidden_update
       _ ->
         false
     end

@@ -26,3 +26,14 @@
     padding-left: 35px;
   }
 }
+
+
+#register {
+  .actions {
+    display: flex;
+    flex-direction: row;
+    .captcha {
+      flex-grow: 1;
+    }
+  }
+}

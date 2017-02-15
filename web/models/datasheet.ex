@@ -113,16 +113,6 @@ defmodule Registro.Datasheet do
     end
   end
 
-  def role_label(datasheet) do
-    datasheet = Registro.Repo.preload(datasheet, :admin_branches)
-
-    cond do
-      Datasheet.is_volunteer?(datasheet) -> "Voluntario"
-      Datasheet.is_associate?(datasheet) -> "Asociado"
-      true -> ""
-    end
-  end
-
   def is_volunteer?(datasheet) do
     datasheet.role == "volunteer"
   end

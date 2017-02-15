@@ -55,7 +55,7 @@
           <% desired_state = if @current_user.datasheet.status == "associate_requested" do
                                "asociado"
                              else
-                               Registro.Datasheet.role_label(@current_user.datasheet)
+                               Registro.Role.label(@current_user.datasheet.role)
                              end %>
             Actualmente tu trámite se encuentra en estado
             <b>PENDIENTE</b>

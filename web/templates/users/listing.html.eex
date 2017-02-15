@@ -19,7 +19,7 @@
           <tr data-href="<%= users_path(@conn, :show, d) %>">
             <td><%= "#{d.first_name} #{d.last_name}" %></td>
             <td><%= if d.user, do: d.user.email, else: "" %></td>
-            <td><%= Registro.Datasheet.role_label(d) %></td>
+            <td><%= Registro.Role.label(d.role) %></td>
             <td><%= Registro.Datasheet.status_label(d.status) %></td>
             <%= if can_view_branch do %>
             <td><%= branch_label(d) %></td>

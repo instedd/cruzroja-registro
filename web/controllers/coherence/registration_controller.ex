@@ -58,17 +58,25 @@ defmodule Registro.Coherence.RegistrationController do
 
     cs = User.changeset(:create_with_datasheet, registration_params)
 
-    case Config.repo.insert(cs) do
-      {:ok, user} ->
-        Registro.UserAuditLogEntry.add(user.datasheet_id, user, :create)
-        conn
-        |> send_confirmation(user, user_schema)
-        |> translate_flash
-        |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
-      {:error, changeset} ->
+    case Recaptcha.verify(params["g-recaptcha-response"]) do
+      :ok ->
+        case Config.repo.insert(cs) do
+          {:ok, user} ->
+            Registro.UserAuditLogEntry.add(user.datasheet_id, user, :create)
+            conn
+            |> send_confirmation(user, user_schema)
+            |> translate_flash
+            |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
+          {:error, changeset} ->
+            conn
+            |> load_registration_form_data
+            |> render("new.html", changeset: changeset)
+        end
+      :error ->
         conn
         |> load_registration_form_data
-        |> render("new.html", changeset: changeset)
+        |> put_flash(:error, "Hubo un problema. Por favor reintentar.")
+        |> render("new.html", changeset: cs)
     end
   end
 

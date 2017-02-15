@@ -85,6 +85,11 @@ h3 {
   width: 90%;
 }
 
+.g-recaptcha {
+  display: inline-block;
+  margin-top: 20px;
+}
+
 @import "_nav";
 @import "_landing";
 @import "_edit_forms";

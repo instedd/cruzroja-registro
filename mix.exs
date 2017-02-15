@@ -21,7 +21,8 @@ defmodule Registro.Mixfile do
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex,
                     :coherence,
-                    :gen_smtp]]
+                    :gen_smtp,
+                    :httpoison]]
   end
 
   # Specifies which paths to compile per environment.
@@ -42,7 +43,8 @@ defmodule Registro.Mixfile do
      {:cowboy, "~> 1.0"},
      {:coherence, "~> 0.3"},
      {:csv, "~> 1.4.0"},
-     {:gen_smtp, "~> 0.11.0"}
+     {:gen_smtp, "~> 0.11.0"},
+     {:httpoison, "~> 0.10.0"},
     ]
   end
 

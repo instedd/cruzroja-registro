@@ -3,6 +3,7 @@ defmodule Registro.User do
   use Coherence.Schema
 
   alias __MODULE__
+  alias Registro.Datasheet
   alias Registro.Repo
 
   schema "users" do
@@ -20,7 +21,7 @@ defmodule Registro.User do
   def changeset(:create_with_datasheet, params) do
     %User{}
     |> basic_changeset(params)
-    |> cast_assoc(:datasheet, required: true)
+    |> cast_assoc(:datasheet, required: true, with: &Datasheet.registration_changeset/2)
   end
 
   @doc """

@@ -115,7 +115,7 @@ defmodule Registro.BranchesControllerTest do
         |> get(branches_path(conn, :show, branch1))
 
         assert html_response(conn, 200)
-        assert conn.assigns[:abilities] == [:view, :update]
+        assert conn.assigns[:abilities] == [:view, :update, :update_eligibility]
       end)
     end
 
@@ -369,9 +369,36 @@ defmodule Registro.BranchesControllerTest do
     end
   end
 
+  describe "changing eligibility for volunteers" do
+    test "a global admin can change a branch's eligibility", %{conn: conn, branch2: branch} do
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ eligible: false }}
+      conn
+      |> log_in("admin@instedd.org")
+      |> patch(branches_path(conn, :update, branch), params)
+
+      updated_branch = Repo.get!(Branch, branch.id)
+
+      assert !updated_branch.eligible
+    end
+
+    test "a branch admin can't change a branch's eligibility", %{conn: conn, branch1: branch} do
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ eligible: false }}
+
+      conn =
+        conn
+        |> log_in("branch_admin1@instedd.org")
+        |> patch(branches_path(conn, :update, branch), params)
+
+      updated_branch = Repo.get!(Branch, branch.id)
+
+      assert_unauthorized(conn)
+      assert updated_branch == branch
+    end
+  end
+
   describe "creation" do
     test "a global admin can create new branches", %{conn: conn, admin: admin} do
-      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch" }}
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch", eligible: true }}
 
       conn
       |> log_in(admin)
@@ -385,7 +412,7 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "a super admin can create new branches", %{conn: conn, super_admin: super_admin} do
-      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch" }}
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch", eligible: true }}
 
       conn
       |> log_in(super_admin)
@@ -399,7 +426,7 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "a global reader can not create new branches", %{conn: conn, reader: reader} do
-      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch" }}
+      params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch", eligible: true }}
 
       conn =
         conn
@@ -411,7 +438,7 @@ defmodule Registro.BranchesControllerTest do
     end
 
     test "branch admins are not allowed to create branches", %{conn: conn} do
-      params = %{ admin_emails: "", branch: %{ name: "NewBranch" }}
+      params = %{ admin_emails: "", branch: %{ name: "NewBranch", eligible: true }}
 
       conn = conn
            |> log_in("branch_admin1@instedd.org")

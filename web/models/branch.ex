@@ -11,6 +11,8 @@ defmodule Registro.Branch do
     field :email, :string
     field :president, :string
     field :authorities, :string
+
+    field :eligible, :boolean
     timestamps
 
     many_to_many :admins, Registro.Datasheet,
@@ -24,8 +26,8 @@ defmodule Registro.Branch do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities])
-    |> validate_required([:name])
+    |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities, :eligible])
+    |> validate_required([:name, :eligible])
     |> unique_constraint(:name, message: "ya pertenece a otra filial")
   end
 
@@ -35,6 +37,10 @@ defmodule Registro.Branch do
 
   def update_clerks(changeset, clerk_datasheets) do
     Ecto.Changeset.put_assoc(changeset, :clerks, clerk_datasheets)
+  end
+
+  def eligible do
+    Registro.Repo.all(from b in Registro.Branch, where: b.eligible, select: b, order_by: :name)
   end
 
   def all do

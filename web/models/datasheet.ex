@@ -61,6 +61,12 @@ defmodule Registro.Datasheet do
     |> validate_global_grant
   end
 
+  def registration_changeset(model, params \\ %{}) do
+    model
+    |> changeset(params)
+    |> validate_branch_is_eligible
+  end
+
   def profile_filled_changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields)
@@ -216,6 +222,22 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
+    end
+  end
+
+  defp validate_branch_is_eligible(changeset) do
+    branch_id = Ecto.Changeset.get_field(changeset, :branch_id)
+
+    case branch_id do
+      nil ->
+        changeset
+      _ ->
+        case Registro.Repo.get(Branch, branch_id) do
+          %Branch{ eligible: false } ->
+            Ecto.Changeset.add_error(changeset, :branch_id, "is not eligible")
+          _ ->
+            changeset
+        end
     end
   end
 

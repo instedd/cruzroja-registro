@@ -144,7 +144,7 @@ defmodule Registro.BranchesController do
 
     cond do
       Datasheet.is_global_admin?(datasheet) ->
-        {true, [:view, :update]}
+        {true, [:view, :update, :update_eligibility]}
 
       Datasheet.is_admin_of?(datasheet, branch_id) ->
         {true, [:view, :update]}
@@ -164,7 +164,11 @@ defmodule Registro.BranchesController do
     case authorize_detail(conn, user) do
       {true, abilities} ->
         if Enum.member?(abilities, :update) do
-          {true, abilities}
+          if !Enum.member?(abilities, :update_eligibility) && eligibility_updated(conn.params) do
+            false
+          else
+            {true, abilities}
+          end
         else
           false
         end
@@ -190,6 +194,26 @@ defmodule Registro.BranchesController do
         "Se envió una invitación a #{Datasheet.email(d)} para unirse a la filial."
       [_|_] ->
         "Se enviaron #{Enum.count(new_datasheets)} invitaciones para los nuevos miembros de la filial."
+    end
+  end
+
+  defp eligibility_updated(params) do
+    branch = Repo.get!(Branch, params["id"])
+
+    case Map.fetch(params["branch"], "eligible") do
+      :error ->
+        false
+      {:ok, value} ->
+        parse_bool(value) != branch.eligible
+    end
+  end
+
+  defp parse_bool(b) do
+    case b do
+      true -> true
+      "true" -> true
+      false -> false
+      "false" -> false
     end
   end
 end

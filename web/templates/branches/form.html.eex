@@ -1,8 +1,26 @@
 <%= form_for @changeset, @action, fn f -> %>
-  <div class="row">
-    <div class="input-field col s12">
-      <%= validated_input f, :name, [requied: true, disabled: @readonly], class: "form-control", required: "" %>
-      <%= validated_label f, :name, [text: "Nombre", required: true], class: "control-label" %>
+  <div class="section">
+    <h3>Información básica</h3>
+    <div class="row">
+      <%=
+      legibility_toggle = has_ability?(@conn, :update_eligibility)
+      name_input_class = if legibility_toggle, do: "input-field col s6", else: "input-field col s12"
+
+      content_tag(:div, class: name_input_class) do
+        [ validated_input(f, :name, [requied: true, disabled: @readonly], class: "form-control", required: ""),
+          validated_label(f, :name, [text: "Nombre", required: true], class: "control-label") ]
+      end
+      %>
+      <%=
+      if legibility_toggle do
+        content_tag(:div, class: "input-field col s6") do
+          [ checkbox(f, :eligible, class: "form-control"),
+            label(f, :eligible, "Permitir que voluntarios se registren en esta filial", class: "control-label") ]
+        end
+      else
+        hidden_input(f, :eligible, disabled: "")
+      end
+      %>
     </div>
   </div>
 

@@ -10,7 +10,12 @@ defmodule Registro.UserTest do
     country = Country.changeset(%Country{}, %{ name: "Argentina" })
     |> Repo.insert!
 
+    branch1 = create_branch(name: "Branch 1")
+    branch2 = create_branch(name: "Branch 2")
+
     {:ok, [some_country: country,
+           branch1: branch1,
+           branch2: branch2,
            minimal_params: %{email: "john@example.com",
                              password: "fooo",
                              password_confirmation: "fooo",
@@ -22,11 +27,14 @@ defmodule Registro.UserTest do
                                            occupation: "-",
                                            address: "-",
                                            phone_number: "+1222222",
-                                           country_id: country.id }}]}
+                                           country_id: country.id,
+                                           branch_id: branch1.id,
+                                           role: "volunteer",
+                                           status: "at_start" }}]}
   end
 
   test "a user can be created with a datasheet", %{minimal_params: params} do
-    changeset = User.changeset(:create_with_datasheet, params)
+    changeset = User.changeset(:registration, params)
 
     assert changeset.valid?
 
@@ -40,15 +48,12 @@ defmodule Registro.UserTest do
               Map.merge(dp, %{first_name: nil})
             end)
 
-    cs = User.changeset(:create_with_datasheet, params)
+    cs = User.changeset(:registration, params)
 
     refute cs.valid?
   end
 
-  test "cannot mark as colaborator of a branch without setting role", %{some_country: country} do
-    branch1 = create_branch(name: "Branch 1")
-    branch2 = create_branch(name: "Branch 2")
-
+  test "cannot mark as colaborator of a branch without setting role", %{some_country: country, branch1: branch1, branch2: branch2} do
     user = create_branch_admin("john@example.com", branch1, %{country_id: country.id})
 
     update_params = %{datasheet: %{

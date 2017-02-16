@@ -170,4 +170,95 @@ defmodule Registro.DatasheetTest do
 
     assert Datasheet.can_filter_by_branch?(datasheet)
   end
+
+  describe "branch-scoped identifier generation" do
+    setup :setup_colaboration
+
+    test "does not generate an identifier for datasheets without branch" do
+      datasheet = Datasheet.new_empty_changeset |> Repo.insert!
+
+      assert is_nil(datasheet.branch_identifier)
+    end
+
+    test "generates a new identifier when registering as colaborator of a branch", %{ds_with_colaboration_params: params} do
+      datasheet =
+        %Datasheet{}
+        |> Datasheet.registration_changeset(params)
+        |> Repo.insert!
+
+      assert !is_nil(datasheet.branch_identifier)
+    end
+
+    test "doesn't change identifier if update params don't include branch_id", %{ds_with_colaboration_params: params} do
+      datasheet =
+        %Datasheet{}
+        |> Datasheet.registration_changeset(params)
+        |> Repo.insert!
+
+      updated_datasheet =
+        datasheet
+        |> Datasheet.changeset(%{first_name: "Another name"})
+        |> Repo.update!
+
+      assert datasheet.branch_identifier == updated_datasheet.branch_identifier
+    end
+
+    test "doesn't change identifier if update params include same branch_id", %{ds_with_colaboration_params: params} do
+      datasheet =
+        %Datasheet{}
+        |> Datasheet.registration_changeset(params)
+        |> Repo.insert!
+
+      updated_datasheet =
+        datasheet
+        |> Datasheet.changeset(%{branch_id: params[:branch_id]})
+        |> Repo.update!
+
+      assert datasheet.branch_identifier == updated_datasheet.branch_identifier
+    end
+
+    test "generates a new identifier when branch changes", ctx do
+      %{ ds_with_colaboration_params: params,
+         branch1: branch1,
+         branch2: branch2 } = ctx
+
+      # to allow verifying that a new identifier was generated once the branch changes
+      ensure_different_seq_nums!(branch1, branch2)
+
+      datasheet =
+        %Datasheet{}
+        |> Datasheet.registration_changeset(params)
+        |> Repo.insert!
+
+      updated_datasheet =
+        datasheet
+        |> Datasheet.changeset(%{branch_id: branch2.id})
+        |> Repo.update!
+
+      assert !is_nil(updated_datasheet.branch_identifier)
+      assert datasheet.branch_identifier != updated_datasheet.branch_identifier
+    end
+
+    def setup_colaboration(%{minimal_params: minimal_params} = context) do
+      branch1 = create_branch(name: "Branch 1")
+      branch2 = create_branch(name: "Branch 2")
+
+      datasheet_params = Map.merge(minimal_params, %{ branch_id: branch1.id,
+                                                      role: "volunteer",
+                                                      status: "at_start" })
+
+      {:ok, Map.merge(context, %{ branch1: branch1,
+                                  branch2: branch2,
+                                  ds_with_colaboration_params: datasheet_params })}
+    end
+
+    def ensure_different_seq_nums!(branch1, branch2) do
+      {:ok, seq1} = PgSql.next_datasheet_seq_num(branch1.id)
+      {:ok, seq2} = PgSql.next_datasheet_seq_num(branch2.id)
+
+      if seq1 == seq2 do
+        PgSql.next_datasheet_seq_num(branch1.id)
+      end
+    end
+  end
 end

@@ -13,6 +13,7 @@ defmodule Registro.Branch do
     field :authorities, :string
 
     field :eligible, :boolean
+    field :identifier, :integer
     timestamps
 
     many_to_many :admins, Registro.Datasheet,
@@ -22,6 +23,12 @@ defmodule Registro.Branch do
     many_to_many :clerks, Registro.Datasheet,
       join_through: "branches_clerks",
       on_replace: :delete # allow to delete admins by updating the branch
+  end
+
+  def creation_changeset(params \\ %{}) do
+    %Registro.Branch{}
+    |> changeset(params)
+    |> generate_identifier
   end
 
   def changeset(model, params \\ %{}) do
@@ -57,5 +64,10 @@ defmodule Registro.Branch do
     else
       datasheet.admin_branches ++ datasheet.clerk_branches
     end
+  end
+
+  def generate_identifier(changeset) do
+    {:ok, identifier} = PgSql.next_branch_seq_num
+    put_change(changeset, :identifier, identifier)
   end
 end

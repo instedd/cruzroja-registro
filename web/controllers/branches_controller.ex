@@ -123,9 +123,10 @@ defmodule Registro.BranchesController do
     admin_emails = decode_email_list(encoded_admin_emails)
     clerk_emails = decode_email_list(encoded_clerk_emails)
 
-    %{changeset: changeset,
-      new_datasheets: new_datasheets} = Branch.changeset(%Branch{}, branch_params)
-                                      |> BranchManagement.update_staff(current_user, admin_emails, clerk_emails)
+    %{changeset: changeset, new_datasheets: new_datasheets} =
+      branch_params
+      |> Branch.creation_changeset
+      |> BranchManagement.update_staff(current_user, admin_emails, clerk_emails)
 
     case Repo.insert(changeset) do
       {:ok, _branch} ->

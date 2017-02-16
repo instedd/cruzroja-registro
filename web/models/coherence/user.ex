@@ -18,7 +18,7 @@ defmodule Registro.User do
   Changeset for user creation. A new datasheet will be created based on the
   information specified in params.
   """
-  def changeset(:create_with_datasheet, params) do
+  def changeset(:registration, params) do
     %User{}
     |> basic_changeset(params)
     |> cast_assoc(:datasheet, required: true, with: &Datasheet.registration_changeset/2)

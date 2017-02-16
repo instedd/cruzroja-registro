@@ -1,7 +1,7 @@
 defmodule Registro.Branch do
   use Registro.Web, :model
 
-  @derive {Poison.Encoder, only: [:name, :id]}
+  @derive {Poison.Encoder, only: [:name, :id, :eligible]}
 
   schema "branches" do
     field :name, :string

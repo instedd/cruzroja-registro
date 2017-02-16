@@ -1,8 +1,9 @@
 import { Listings } from "./listings";
+import { BranchSelector } from "./branch_selector";
 
 export var Users = {
   init: function() {
-    $("#users").each(() =>
+    $("#users").each(() => {
       Listings.init({
         selector: "#users.listing",
         endpoint: "/usuarios/filter",
@@ -18,4 +19,22 @@ export var Users = {
           document.location.href = $(e.target).closest("tr").data("href")
         }
       })
-    )}};
+
+      BranchSelector.init(window.branches)
+    })
+
+    $("#profile").each(() => {
+      let eligibilityWarning = $("#eligible-branch-warning");
+
+      BranchSelector.init(window.branches, {
+        onSelect: function(branch) {
+          let display = branch && !branch.eligible;
+          let isVisible = eligibilityWarning.is(":visible");
+
+          if (isVisible != display) {
+            eligibilityWarning.fadeToggle('fast');
+          }
+        }
+      })
+    })
+  }};

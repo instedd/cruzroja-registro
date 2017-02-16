@@ -109,8 +109,10 @@
                     type: "text",
                     id: "user_datasheet_branch_name",
                     name: "branch_name",
+                    autocomplete: "off",
                     class: "autocomplete form-control",
-                    value: @branch_name) %>
+                    value: @branch_name,
+                  ) %>
                   <%= error_tag fd, :branch_name %>
                 <% else %>
                   <%= tag(:input,
@@ -128,6 +130,7 @@
               end
               %>
             </div>
+            <span id="eligible-branch-warning">La filial seleccionada no es elegible por voluntarios</span>
           </div>
 
           <%= if !readonly do %>

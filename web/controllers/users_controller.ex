@@ -17,7 +17,7 @@ defmodule Registro.UsersController do
 
   plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
   plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
-  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show]
+  plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
   plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
@@ -303,32 +303,29 @@ defmodule Registro.UsersController do
   end
 
   def authorize_update(conn, target_datasheet, datasheet_params) do
+    # Assumes authorize_detail was run first to set abilities
     current_user = Coherence.current_user(conn)
+    abilities = conn.assigns[:abilities]
 
-    case authorize_detail(conn, current_user) do
-      {true, abilities} ->
-        is_super_admin = Datasheet.is_super_admin?(current_user.datasheet)
-        is_global_admin = Datasheet.is_global_admin?(current_user.datasheet)
-        global_grant_changed = global_grant_changed(datasheet_params, target_datasheet)
+    is_super_admin = Datasheet.is_super_admin?(current_user.datasheet)
+    is_global_admin = Datasheet.is_global_admin?(current_user.datasheet)
+    global_grant_changed = global_grant_changed(datasheet_params, target_datasheet)
 
-        super_admin_revoking_own_access =
-          is_super_admin &&
-          target_datasheet.user &&
-          target_datasheet.user.id == current_user.id &&
-          global_grant_changed
+    super_admin_revoking_own_access =
+      is_super_admin &&
+      target_datasheet.user &&
+      target_datasheet.user.id == current_user.id &&
+      global_grant_changed
 
-        non_super_admin_changing_global_grant =
-          !is_super_admin && global_grant_changed
+    non_super_admin_changing_global_grant =
+      !is_super_admin && global_grant_changed
 
-        non_global_admin_updating_branch =
-          !is_global_admin && branch_updated(datasheet_params, target_datasheet)
+    non_global_admin_updating_branch =
+      !is_global_admin && branch_updated(datasheet_params, target_datasheet)
 
-        forbidden_update = super_admin_revoking_own_access || non_super_admin_changing_global_grant || non_global_admin_updating_branch
+    forbidden_update = super_admin_revoking_own_access || non_super_admin_changing_global_grant || non_global_admin_updating_branch
 
-        Enum.member?(abilities, :update) && !forbidden_update
-      _ ->
-        false
-    end
+    Enum.member?(abilities, :update) && !forbidden_update
   end
 
   def authorize_profile_update(conn, current_user) do

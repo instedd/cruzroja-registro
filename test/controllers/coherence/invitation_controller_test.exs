@@ -1,4 +1,4 @@
-defmodule Registro.InvitationsControllerTest do
+defmodule Registro.InvitationControllerTest do
   use Registro.ConnCase
 
   import Registro.ModelTestHelpers

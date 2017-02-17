@@ -51,11 +51,6 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def create(conn, %{"registration" => registration_params} = params) do
     user_schema = Config.user_schema
-
-    registration_params = update_in(registration_params, ["datasheet"], fn(dp) ->
-      Dict.merge(dp, %{"status" => "at_start"})
-    end)
-
     cs = User.changeset(:registration, registration_params)
 
     case Recaptcha.verify(params["g-recaptcha-response"]) do

@@ -66,8 +66,9 @@ defmodule Registro.Datasheet do
 
   def registration_changeset(model, params \\ %{}) do
     model
+    |> cast(%{status: "at_start"}, [:status])
     |> changeset(params)
-    |> validate_required([:branch_id, :role, :status]) # TODO
+    |> validate_required([:branch_id, :role])
     |> validate_branch_is_eligible
   end
 

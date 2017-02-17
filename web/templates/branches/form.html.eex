@@ -1,6 +1,15 @@
 <%= form_for @changeset, @action, fn f -> %>
   <div class="section">
     <h3>Información básica</h3>
+    <%= if @changeset.data.identifier do %>
+    <div class="row">
+      <div class="input-field col s4">
+        <%= tag(:input, class: "form-control", type: "text", disabled: "", value: format_branch_identifier(@changeset.data)) %>
+        <%= content_tag(:label, "Número de orden", class: "control-label") %>
+      </div>
+    </div>
+    <%= end %>
+
     <div class="row">
       <%=
       legibility_toggle = has_ability?(@conn, :update_eligibility)

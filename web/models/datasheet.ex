@@ -24,6 +24,7 @@ defmodule Registro.Datasheet do
     field :global_grant, :string
 
     field :filled, :boolean
+    field :branch_identifier, :integer
 
     has_one :user, Registro.User
     has_one :invitation, Registro.Invitation
@@ -60,11 +61,14 @@ defmodule Registro.Datasheet do
     |> validate_required(@required_fields)
     |> validate_colaboration
     |> validate_global_grant
+    |> generate_identifier_on_branch_change
   end
 
   def registration_changeset(model, params \\ %{}) do
     model
+    |> cast(%{status: "at_start"}, [:status])
     |> changeset(params)
+    |> validate_required([:branch_id, :role])
     |> validate_branch_is_eligible
   end
 
@@ -223,6 +227,18 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
+    end
+  end
+
+  defp generate_identifier_on_branch_change(changeset) do
+    case Ecto.Changeset.get_change(changeset, :branch_id, :unchanged) do
+      :unchanged ->
+        changeset
+
+      branch_id ->
+        {:ok, identifier} = PgSql.next_datasheet_seq_num(branch_id)
+
+        put_change(changeset, :branch_identifier, identifier)
     end
   end
 

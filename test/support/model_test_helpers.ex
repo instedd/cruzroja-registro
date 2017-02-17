@@ -71,11 +71,9 @@ defmodule Registro.ModelTestHelpers do
   end
 
   def create_branch(name: name, eligible: eligible) do
-    changeset = Branch.changeset(%Branch{}, %{
-          name: name,
-          address: "generated",
-          eligible: eligible
-    })
+    changeset = Branch.creation_changeset(%{ name: name,
+                                             address: "generated",
+                                             eligible: eligible })
     Repo.insert! changeset
   end
 
@@ -90,7 +88,7 @@ defmodule Registro.ModelTestHelpers do
   end
 
   defp user_changeset(email, datasheet_overrides) do
-    User.changeset(:create_with_datasheet, user_params(email, datasheet_overrides))
+    User.changeset(%User{}, :update, user_params(email, datasheet_overrides))
   end
 
   defp user_params(email, datasheet_overrides) do

@@ -13,6 +13,8 @@ import Ecto.Query
 
 defmodule Seed do
   def run do
+    PgSql.load_functions!
+
     insert_branches
     insert_countries
 
@@ -117,8 +119,19 @@ defmodule Seed do
   def insert_branches do
     File.stream!("priv/data/branches.csv")
     |> Enum.map(&parse_branch_line/1)
-    |> Enum.each(fn [branch_name, address, province, president, authorities, phone, cell, email] ->
-      Branch.changeset(%Branch{}, %{name: titleize(branch_name), address: titleize(address <> " - " <> province), president: titleize(president), authorities: titleize(authorities), phone_number: phone, cell_phone_number: cell, email: email, eligible: true}) |> Repo.insert!
+    |> Enum.each(fn line ->
+      [branch_name, address, province, president, authorities, phone, cell, email] = line
+
+      params = %{ name: titleize(branch_name),
+                  address: titleize(address <> " - " <> province),
+                  president: titleize(president),
+                  authorities: titleize(authorities),
+                  phone_number: phone,
+                  cell_phone_number: cell,
+                  email: email,
+                  eligible: true }
+
+      Branch.creation_changeset(params) |> Repo.insert!
     end)
   end
 
@@ -138,7 +151,7 @@ defmodule Seed do
   end
 
   def insert_user(params) do
-    User.changeset(:create_with_datasheet, params) |> Repo.insert!
+    User.changeset(%User{}, :update, params) |> Repo.insert!
   end
 
   def mark_as_branch_admin(email, branch) do

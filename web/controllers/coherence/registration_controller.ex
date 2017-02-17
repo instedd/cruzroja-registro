@@ -35,7 +35,7 @@ defmodule Registro.Coherence.RegistrationController do
   Render the new user form.
   """
   def new(conn, _params) do
-    cs = User.changeset(:create_with_datasheet, %{ datasheet: %{country_id: Country.default.id} })
+    cs = User.changeset(:registration, %{ datasheet: %{country_id: Country.default.id} })
 
     conn
     |> load_registration_form_data
@@ -51,12 +51,7 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def create(conn, %{"registration" => registration_params} = params) do
     user_schema = Config.user_schema
-
-    registration_params = update_in(registration_params, ["datasheet"], fn(dp) ->
-      Dict.merge(dp, %{"status" => "at_start"})
-    end)
-
-    cs = User.changeset(:create_with_datasheet, registration_params)
+    cs = User.changeset(:registration, registration_params)
 
     case Recaptcha.verify(params["g-recaptcha-response"]) do
       :ok ->

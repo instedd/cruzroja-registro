@@ -123,9 +123,10 @@ defmodule Registro.BranchesController do
     admin_emails = decode_email_list(encoded_admin_emails)
     clerk_emails = decode_email_list(encoded_clerk_emails)
 
-    %{changeset: changeset,
-      new_datasheets: new_datasheets} = Branch.changeset(%Branch{}, branch_params)
-                                      |> BranchManagement.update_staff(current_user, admin_emails, clerk_emails)
+    %{changeset: changeset, new_datasheets: new_datasheets} =
+      branch_params
+      |> Branch.creation_changeset
+      |> BranchManagement.update_staff(current_user, admin_emails, clerk_emails)
 
     case Repo.insert(changeset) do
       {:ok, _branch} ->
@@ -136,6 +137,16 @@ defmodule Registro.BranchesController do
       {:error, changeset} ->
         conn
         |> render("new.html", changeset: changeset, admin_emails: admin_emails, clerk_emails: clerk_emails)
+    end
+  end
+
+  def authorize_creation(_conn, %User{datasheet: datasheet}) do
+    cond do
+      Datasheet.is_global_admin?(datasheet) ->
+        {true, [:update_eligibility]}
+
+      true ->
+        false
     end
   end
 
@@ -175,10 +186,6 @@ defmodule Registro.BranchesController do
       _ ->
         false
     end
-  end
-
-  def authorize_creation(_conn, %User{datasheet: datasheet}) do
-    Datasheet.is_global_admin?(datasheet)
   end
 
   defp decode_email_list(encoded_emails) do

@@ -18,6 +18,7 @@ To start the Phoenix app:
   * Install dependencies with `mix deps.get`
   * Migrate your database with `mix ecto.migrate`
   * Install Node.js dependencies with `npm install`
+  * Load PL/pgSQL functions with `mix run priv/repo/functions_init.exs`
   * Start Phoenix endpoint with `mix phoenix.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.

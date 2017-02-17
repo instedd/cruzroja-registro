@@ -7,7 +7,7 @@
   <%= set_generic_error_toast %>
 <% end %>
 
-<div id="profile">
+<div id="profile-show">
   <div class="row">
     <div class="col">
       <h2 class="name"><%= Registro.Datasheet.full_name(@changeset.data) %></h2>
@@ -56,6 +56,9 @@
 
               [ validated_field(fd, :occupation, text: "Ocupación", required: true, disabled: readonly)
               ],
+
+              [ validated_field(fd, :registration_date, text: "Fecha de inicio de voluntariado", disabled: readonly)
+              ]
             ] %>
           </div>
 

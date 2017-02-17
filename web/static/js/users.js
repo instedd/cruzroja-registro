@@ -23,7 +23,7 @@ export var Users = {
       BranchSelector.init(window.branches)
     })
 
-    $("#profile").each(() => {
+    $("#profile-show").each(() => {
       let eligibilityWarning = $("#eligible-branch-warning");
 
       BranchSelector.init(window.branches, {

@@ -52,6 +52,17 @@
     ]
   ] %>
 
+    <div class="row">
+      <div class="col s12">
+        <input type="checkbox" id="old_volunteer">
+        <label for="old_volunteer">Ya soy voluntario de CRA</label>
+        <div class="registration_date hide input-field">
+          <%= label(fd, :registration_date, "Fecha de inicio de voluntariado") %>
+          <%= date_picker(fd, :registration_date) %>
+        </div>
+      </div>
+    </div>
+
     <br/>
     <div class="row">
       <div class="col s12">

@@ -17,6 +17,7 @@ defmodule Registro.Datasheet do
     field :occupation, :string
     field :address, :string
     field :phone_number, :string
+    field :registration_date, :date
 
     field :status, :string
     field :role, :string
@@ -52,7 +53,7 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:status, :branch_id, :role, :global_grant])
+    |> cast(params, @required_fields ++ [:registration_date, :status, :branch_id, :role, :global_grant])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)

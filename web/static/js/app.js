@@ -22,6 +22,7 @@ import "phoenix_html";
 
 import { Users } from "./users";
 import { Branches } from "./branches";
+import { Registration } from "./registration";
 
 export var App = {
   run: function() {
@@ -47,5 +48,6 @@ export var App = {
     // initialize all modules
     Users.init();
     Branches.init();
+    Registration.init();
   }
 };

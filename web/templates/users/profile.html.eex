@@ -78,6 +78,8 @@
             en la filial
             <%= branch_label(@current_user.datasheet) %>.
         <% end %>
+
+        Tu número de orden es <b><%= format_datasheet_identifier(@current_user.datasheet.branch, @current_user.datasheet) %></b>.
       </div>
     <% end %>
 

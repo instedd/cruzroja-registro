@@ -104,6 +104,16 @@
 
           <div class="section">
             <h3>Colaboración en filial</h3>
+
+            <%= if @changeset.data.branch_identifier do %>
+            <div class="row">
+              <div class="input-field col s6">
+                <%= tag(:input, class: "form-control", type: "text", disabled: "", value: format_datasheet_identifier(@changeset.data.branch, @changeset.data)) %>
+                <%= content_tag(:label, "Número de orden", class: "control-label") %>
+              </div>
+            </div>
+            <%= end %>
+
             <div class="row">
               <div class="input-field col s6">
                 <label class="control-label" for="user_datasheet_branch_name">Filial</label>

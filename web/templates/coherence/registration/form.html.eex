@@ -49,6 +49,10 @@
 
     [ select(fd, :branch_id, @conn.assigns[:branches], class: "form-control", required: ""),
       label(fd, :branch_id, "Filial")
+    ],
+
+    [ textarea(fd, :observations, class: "materialize-textarea"),
+      label(fd, :observations, "Observaciones")
     ]
   ] %>
 

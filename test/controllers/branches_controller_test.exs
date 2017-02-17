@@ -397,6 +397,17 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "creation" do
+    @tag :focus
+    test "renders creation form for global admins", %{conn: conn, admin: admin} do
+      # regression test. abilities not being set caused form rendering to fail
+      conn =
+        conn
+        |> log_in(admin)
+        |> get(branches_path(conn, :new))
+
+      assert html_response(conn, 200)
+    end
+
     test "a global admin can create new branches", %{conn: conn, admin: admin} do
       params = %{ admin_emails: "", clerk_emails: "", branch: %{ name: "NewBranch", eligible: true }}
 

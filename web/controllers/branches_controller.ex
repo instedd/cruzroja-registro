@@ -140,6 +140,16 @@ defmodule Registro.BranchesController do
     end
   end
 
+  def authorize_creation(_conn, %User{datasheet: datasheet}) do
+    cond do
+      Datasheet.is_global_admin?(datasheet) ->
+        {true, [:update_eligibility]}
+
+      true ->
+        false
+    end
+  end
+
   def authorize_detail(conn, %User{datasheet: datasheet}) do
     branch_id = String.to_integer(conn.params["id"])
 
@@ -176,10 +186,6 @@ defmodule Registro.BranchesController do
       _ ->
         false
     end
-  end
-
-  def authorize_creation(_conn, %User{datasheet: datasheet}) do
-    Datasheet.is_global_admin?(datasheet)
   end
 
   defp decode_email_list(encoded_emails) do

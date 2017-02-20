@@ -98,7 +98,7 @@
     <div class="form-group actions right-align">
       <%= if Registro.Datasheet.can_ask_to_become_associate?(@current_user.datasheet) do %>
         <%= form_tag(users_path(@conn, :associate_request), method: :post, style: "display:inline-block") do %>
-        <%= submit "Solicitar pase a asociado", class: "btn btn-large btn-flat" %>
+        <%= submit "Solicitar pase a asociado", class: "btn btn-large" %>
         <% end %>
       <% end %>
 

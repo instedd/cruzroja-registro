@@ -16,7 +16,7 @@
   }
 
   .actions {
-    .btn {
+    .btn:not(first-child) {
       margin-left: 20px;
     }
   }
@@ -29,12 +29,8 @@
 
 
 #register {
-  .actions {
-    display: flex;
-    flex-direction: row;
-    .captcha {
-      flex-grow: 1;
-    }
+  .captcha {
+    margin-bottom: 20px;
   }
 }
 

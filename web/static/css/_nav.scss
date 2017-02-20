@@ -21,21 +21,24 @@ nav {
 
     li {
       height: $nav-height; // a height is needed to keep the border inside the container
+      background-color: transparent !important; // override materialize's style
 
       a {
+        background-color: transparent !important; // override materialize's style
         font-weight: bold;
         font-size: 13px;
         text-transform: uppercase;
         color: $grey-disabled;
       }
 
+      &:hover, &.active {
+        a {
+          color: #131313;
+        }
+      }
+
       &.active {
         border-bottom: 5px solid $brand-red;
-        background-color: transparent; // override materializes style
-
-        a {
-          color: $black;
-        }
       }
     }
   }

@@ -139,6 +139,15 @@ defmodule Registro.UsersController do
     |> render("show.html", changeset: changeset, datasheet: datasheet, branch_name: branch_name)
   end
 
+  def print(conn, params) do
+    datasheet = Repo.one(from d in Datasheet.full_query, where: d.id == ^params["id"])
+    branch_name = if datasheet.branch, do: datasheet.branch.name
+
+    conn
+    |> put_layout(false)
+    |> render("print.html", datasheet: datasheet, branch_name: branch_name)
+  end
+
   def filter(conn, params) do
     page = Pagination.requested_page(params)
 

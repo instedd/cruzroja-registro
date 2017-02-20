@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Impresión de formulario - Cruz Roja Argentina</title>
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="mstile-310x310.png" />
+
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+  </head>
+
+  <body>
+    <div class="contaner"><div class="print-form">
+      <p class="center-align">ANEXO I</p>
+      <p class="center-align">FICHA ÚNICA DE IDENTIFICACIÓN DE COLABORADORES</p>
+      <p class="center-align">FILIAL: <%= @branch_name %></p>
+
+      <p>SOLICITO mi incorporación a Cruz Roja Argentina en carácter de COLABORADOR manifestando mi intención de contribuir solidariamente con los fines de la organización desarrollando actividades voluntarias </p>
+      <p>Información del solicitante:</p>
+      <ul class="classic-list">
+      <li><b>Apellido:</b> <%= @datasheet.last_name %></li>
+      <li><b>Nombre:</b> <%= @datasheet.first_name %></li>
+      <li><b>Tipo y número de documento:</b> <%= @datasheet.legal_id_kind %> <%= @datasheet.legal_id_number %></li>
+      <li><b>Fecha de nacimiento:</b> <%= Registro.DateTime.format_date(@datasheet.birth_date) %> Sexo: _____________________</li>
+      <li><b>Domicilio:</b> <%= @datasheet.address %></li>
+      <li><b>CP:</b> __________ <b>Localidad:</b> ________________________<b>Provincia:</b> __________________</li>
+      <li><b>Teléfono:</b> <%= @datasheet.phone_number %> Celular: (______) _____________________</li>
+      <li><b>Correo electrónico:</b> <%= @datasheet.user.email %></li>
+      <li><b>Estudios cursados:</b> _________________________________________________________</li>
+      <li><b>Estudios en curso:</b> _________________________________________________________</li>
+      <li><b>Idioma:</b> __________________________________________________________________</li>
+      <li><b>Ocupación actual:</b> <%= @datasheet.occupation %></li>
+      </ul>
+
+      <p>(Transcurrido 1 (un) año de haber desarrollado en forma permanente o habitual una actividad voluntaria el COLABORADOR podrá solicitar su incorporación como Asociado).</p>
+
+
+      <p class="signature">Firma del solicitante: ___________________________</p>
+      <p class="signature">Aclaración: ___________________________</p>
+    </div></div>
+</body>
+</html>

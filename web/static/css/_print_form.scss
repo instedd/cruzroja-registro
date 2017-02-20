@@ -1,0 +1,18 @@
+.print-form {
+  background-color: #ffffff;
+  p {
+    font-family: 'Roboto', sans-serif;
+  }
+  ul.classic-list {
+    li {
+      list-style-type: disc;
+      list-style-position: inside;
+      margin-left: 15px
+    }
+  }
+
+  p.signature {
+    text-align: right;
+    margin-top: 50px;
+  }
+}

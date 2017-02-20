@@ -1,17 +1,17 @@
 defmodule PgSql do
 
-  @functions ~w[next_datasheet_seq_num]
+  alias Registro.Repo
+
+  @source_file "priv/repo/functions.sql"
 
   def load_functions! do
-    Enum.each(@functions, fn func_name ->
-      source_file = "priv/repo/functions/#{func_name}.plpgsql"
-      source = File.read! source_file
-      Registro.Repo.query! source
-    end)
+    @source_file
+    |> File.read!
+    |> Repo.query!
   end
 
   def next_branch_seq_num do
-    case Registro.Repo.query("SELECT nextval('branches_seq_num')") do
+    case Repo.query("SELECT nextval('branches_seq_num')") do
       {:ok, %Postgrex.Result{rows: [[value]]}} ->
         {:ok, value}
       _ ->
@@ -20,7 +20,7 @@ defmodule PgSql do
   end
 
   def next_datasheet_seq_num(branch_id) do
-    case Registro.Repo.query("SELECT next_datasheet_seq_num($1)", [branch_id]) do
+    case Repo.query("SELECT next_datasheet_seq_num($1)", [branch_id]) do
       {:ok, %Postgrex.Result{rows: [[value]]}} ->
         {:ok, value}
       _ ->

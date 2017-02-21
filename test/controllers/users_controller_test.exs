@@ -708,7 +708,7 @@ defmodule Registro.UsersControllerTest do
 
       conn = conn
       |> log_in("branch_admin1@instedd.org")
-      |> get(users_path(Registro.Endpoint, :show, volunteer))
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert_unauthorized(conn)
     end
@@ -718,7 +718,7 @@ defmodule Registro.UsersControllerTest do
 
       conn = conn
       |> log_in("branch_admin1@instedd.org")
-      |> get(users_path(Registro.Endpoint, :show, volunteer))
+      |> get(users_path(Registro.Endpoint, :show, volunteer.datasheet))
 
       assert_unauthorized(conn)
     end

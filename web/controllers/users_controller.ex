@@ -275,9 +275,9 @@ defmodule Registro.UsersController do
   end
 
   def authorize_detail(conn, %User{datasheet: datasheet}) do
-    user_id = String.to_integer(conn.params["id"])
+    target_datasheet_id = String.to_integer(conn.params["id"])
 
-    target_datasheet = (from d in Datasheet, where: d.id == ^user_id)
+    target_datasheet = (from d in Datasheet, where: d.id == ^target_datasheet_id)
                      |> restrict_to_visible_users(conn)
                      |> Repo.one
 

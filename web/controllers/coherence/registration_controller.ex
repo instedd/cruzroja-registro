@@ -125,7 +125,7 @@ defmodule Registro.Coherence.RegistrationController do
 
   defp load_registration_form_data(conn, submitted_params \\ %{}) do
     conn
-    |> assign(:branches, Branch.eligible |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:branches, Branch.all_by_province())
     |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
     |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
     # additional params not included in the changeset to prefil form fields

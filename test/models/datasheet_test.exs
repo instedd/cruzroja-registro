@@ -171,7 +171,6 @@ defmodule Registro.DatasheetTest do
     assert Datasheet.can_filter_by_branch?(datasheet)
   end
 
-  @tag :focus
   test "whitespace and dots are removed from legal_id if kind is DNI", %{minimal_params: params} do
     params = Map.merge(params, %{ legal_id_kind: "DNI",
                                   legal_id_number: "12.345 678" })
@@ -182,7 +181,6 @@ defmodule Registro.DatasheetTest do
     assert get_field(changeset, :legal_id_number) == "12345678"
   end
 
-  @tag :focus
   test "legal_id must be numeric if kind is DNI", %{minimal_params: params} do
     params = Map.merge(params, %{ legal_id_kind: "DNI",
                                   legal_id_number: "1234N" })
@@ -193,7 +191,6 @@ defmodule Registro.DatasheetTest do
     assert invalid_fields(changeset) == [:legal_id_number]
   end
 
-  @tag :focus
   test "legal_id doesn't need to be a number if kind is not DNI", %{minimal_params: params} do
     params = Map.merge(params, %{ legal_id_kind: "CI",
                                   legal_id_number: "1234N" })

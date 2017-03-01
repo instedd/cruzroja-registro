@@ -15,10 +15,10 @@ defmodule LegalIdKind do
 
   def all do
     [
-      %LegalIdKind{ id: "CI",  label: "Cédula de identidad" },
-      %LegalIdKind{ id: "DNI", label: "Documento nacional de identidad" },
-      %LegalIdKind{ id: "LC",  label: "Libreta cívica" },
-      %LegalIdKind{ id: "LE",  label: "Libreta de enrolamiento" },
+      %LegalIdKind{ id: "DNI", label: "Documento Nacional de Identidad" },
+      %LegalIdKind{ id: "CI",  label: "Cédula de Identidad" },
+      %LegalIdKind{ id: "LC",  label: "Libreta Cívica" },
+      %LegalIdKind{ id: "LE",  label: "Libreta de Enrolamiento" },
       %LegalIdKind{ id: "PAS", label: "Pasaporte" },
     ]
   end

@@ -764,16 +764,16 @@ defmodule Registro.UsersControllerTest do
 
       assert response == """
       Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado\r
-      Doe,admin,admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin1,branch_admin1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_clerk1,branch_clerk1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,reader,reader@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,super_admin,super_admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
-      Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
-      Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
+      Doe,admin,admin@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin1,branch_admin1@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin2,branch_admin2@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin3,branch_admin3@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_clerk1,branch_clerk1@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,reader,reader@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,super_admin,super_admin@instedd.org,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,volunteer1,volunteer1@example.com,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
+      Doe,volunteer2,volunteer2@example.com,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
+      Doe,volunteer3,volunteer3@example.com,Documento Nacional de Identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
       """
     end
 

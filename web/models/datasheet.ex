@@ -6,6 +6,8 @@ defmodule Registro.Datasheet do
   alias Registro.Branch
   alias Registro.Invitation
 
+  import Registro.Gettext, only: [gettext: 1]
+
   @assocs [:branch, :admin_branches, :clerk_branches, :country, :user]
 
   schema "datasheets" do
@@ -62,6 +64,7 @@ defmodule Registro.Datasheet do
     |> validate_required(@required_fields)
     |> validate_colaboration
     |> validate_global_grant
+    |> validate_required_fields
     |> generate_identifier_on_branch_change
   end
 
@@ -79,6 +82,7 @@ defmodule Registro.Datasheet do
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
+    |> validate_required_fields
   end
 
   def profile_update_changeset(model, params \\ %{}) do
@@ -100,6 +104,29 @@ defmodule Registro.Datasheet do
     |> Registro.Repo.preload(:clerk_branches)
     |> Ecto.Changeset.change
     |> Ecto.Changeset.put_assoc(:clerk_branches, branches)
+  end
+
+  def validate_required_fields(changeset) do
+    # these validations should be present every time @required_fields are casted
+    changeset
+    |> validate_legal_id
+  end
+
+  def validate_legal_id(changeset) do
+    legal_id_kind = Ecto.Changeset.get_field(changeset, :legal_id_kind)
+    legal_id_number = Ecto.Changeset.get_field(changeset, :legal_id_number)
+
+    if legal_id_kind == "DNI" && !is_nil(legal_id_number) do
+      formatted_number = String.replace(legal_id_number, ~r/\s|\./, "")
+      case Integer.parse(formatted_number) do
+        {_num, ""} ->
+          put_change(changeset, :legal_id_number, formatted_number)
+        _ ->
+          changeset |> Ecto.Changeset.add_error(:legal_id_number, gettext "is not a valid number")
+      end
+    else
+      changeset
+    end
   end
 
   @doc """

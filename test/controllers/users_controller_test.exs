@@ -12,19 +12,19 @@ defmodule Registro.UsersControllerTest do
     branch2 = create_branch(name: "Branch 2")
     branch3 = create_branch(name: "Branch 3")
 
-    create_super_admin("super_admin@instedd.org")
-    create_admin("admin@instedd.org")
-    create_reader("reader@instedd.org")
+    create_super_admin("super_admin@instedd.org", %{legal_id: "1"})
+    create_admin("admin@instedd.org", %{legal_id: "2"})
+    create_reader("reader@instedd.org", %{legal_id: "3"})
 
-    create_branch_admin("branch_admin1@instedd.org", [branch1, branch3])
-    create_branch_admin("branch_admin2@instedd.org", branch2)
-    create_branch_admin("branch_admin3@instedd.org", branch3)
+    create_branch_admin("branch_admin1@instedd.org", [branch1, branch3], %{legal_id: "4"})
+    create_branch_admin("branch_admin2@instedd.org", branch2, %{legal_id: "5"})
+    create_branch_admin("branch_admin3@instedd.org", branch3, %{legal_id: "6"})
 
-    create_branch_clerk("branch_clerk1@instedd.org", [branch1, branch3])
+    create_branch_clerk("branch_clerk1@instedd.org", [branch1, branch3], %{legal_id: "7"})
 
-    volunteer1 = create_volunteer("volunteer1@example.com", branch1.id)
-    volunteer2 = create_volunteer("volunteer2@example.com", branch2.id)
-    volunteer3 = create_volunteer("volunteer3@example.com", branch3.id)
+    volunteer1 = create_volunteer("volunteer1@example.com", branch1.id, %{legal_id: "8"})
+    volunteer2 = create_volunteer("volunteer2@example.com", branch2.id, %{legal_id: "9"})
+    volunteer3 = create_volunteer("volunteer3@example.com", branch3.id, %{legal_id: "10"})
 
     # TODO: pass the desired status when creating the user
     # These asserts are here because status change specs assume volunteers start in "at_start" state
@@ -180,7 +180,7 @@ defmodule Registro.UsersControllerTest do
         first_name: "John",
         last_name: "Doe",
         legal_id_kind: "DNI",
-        legal_id_number: "1234567890",
+        legal_id: "1234567890",
         birth_date: ~D[1990-01-01],
         occupation: "occupation...",
         address: "address...",
@@ -272,7 +272,7 @@ defmodule Registro.UsersControllerTest do
         first_name: "John",
         last_name: "Doe",
         legal_id_kind: "DNI",
-        legal_id_number: "1234567890",
+        legal_id: "1234567890",
         birth_date: "1990-01-01",
         occupation: "occupation...",
         address: "address...",
@@ -764,16 +764,16 @@ defmodule Registro.UsersControllerTest do
 
       assert response == """
       Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado\r
-      Doe,admin,admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin1,branch_admin1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin2,branch_admin2@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin3,branch_admin3@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_clerk1,branch_clerk1@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,reader,reader@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,super_admin,super_admin@instedd.org,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,volunteer1,volunteer1@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
-      Doe,volunteer2,volunteer2@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
-      Doe,volunteer3,volunteer3@example.com,Documento nacional de identidad,1,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
+      Doe,admin,admin@instedd.org,Cédula de Identidad,2,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin1,branch_admin1@instedd.org,Cédula de Identidad,4,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin2,branch_admin2@instedd.org,Cédula de Identidad,5,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_admin3,branch_admin3@instedd.org,Cédula de Identidad,6,Argentina,1980-01-01,-,-,,,\r
+      Doe,branch_clerk1,branch_clerk1@instedd.org,Cédula de Identidad,7,Argentina,1980-01-01,-,-,,,\r
+      Doe,reader,reader@instedd.org,Cédula de Identidad,3,Argentina,1980-01-01,-,-,,,\r
+      Doe,super_admin,super_admin@instedd.org,Cédula de Identidad,1,Argentina,1980-01-01,-,-,,,\r
+      Doe,volunteer1,volunteer1@example.com,Cédula de Identidad,8,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
+      Doe,volunteer2,volunteer2@example.com,Cédula de Identidad,9,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
+      Doe,volunteer3,volunteer3@example.com,Cédula de Identidad,10,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
       """
     end
 
@@ -798,7 +798,7 @@ defmodule Registro.UsersControllerTest do
       datasheet = create_datasheet(%{first_name: "John",
                                      last_name: "Dow",
                                      legal_id_kind: "DNI",
-                                     legal_id_number: "1",
+                                     legal_id: "1",
                                      birth_date: ~D[1980-01-01],
                                      occupation: "-",
                                      address: "-",

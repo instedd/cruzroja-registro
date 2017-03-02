@@ -13,8 +13,10 @@ defmodule Registro.ModelTestHelpers do
     Repo.one!(from c in Country, limit: 1)
   end
 
-  def create_volunteer(email, branch_id) do
-    user_changeset(email, %{ role: "volunteer", branch_id: branch_id, status: "at_start" })
+  def create_volunteer(email, branch_id, params \\ %{}) do
+    params = Map.merge(params, %{ role: "volunteer", branch_id: branch_id, status: "at_start" })
+
+    user_changeset(email, params)
     |> Repo.insert!
   end
 
@@ -46,18 +48,24 @@ defmodule Registro.ModelTestHelpers do
     create_branch_admin(email, [branch], params)
   end
 
-  def create_super_admin(email) do
-    user_changeset(email, %{global_grant: "super_admin"})
+  def create_super_admin(email, params \\ %{}) do
+    params = Map.merge(params, %{global_grant: "super_admin"})
+
+    user_changeset(email, params)
     |> Repo.insert!
   end
 
-  def create_admin(email) do
-    user_changeset(email, %{global_grant: "admin"})
+  def create_admin(email, params \\ %{}) do
+    params = Map.merge(params, %{global_grant: "admin"})
+
+    user_changeset(email, params)
     |> Repo.insert!
   end
 
-  def create_reader(email) do
-    user_changeset(email, %{global_grant: "reader"})
+  def create_reader(email, params \\ %{}) do
+    params = Map.merge(params, %{global_grant: "reader"})
+
+    user_changeset(email, params)
     |> Repo.insert!
   end
 
@@ -92,8 +100,14 @@ defmodule Registro.ModelTestHelpers do
   end
 
   defp user_params(email, datasheet_overrides) do
-    # by default generate a name based on the email
-    datasheet_overrides = Map.merge(%{first_name: name(email)}, datasheet_overrides)
+    # innocent hacks for default values... :-)
+    # - generate a name based on the email
+    # - use the email as legal_id to avoid duplicates. we should
+    #   probably have an agent to generate these
+    datasheet_overrides = Map.merge(%{first_name: name(email),
+                                      legal_id_kind: "CI",
+                                      legal_id: email}, datasheet_overrides)
+
     datasheet_params = datasheet_params(datasheet_overrides)
 
     %{ email: email,
@@ -108,7 +122,7 @@ defmodule Registro.ModelTestHelpers do
     base_params = %{ first_name: "John",
                      last_name: "Doe",
                      legal_id_kind: "DNI",
-                     legal_id_number: "1",
+                     legal_id: "1",
                      birth_date: ~D[1980-01-01],
                      occupation: "-",
                      address: "-",

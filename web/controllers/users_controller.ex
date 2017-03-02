@@ -179,7 +179,7 @@ defmodule Registro.UsersController do
         d.first_name,
         (if d.user, do: d.user.email, else: d.invitation.email),
         Datasheet.legal_id_kind(d).label,
-        d.legal_id_number,
+        d.legal_id,
         d.country.name,
         Date.to_iso8601(d.birth_date),
         d.occupation,

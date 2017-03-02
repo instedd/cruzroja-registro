@@ -397,7 +397,6 @@ defmodule Registro.BranchesControllerTest do
   end
 
   describe "creation" do
-    @tag :focus
     test "renders creation form for global admins", %{conn: conn, admin: admin} do
       # regression test. abilities not being set caused form rendering to fail
       conn =

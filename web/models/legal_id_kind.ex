@@ -13,6 +13,12 @@ defmodule LegalIdKind do
     kind
   end
 
+  def is_valid?(id_value) do
+    Enum.any?(all, fn %LegalIdKind{id: id, label: _label} ->
+      id == id_value
+    end)
+  end
+
   def all do
     [
       %LegalIdKind{ id: "DNI", label: "Documento Nacional de Identidad" },

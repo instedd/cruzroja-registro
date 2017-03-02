@@ -113,19 +113,26 @@ defmodule Registro.Datasheet do
   end
 
   def validate_legal_id(changeset) do
+    changeset = unique_constraint(changeset, :legal_id_number, name: :index_datasheets_on_legal_id)
+
     legal_id_kind = Ecto.Changeset.get_field(changeset, :legal_id_kind)
     legal_id_number = Ecto.Changeset.get_field(changeset, :legal_id_number)
 
-    if legal_id_kind == "DNI" && !is_nil(legal_id_number) do
-      formatted_number = String.replace(legal_id_number, ~r/\s|\./, "")
-      case Integer.parse(formatted_number) do
-        {_num, ""} ->
-          put_change(changeset, :legal_id_number, formatted_number)
-        _ ->
-          changeset |> Ecto.Changeset.add_error(:legal_id_number, gettext "is not a valid number")
-      end
-    else
-      changeset
+    cond do
+      legal_id_kind == "DNI" && !is_nil(legal_id_number)->
+        formatted_number = String.replace(legal_id_number, ~r/\s|\./, "")
+        case Integer.parse(formatted_number) do
+          {_num, ""} ->
+            put_change(changeset, :legal_id_number, formatted_number)
+          _ ->
+            changeset |> Ecto.Changeset.add_error(:legal_id_number, gettext "is not a valid number")
+        end
+
+      LegalIdKind.is_valid?(legal_id_kind) ->
+        changeset
+
+      true ->
+        changeset |> Ecto.Changeset.add_error(:legal_id_kind, "is invalid")
     end
   end
 

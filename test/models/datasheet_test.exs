@@ -119,14 +119,28 @@ defmodule Registro.DatasheetTest do
     refute Datasheet.is_admin_of?(datasheet, branch3)
   end
 
-  test "users with global access can filter by branch", %{minimal_params: params} do
-    Enum.each(["super_admin", "admin", "reader"], fn grant ->
-      datasheet =
-        Map.merge(params, %{global_grant: grant})
-        |> create_datasheet
+  test "super_admin can filter by branch", %{minimal_params: params} do
+    datasheet =
+      Map.merge(params, %{global_grant: "super_admin"})
+      |> create_datasheet
 
-      assert Datasheet.can_filter_by_branch?(datasheet)
-    end)
+    assert Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "admin can filter by branch", %{minimal_params: params} do
+    datasheet =
+      Map.merge(params, %{global_grant: "admin"})
+      |> create_datasheet
+
+    assert Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  test "global reader can filter by branch", %{minimal_params: params} do
+    datasheet =
+      Map.merge(params, %{global_grant: "reader"})
+      |> create_datasheet
+
+    assert Datasheet.can_filter_by_branch?(datasheet)
   end
 
   test "a branch admin with one branch cannot filter by branch", %{minimal_params: params} do
@@ -171,33 +185,72 @@ defmodule Registro.DatasheetTest do
     assert Datasheet.can_filter_by_branch?(datasheet)
   end
 
-  test "whitespace and dots are removed from legal_id if kind is DNI", %{minimal_params: params} do
-    params = Map.merge(params, %{ legal_id_kind: "DNI",
-                                  legal_id_number: "12.345 678" })
+  describe "legal id" do
+    test "legal_id_kind can not contain arbitrary values", %{minimal_params: params} do
+      params = Map.merge(params, %{ legal_id_kind: "SOMETHING_ELSE",
+                                    legal_id_number: "12345678" })
 
-    changeset = Datasheet.changeset(%Datasheet{}, params)
+      changeset = Datasheet.changeset(%Datasheet{}, params)
 
-    assert changeset.valid?
-    assert get_field(changeset, :legal_id_number) == "12345678"
-  end
+      refute changeset.valid?
+      assert invalid_fields(changeset) == [:legal_id_kind]
+    end
 
-  test "legal_id must be numeric if kind is DNI", %{minimal_params: params} do
-    params = Map.merge(params, %{ legal_id_kind: "DNI",
-                                  legal_id_number: "1234N" })
+    test "legal id must be unique", %{minimal_params: params} do
+      params = Map.merge(params, %{ legal_id_kind: "DNI",
+                                    legal_id_number: "12345678" })
 
-    changeset = Datasheet.changeset(%Datasheet{}, params)
 
-    refute changeset.valid?
-    assert invalid_fields(changeset) == [:legal_id_number]
-  end
+      changeset = Datasheet.changeset(%Datasheet{}, params)
 
-  test "legal_id doesn't need to be a number if kind is not DNI", %{minimal_params: params} do
-    params = Map.merge(params, %{ legal_id_kind: "CI",
-                                  legal_id_number: "1234N" })
+      assert changeset.valid?
 
-    changeset = Datasheet.changeset(%Datasheet{}, params)
+      {:ok, _datasheet} = Repo.insert(changeset)
+      {:error, insert_changeset} = Repo.insert(changeset)
 
-    assert changeset.valid?
+      refute insert_changeset.valid?
+      assert invalid_fields(insert_changeset) == [:legal_id_number]
+    end
+
+    test "legal_id_number can be duplicated if legal_id_kind doesn't match", %{minimal_params: params} do
+      params = Map.merge(params, %{ legal_id_kind: "DNI",
+                                    legal_id_number: "12345678" })
+
+      {:ok, _datasheet1} = Datasheet.changeset(%Datasheet{}, params) |> Repo.insert
+
+      params = Map.merge(params, %{ legal_id_kind: "CI" })
+
+      {:ok, _datasheet2} = Datasheet.changeset(%Datasheet{}, params) |> Repo.insert
+    end
+
+    test "whitespace and dots are removed from legal_id if kind is DNI", %{minimal_params: params} do
+      params = Map.merge(params, %{ legal_id_kind: "DNI",
+                                    legal_id_number: "12.345 678" })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      assert changeset.valid?
+      assert get_field(changeset, :legal_id_number) == "12345678"
+    end
+
+    test "legal_id must be numeric if kind is DNI", %{minimal_params: params} do
+      params = Map.merge(params, %{ legal_id_kind: "DNI",
+                                    legal_id_number: "1234N" })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      refute changeset.valid?
+      assert invalid_fields(changeset) == [:legal_id_number]
+    end
+
+    test "legal_id doesn't need to be a number if kind is not DNI", %{minimal_params: params} do
+      params = Map.merge(params, %{ legal_id_kind: "CI",
+                                    legal_id_number: "1234N" })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      assert changeset.valid?
+    end
   end
 
   describe "branch-scoped identifier generation" do

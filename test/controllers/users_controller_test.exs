@@ -306,7 +306,7 @@ defmodule Registro.UsersControllerTest do
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
       params = %{ branch_name: "Branch 2",
-                  datasheet: %{ id: volunteer.datasheet.id, role: "associate" } }
+                  datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false } }
 
       {_conn, volunteer} = update_user(conn, "admin@instedd.org", volunteer, params)
 
@@ -320,7 +320,7 @@ defmodule Registro.UsersControllerTest do
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
       params = %{ branch_name: "Branch 2",
-                  datasheet: %{ id: volunteer.datasheet.id, role: "associate" } }
+                  datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false } }
 
       {_conn, volunteer} = update_user(conn, "super_admin@instedd.org", volunteer, params)
 
@@ -334,7 +334,7 @@ defmodule Registro.UsersControllerTest do
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
       params = %{ branch_name: "Branch 2",
-                  datasheet: %{ id: volunteer.datasheet.id, role: "associate" } }
+                  datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false } }
 
       {conn, updated_volunteer} = update_user(conn, "reader@instedd.org", volunteer, params)
 
@@ -349,7 +349,7 @@ defmodule Registro.UsersControllerTest do
 
       params = %{
         branch_name: "Branch 2",
-        datasheet: %{ id: volunteer.datasheet.id, role: "associate" }
+        datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false }
         }
 
       {_conn, updated_volunteer} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
@@ -366,11 +366,13 @@ defmodule Registro.UsersControllerTest do
       params = %{ :datasheet => %{
                   id: u2.datasheet.id,
                   role: "associate",
+                  is_paying_associate: true,
                   status: u2.datasheet.status }}
 
       {_conn, u2} = update_user(conn, u1, u2, params)
 
       assert u2.datasheet.role == "associate"
+      assert u2.datasheet.is_paying_associate == true
     end
 
     test "a branch admin can't change role of colaborations of other branches", %{conn: conn} do
@@ -382,6 +384,7 @@ defmodule Registro.UsersControllerTest do
       params = %{ :datasheet => %{
                   id: u2.datasheet.id,
                   role: "associate",
+                  is_paying_associate: true,
                   status: u2.datasheet.status }}
 
       {conn, _u2} = update_user(conn, u1, u2, params)
@@ -398,6 +401,7 @@ defmodule Registro.UsersControllerTest do
       params = %{ :datasheet => %{
                 id: u2.datasheet.id,
                 role: "associate",
+                is_paying_associate: true,
                 status: u2.datasheet.status }}
 
       {conn, updated_u2} = update_user(conn, u1, u2, params)
@@ -458,12 +462,15 @@ defmodule Registro.UsersControllerTest do
 
       volunteer =
         volunteer
-        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
+                                                    status: "associate_requested",
+                                                    is_paying_associate: false } })
         |> Repo.update!
 
       {_conn, user} = update_state(conn, "admin@instedd.org", volunteer, :approve)
 
       assert user.datasheet.role == "associate"
+      assert user.datasheet.is_paying_associate == false
       assert user.datasheet.status == "approved"
     end
 
@@ -472,12 +479,15 @@ defmodule Registro.UsersControllerTest do
 
       volunteer =
         volunteer
-        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
+                                                  status: "associate_requested",
+                                                  is_paying_associate: false } })
         |> Repo.update!
 
       {_conn, user} = update_state(conn, "super_admin@instedd.org", volunteer, :approve)
 
       assert user.datasheet.role == "associate"
+      assert user.datasheet.is_paying_associate == false
       assert user.datasheet.status == "approved"
     end
 
@@ -486,13 +496,17 @@ defmodule Registro.UsersControllerTest do
 
       volunteer =
         volunteer
-        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id, status: "associate_requested" } })
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
+                                                    status: "associate_requested",
+                                                    is_paying_associate: false } })
         |> Repo.update!
 
       {conn, user} = update_state(conn, "reader@instedd.org", volunteer, :approve)
 
       assert_unauthorized(conn)
+
       assert user.datasheet.role == "volunteer"
+      assert user.datasheet.is_paying_associate == false
       assert user.datasheet.status == "associate_requested"
     end
 
@@ -515,26 +529,29 @@ defmodule Registro.UsersControllerTest do
 
   describe "volunteer transition to associate" do
     test "an approved volunteer can ask to become associate", %{conn: conn, some_branch: branch} do
-      {conn, user} = create_approved_volunteer(branch)
-                    |> request_volunteer_update(conn)
+      {conn, user} =
+        create_approved_volunteer(branch)
+        |> request_volunteer_update(conn, is_paying_associate: true)
 
       assert redirected_to(conn) == users_path(Registro.Endpoint, :profile)
       assert user.datasheet.status == "associate_requested"
+      assert user.datasheet.is_paying_associate == true
     end
 
     test "an audit entry is created when the user requests to become associate", %{conn: conn, some_branch: branch} do
-      {_conn, user} = create_approved_volunteer(branch)
-                    |> request_volunteer_update(conn)
+      {_conn, user} =
+        create_approved_volunteer(branch)
+        |> request_volunteer_update(conn, is_paying_associate: true)
 
       audit_entries = Registro.UserAuditLogEntry.for(user.datasheet, "associate_requested")
 
       assert Enum.count(audit_entries) == 1
     end
 
-    def request_volunteer_update(volunteer, conn) do
+    def request_volunteer_update(volunteer, conn, is_paying_associate: is_paying_associate) do
       conn = conn
       |> log_in(volunteer)
-      |> post(users_path(Registro.Endpoint, :associate_request))
+      |> post(users_path(Registro.Endpoint, :associate_request, %{"is_paying_associate" => is_paying_associate}))
 
       updated_volunteer = Repo.get(User.query_with_datasheet, volunteer.id)
 

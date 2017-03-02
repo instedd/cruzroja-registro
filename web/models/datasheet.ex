@@ -24,6 +24,7 @@ defmodule Registro.Datasheet do
 
     field :status, :string
     field :role, :string
+    field :is_paying_associate, :boolean
     field :global_grant, :string
 
     field :filled, :boolean
@@ -57,7 +58,7 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:observations, :registration_date, :status, :branch_id, :role, :global_grant])
+    |> cast(params, @required_fields ++ [:observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
@@ -73,6 +74,7 @@ defmodule Registro.Datasheet do
     |> cast(%{status: "at_start"}, [:status])
     |> changeset(params)
     |> validate_required([:branch_id, :role])
+    |> validate_colaboration
     |> validate_branch_is_eligible
   end
 
@@ -262,6 +264,7 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
+        |> validate_associates_paying_flag
     end
   end
 
@@ -318,6 +321,18 @@ defmodule Registro.Datasheet do
     status = Ecto.Changeset.get_field(changeset, :status)
     if !valid_status?(status) do
       changeset |> Ecto.Changeset.add_error(:status, "is invalid")
+    else
+      changeset
+    end
+  end
+
+  defp validate_associates_paying_flag(changeset) do
+    is_associate = Ecto.Changeset.get_field(changeset, :role) == "associate"
+    requested_associate = Ecto.Changeset.get_field(changeset, :status) == "associate_requested"
+    is_paying_associate = Ecto.Changeset.get_field(changeset, :is_paying_associate)
+
+    if is_nil(is_paying_associate) == (is_associate || requested_associate) do
+      Ecto.Changeset.add_error(changeset, :is_paying_associate, "is invalid")
     else
       changeset
     end

@@ -108,10 +108,11 @@ defmodule Registro.UsersController do
     end
   end
 
-  def associate_request(conn, _params) do
+  def associate_request(conn, %{"is_paying_associate" => is_paying_associate}) do
     current_user = Coherence.current_user(conn)
     datasheet = current_user.datasheet
-    changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested" })
+    changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested",
+                                                  is_paying_associate: is_paying_associate })
 
     case Repo.update(changeset) do
       {:ok, _} ->
@@ -372,14 +373,14 @@ defmodule Registro.UsersController do
         Map.put(datasheet_params, "status", "rejected")
 
       { "associate_requested", "approve" } ->
-        datasheet_params
-        |> Map.put("role", "associate")
-        |> Map.put("status", "approved")
+        Map.merge(datasheet_params, %{ "role" => "associate",
+                                       "status" => "approved",
+                                     })
 
       { "associate_requested", "reject" } ->
-        datasheet_params
-        |> Map.put("role", "volunteer")
-        |> Map.put("status", "approved")
+        Map.merge(datasheet_params, %{ "role" => "volunteer",
+                                       "status" => "approved" })
+
       _ ->
         datasheet_params
     end

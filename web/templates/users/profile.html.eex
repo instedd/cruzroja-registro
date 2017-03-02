@@ -35,7 +35,7 @@
         label(fd, :legal_id_ind, "Tipo de documento")
       ],
 
-      [ validated_field(fd, :legal_id_number, text: "Número de documento", required: true, disabled: @filled)
+      [ validated_field(fd, :legal_id, text: "Número de documento", required: true, disabled: @filled)
       ],
 
       [ validated_field(fd, :phone_number, text: "Teléfono", required: true)

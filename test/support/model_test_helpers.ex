@@ -102,11 +102,11 @@ defmodule Registro.ModelTestHelpers do
   defp user_params(email, datasheet_overrides) do
     # innocent hacks for default values... :-)
     # - generate a name based on the email
-    # - use the email as legal_id_number to avoid duplicates. we should
+    # - use the email as legal_id to avoid duplicates. we should
     #   probably have an agent to generate these
     datasheet_overrides = Map.merge(%{first_name: name(email),
                                       legal_id_kind: "CI",
-                                      legal_id_number: email}, datasheet_overrides)
+                                      legal_id: email}, datasheet_overrides)
 
     datasheet_params = datasheet_params(datasheet_overrides)
 
@@ -122,7 +122,7 @@ defmodule Registro.ModelTestHelpers do
     base_params = %{ first_name: "John",
                      last_name: "Doe",
                      legal_id_kind: "DNI",
-                     legal_id_number: "1",
+                     legal_id: "1",
                      birth_date: ~D[1980-01-01],
                      occupation: "-",
                      address: "-",

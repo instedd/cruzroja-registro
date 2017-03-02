@@ -13,7 +13,7 @@ defmodule Registro.DatasheetTest do
     {:ok, [minimal_params: %{first_name: "John",
                              last_name: "Doe",
                              legal_id_kind: "DNI",
-                             legal_id_number: "1",
+                             legal_id: "1",
                              birth_date: ~D[1980-01-01],
                              occupation: "-",
                              address: "-",
@@ -188,7 +188,7 @@ defmodule Registro.DatasheetTest do
   describe "legal id" do
     test "legal_id_kind can not contain arbitrary values", %{minimal_params: params} do
       params = Map.merge(params, %{ legal_id_kind: "SOMETHING_ELSE",
-                                    legal_id_number: "12345678" })
+                                    legal_id: "12345678" })
 
       changeset = Datasheet.changeset(%Datasheet{}, params)
 
@@ -198,7 +198,7 @@ defmodule Registro.DatasheetTest do
 
     test "legal id must be unique", %{minimal_params: params} do
       params = Map.merge(params, %{ legal_id_kind: "DNI",
-                                    legal_id_number: "12345678" })
+                                    legal_id: "12345678" })
 
 
       changeset = Datasheet.changeset(%Datasheet{}, params)
@@ -209,12 +209,12 @@ defmodule Registro.DatasheetTest do
       {:error, insert_changeset} = Repo.insert(changeset)
 
       refute insert_changeset.valid?
-      assert invalid_fields(insert_changeset) == [:legal_id_number]
+      assert invalid_fields(insert_changeset) == [:legal_id]
     end
 
-    test "legal_id_number can be duplicated if legal_id_kind doesn't match", %{minimal_params: params} do
+    test "legal_id can be duplicated if legal_id_kind doesn't match", %{minimal_params: params} do
       params = Map.merge(params, %{ legal_id_kind: "DNI",
-                                    legal_id_number: "12345678" })
+                                    legal_id: "12345678" })
 
       {:ok, _datasheet1} = Datasheet.changeset(%Datasheet{}, params) |> Repo.insert
 
@@ -225,27 +225,27 @@ defmodule Registro.DatasheetTest do
 
     test "whitespace and dots are removed from legal_id if kind is DNI", %{minimal_params: params} do
       params = Map.merge(params, %{ legal_id_kind: "DNI",
-                                    legal_id_number: "12.345 678" })
+                                    legal_id: "12.345 678" })
 
       changeset = Datasheet.changeset(%Datasheet{}, params)
 
       assert changeset.valid?
-      assert get_field(changeset, :legal_id_number) == "12345678"
+      assert get_field(changeset, :legal_id) == "12345678"
     end
 
     test "legal_id must be numeric if kind is DNI", %{minimal_params: params} do
       params = Map.merge(params, %{ legal_id_kind: "DNI",
-                                    legal_id_number: "1234N" })
+                                    legal_id: "1234N" })
 
       changeset = Datasheet.changeset(%Datasheet{}, params)
 
       refute changeset.valid?
-      assert invalid_fields(changeset) == [:legal_id_number]
+      assert invalid_fields(changeset) == [:legal_id]
     end
 
     test "legal_id doesn't need to be a number if kind is not DNI", %{minimal_params: params} do
       params = Map.merge(params, %{ legal_id_kind: "CI",
-                                    legal_id_number: "1234N" })
+                                    legal_id: "1234N" })
 
       changeset = Datasheet.changeset(%Datasheet{}, params)
 

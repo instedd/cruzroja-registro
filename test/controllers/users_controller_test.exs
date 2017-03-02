@@ -12,19 +12,19 @@ defmodule Registro.UsersControllerTest do
     branch2 = create_branch(name: "Branch 2")
     branch3 = create_branch(name: "Branch 3")
 
-    create_super_admin("super_admin@instedd.org", %{legal_id_number: "1"})
-    create_admin("admin@instedd.org", %{legal_id_number: "2"})
-    create_reader("reader@instedd.org", %{legal_id_number: "3"})
+    create_super_admin("super_admin@instedd.org", %{legal_id: "1"})
+    create_admin("admin@instedd.org", %{legal_id: "2"})
+    create_reader("reader@instedd.org", %{legal_id: "3"})
 
-    create_branch_admin("branch_admin1@instedd.org", [branch1, branch3], %{legal_id_number: "4"})
-    create_branch_admin("branch_admin2@instedd.org", branch2, %{legal_id_number: "5"})
-    create_branch_admin("branch_admin3@instedd.org", branch3, %{legal_id_number: "6"})
+    create_branch_admin("branch_admin1@instedd.org", [branch1, branch3], %{legal_id: "4"})
+    create_branch_admin("branch_admin2@instedd.org", branch2, %{legal_id: "5"})
+    create_branch_admin("branch_admin3@instedd.org", branch3, %{legal_id: "6"})
 
-    create_branch_clerk("branch_clerk1@instedd.org", [branch1, branch3], %{legal_id_number: "7"})
+    create_branch_clerk("branch_clerk1@instedd.org", [branch1, branch3], %{legal_id: "7"})
 
-    volunteer1 = create_volunteer("volunteer1@example.com", branch1.id, %{legal_id_number: "8"})
-    volunteer2 = create_volunteer("volunteer2@example.com", branch2.id, %{legal_id_number: "9"})
-    volunteer3 = create_volunteer("volunteer3@example.com", branch3.id, %{legal_id_number: "10"})
+    volunteer1 = create_volunteer("volunteer1@example.com", branch1.id, %{legal_id: "8"})
+    volunteer2 = create_volunteer("volunteer2@example.com", branch2.id, %{legal_id: "9"})
+    volunteer3 = create_volunteer("volunteer3@example.com", branch3.id, %{legal_id: "10"})
 
     # TODO: pass the desired status when creating the user
     # These asserts are here because status change specs assume volunteers start in "at_start" state
@@ -180,7 +180,7 @@ defmodule Registro.UsersControllerTest do
         first_name: "John",
         last_name: "Doe",
         legal_id_kind: "DNI",
-        legal_id_number: "1234567890",
+        legal_id: "1234567890",
         birth_date: ~D[1990-01-01],
         occupation: "occupation...",
         address: "address...",
@@ -272,7 +272,7 @@ defmodule Registro.UsersControllerTest do
         first_name: "John",
         last_name: "Doe",
         legal_id_kind: "DNI",
-        legal_id_number: "1234567890",
+        legal_id: "1234567890",
         birth_date: "1990-01-01",
         occupation: "occupation...",
         address: "address...",
@@ -798,7 +798,7 @@ defmodule Registro.UsersControllerTest do
       datasheet = create_datasheet(%{first_name: "John",
                                      last_name: "Dow",
                                      legal_id_kind: "DNI",
-                                     legal_id_number: "1",
+                                     legal_id: "1",
                                      birth_date: ~D[1980-01-01],
                                      occupation: "-",
                                      address: "-",

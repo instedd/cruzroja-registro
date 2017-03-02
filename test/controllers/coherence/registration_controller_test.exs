@@ -56,7 +56,7 @@ defmodule Registro.RegistrationControllerTest do
           first_name: "John",
           last_name: "Doe",
           legal_id_kind: "DNI",
-          legal_id_number: "1",
+          legal_id: "1",
           birth_date: "1980-01-01",
           occupation: "-",
           address: "-",

@@ -94,7 +94,7 @@
   <div class="row">
     <div class="col s12 actions right-align">
       <%= submit "Aceptar", class: "btn btn-large btn-primary" %>
-      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-large btn-gray" %>
+      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-large btn-flat" %>
     </div>
   </div>
 <% end %>

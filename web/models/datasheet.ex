@@ -80,7 +80,7 @@ defmodule Registro.Datasheet do
 
   def profile_filled_changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields)
+    |> cast(params, @required_fields ++ [:registration_date])
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)

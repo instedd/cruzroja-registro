@@ -59,7 +59,7 @@ defmodule Registro.Coherence.UserEmail do
     |> from(from_email)
     |> to(email)
     |> add_reply_to
-    |> subject("Tu solicitud en Cruz Roja fue rechazada")
+    |> subject("Tu solicitud en Cruz Roja fue no fue aprobada")
     |> render_body("rejected.html", %{url: url, ds: ds})
     |> Registro.Coherence.Mailer.deliver
   end

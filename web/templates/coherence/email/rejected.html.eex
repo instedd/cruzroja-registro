@@ -6,7 +6,7 @@
   Hola <%= Registro.Datasheet.full_name(@ds) %>
   </p>
   <p>
-  Tu solicitud como <%= Registro.Role.label(@ds.role) %> de la filial <%= @ds.branch.name %> fue rechazada. Si querés revisar tus datos de inscripción hacé click en el enlace:
+  Tu solicitud como <%= Registro.Role.label(@ds.role) %> de la filial <%= @ds.branch.name %> no fue aprobada. Si querés revisar tus datos de inscripción hacé click en el enlace:
   </p>
   <p>
     <a href="<%= @url %>" target="_blank">Ver mi solicitud</a>

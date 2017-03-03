@@ -153,7 +153,7 @@ defmodule Registro.Datasheet do
     case status do
       "at_start" -> "Pendiente"
       "approved" -> "Aprobado"
-      "rejected" -> "Rechazado"
+      "rejected" -> "No aprobado"
       "associate_requested" -> "Solicitó ser asociado"
       nil        -> ""
     end

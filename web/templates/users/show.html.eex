@@ -160,8 +160,8 @@
             <div class="form-group actions right-align">
               <%=
               if pending_confirmation do
-                [ content_tag(:button, "Aprobar", class: "btn", type: "submit", name: "flow_action", value: "approve"),
-                  content_tag(:button, "Rechazar", class: "btn red", type: "submit", name: "flow_action", value: "reject"),
+                [ content_tag(:button, "Aprobar", class: "btn btn-large", type: "submit", name: "flow_action", value: "approve"),
+                  content_tag(:button, "Rechazar", class: "btn btn-large red", type: "submit", name: "flow_action", value: "reject"),
                 ]
               else
                 submit("Actualizar", class: "btn btn-large btn-primary")

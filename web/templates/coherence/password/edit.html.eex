@@ -16,8 +16,8 @@
     </div>
 
     <div class="form-group">
-      <%= submit "Cambiar contraseña", class: "btn btn-primary" %>
-      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-gray" %>
+      <%= submit "Cambiar contraseña", class: "btn btn-large btn-primary" %>
+      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-large btn-gray" %>
     </div>
   <% end %>
 <% end %>

@@ -66,9 +66,9 @@
     <div class="row">
       <div class="form-group actions right">
         <%= submit "Enviar invitación", class: "btn btn-primary" %>
-        <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+        <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-gray" %>
         <%= if invitation = @conn.assigns[:invitation] do %>
-          <%= link "Reenviar invitación", to: invitation_path(@conn, :resend, invitation.id), class: "btn" %>
+          <%= link "Reenviar invitación", to: invitation_path(@conn, :resend, invitation.id), class: "btn btn-gray" %>
         <% end %>
       </div>
     </div>

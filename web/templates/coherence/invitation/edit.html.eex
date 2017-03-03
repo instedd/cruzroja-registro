@@ -24,7 +24,7 @@
 
     <div class="form-group actions">
       <%= submit "Aceptar", class: "btn btn-primary" %>
-      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn" %>
+      <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-gray" %>
     </div>
   <% end %>
 <% end %>

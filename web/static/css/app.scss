@@ -89,6 +89,14 @@ h3 {
   display: inline-block;
 }
 
+.btn-gray {
+  background-color: #C0C0C0;
+
+  &:hover {
+    background-color: #B0B0B0;
+  }
+}
+
 @import "_nav";
 @import "_landing";
 @import "_edit_forms";

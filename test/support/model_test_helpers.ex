@@ -85,6 +85,10 @@ defmodule Registro.ModelTestHelpers do
     Repo.insert! changeset
   end
 
+  def get_user_by_email(email) do
+    User.query_with_datasheet |> Repo.get_by!(email: email)
+  end
+
   defp name(email) do
     String.replace(email, ~r/@.*/, "")
   end

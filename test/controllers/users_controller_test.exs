@@ -510,6 +510,28 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "associate_requested"
     end
 
+    test "registration_date is set automatically if not set before approval", %{conn: conn} do
+      user = get_user_by_email("volunteer1@example.com")
+
+      assert is_nil(user.datasheet.registration_date)
+
+      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve)
+
+      refute is_nil(updated_user.datasheet.registration_date)
+    end
+
+    test "registration_date is not changed if it was set before approval", %{conn: conn} do
+      user = get_user_by_email("volunteer1@example.com")
+
+      user.datasheet
+      |> Datasheet.changeset(%{registration_date: ~D[1980-01-01]})
+      |> Repo.update!
+
+      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve)
+
+      assert updated_user.datasheet.registration_date == ~D[1980-01-01]
+    end
+
     def update_state(conn, current_user_email, %User{} = volunteer, action) do
       params = %{
           email: volunteer.email,
@@ -846,10 +868,6 @@ defmodule Registro.UsersControllerTest do
       |> Enum.filter(&(&1 != "")) # trailing newline
       |> Enum.count) - 1
     end
-  end
-
-  def get_user_by_email(email) do
-    User.query_with_datasheet |> Repo.get_by!(email: email)
   end
 
   def update_user(conn, %User{} = current_user, target_user, params) do

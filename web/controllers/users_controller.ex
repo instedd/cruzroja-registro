@@ -367,7 +367,9 @@ defmodule Registro.UsersController do
   defp set_state_changes(datasheet_params, flow_action, datasheet) do
     case {datasheet.status, flow_action} do
       { "at_start", "approve" } ->
-        Map.put(datasheet_params, "status", "approved")
+        registration_date = datasheet.registration_date || Timex.Date.today
+        Map.merge(datasheet_params, %{ "status" => "approved",
+                                       "registration_date" => registration_date })
 
       { "at_start", "reject" } ->
         Map.put(datasheet_params, "status", "rejected")

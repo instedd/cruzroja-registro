@@ -1,7 +1,8 @@
+import { RegistrationDateSelector } from "./registration_date_selector";
+
 export var Registration = {
   init: function() {
-    $('#old_volunteer').on("change", function() {
-      $('.registration_date').toggleClass("hide")
-      $('.registration_date input').val("")
+    $("#register").each(() => {
+      RegistrationDateSelector.init(".registration_date_selector")
     })
   }};

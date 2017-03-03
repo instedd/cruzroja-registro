@@ -1,5 +1,6 @@
 import { Listings } from "./listings";
 import { BranchSelector } from "./branch_selector";
+import { RegistrationDateSelector } from "./registration_date_selector";
 
 export var Users = {
   init: function() {
@@ -21,6 +22,10 @@ export var Users = {
       })
 
       BranchSelector.init(window.branches)
+    })
+
+    $("#profile").each(() => {
+      RegistrationDateSelector.init(".registration_date_selector")
     })
 
     $("#profile-show").each(() => {

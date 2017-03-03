@@ -49,8 +49,10 @@ defmodule Registro.Coherence.RegistrationController do
   Creates the new user account. Create and send a confirmation if
   this option is enabled.
   """
-  def create(conn, %{"registration" => registration_params} = params) do
+  def create(conn, params) do
     user_schema = Config.user_schema
+    registration_params = prepare_regitration_params(params)
+
     cs = User.changeset(:registration, registration_params)
 
     case Recaptcha.verify(params["g-recaptcha-response"]) do
@@ -73,6 +75,53 @@ defmodule Registro.Coherence.RegistrationController do
         |> put_flash(:error, "Hubo un problema. Por favor reintentar.")
         |> render("new.html", changeset: cs)
     end
+  end
+
+  defp prepare_regitration_params(params) do
+    registration_params = params["registration"]
+    colaboration_kind = params["colaboration_kind"]
+
+    case colaboration_kind do
+      "new_colaboration" ->
+        is_paying_associate = case params["new_colaboration"]["role"] do
+                                "volunteer" -> nil
+                                "associate" -> true
+                              end
+
+        registration_params
+        |> put_in(["datasheet", "role"], params["new_colaboration"]["role"])
+        |> put_in(["datasheet", "status"], "at_start")
+        |> put_in(["datasheet", "is_paying_associate"], is_paying_associate)
+
+      "current_volunteer" ->
+        registration_date = params["current_volunteer"]["registration_date"]
+        {status, is_paying_associate} = case params["current_volunteer"]["desired_role"] do
+                                          "volunteer" ->
+                                            {"at_start", nil}
+                                          "associate" ->
+                                            {"associate_requested", less_than_a_year_ago(registration_date)}
+                                        end
+
+        registration_params
+        |> put_in(["datasheet", "role"], "volunteer")
+        |> put_in(["datasheet", "status"], status)
+        |> put_in(["datasheet", "registration_date"], registration_date)
+        |> put_in(["datasheet", "is_paying_associate"], is_paying_associate)
+
+      "current_associate" ->
+        registration_params
+        |> put_in(["datasheet", "role"], "associate")
+        |> put_in(["datasheet", "status"], "at_start")
+        |> put_in(["datasheet", "is_paying_associate"], false)
+    end
+  end
+
+  defp less_than_a_year_ago(d) do
+    a_year_ago = Timex.Date.today |> Timex.shift(years: -1)
+    {:ok, erl_date} = d |> Ecto.Date.cast! |> Ecto.Date.dump
+    before_a_year_ago = Timex.to_date(erl_date) |> Timex.before?(a_year_ago)
+
+    !before_a_year_ago
   end
 
   defp redirect_or_login(conn, _user, params, 0) do

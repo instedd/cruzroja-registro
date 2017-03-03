@@ -25,73 +25,144 @@ defmodule Registro.RegistrationControllerTest do
     assert branch_names == ["Branch 1", "Branch 3"]
   end
 
-  test "creates user and datasheet on form submit", %{conn: conn, branch1: branch1} do
-    post(conn, registration_path(conn, :create, registration_params(branch1)))
-
-    user = get_user_by_email("u1@example.com")
-
-    assert user.datasheet.first_name == "John"
-    assert user.datasheet.last_name == "Doe"
-
-    assert user.datasheet.role == "volunteer"
-    assert user.datasheet.branch_id == branch1.id
-    assert user.datasheet.status == "at_start"
-  end
-
-  describe "registration_date" do
-    test "registration_date is not set if not specified by user", %{conn: conn, branch1: branch1} do
-      # in this case, the registration date will be set automatically later,
-      # when the user is APPROVED
-      params = registration_params(branch1)
-      nil = params[:registration][:datasheet][:registration_date]
+  describe "creation" do
+    test "allows new volunteers", %{conn: conn, branch1: branch1} do
+      params = registration_params(branch1, %{ colaboration_kind: "new_colaboration",
+                                               new_colaboration: %{ role: "volunteer" }})
 
       post(conn, registration_path(conn, :create, params))
 
       user = get_user_by_email("u1@example.com")
+
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.branch_id == branch1.id
+      assert user.datasheet.status == "at_start"
+      assert user.datasheet.is_paying_associate == nil
+    end
+
+    test "allows new associates", %{conn: conn, branch1: branch1} do
+      params = registration_params(branch1, %{ colaboration_kind: "new_colaboration",
+                                               new_colaboration: %{ role: "associate" }})
+
+      post(conn, registration_path(conn, :create, params))
+
+      user = get_user_by_email("u1@example.com")
+
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.branch_id == branch1.id
+      assert user.datasheet.status == "at_start"
+      assert user.datasheet.is_paying_associate == true
+    end
+
+    test "allows pre-existing volunteers", %{conn: conn, branch1: branch1} do
+      params = registration_params(branch1, %{ colaboration_kind: "current_volunteer",
+                                               current_volunteer: %{ desired_role: "volunteer",
+                                                                     registration_date: "2010-01-01" }})
+
+      post(conn, registration_path(conn, :create, params))
+
+      user = get_user_by_email("u1@example.com")
+
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.branch_id == branch1.id
+      assert user.datasheet.status == "at_start"
+      assert user.datasheet.registration_date == ~D[2010-01-01]
+      assert user.datasheet.is_paying_associate == nil
+    end
+
+    test "pre-existing volunteers with 1 year or more that want to become associates don't need to pay", %{conn: conn, branch1: branch1} do
+      date = a_year_ago
+
+      params = registration_params(branch1, %{ colaboration_kind: "current_volunteer",
+                                               current_volunteer: %{ desired_role: "associate",
+                                                                     registration_date: Ecto.Date.to_iso8601(date) }})
+
+      post(conn, registration_path(conn, :create, params))
+
+      user = get_user_by_email("u1@example.com")
+
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.branch_id == branch1.id
+      assert user.datasheet.status == "associate_requested"
+      assert Ecto.Date.cast!(user.datasheet.registration_date) == date
+      assert user.datasheet.is_paying_associate == false
+    end
+
+    test "pre-existing volunteers with less than 1 year that want to become associates need to pay", %{conn: conn, branch1: branch1} do
+      date = less_than_a_year_ago
+
+      params = registration_params(branch1, %{ colaboration_kind: "current_volunteer",
+                                               current_volunteer: %{ desired_role: "associate",
+                                                                     registration_date: Ecto.Date.to_iso8601(date) }})
+
+      post(conn, registration_path(conn, :create, params))
+
+      user = get_user_by_email("u1@example.com")
+
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.branch_id == branch1.id
+      assert user.datasheet.status == "associate_requested"
+      assert Ecto.Date.cast!(user.datasheet.registration_date) == date
+      assert user.datasheet.is_paying_associate == true
+    end
+
+    test "allows pre-existing associates", %{conn: conn, branch1: branch1} do
+      params = registration_params(branch1, %{ colaboration_kind: "current_associate" })
+
+      post(conn, registration_path(conn, :create, params))
+
+      user = get_user_by_email("u1@example.com")
+
+      # in this case, the admin will set whether the user should pay or not upon approval,
+      # after checking against the preexisting associate's records.
+
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.branch_id == branch1.id
+      assert user.datasheet.status == "at_start"
       assert is_nil(user.datasheet.registration_date)
     end
 
-    test "registration_date is set if specified by user", %{conn: conn, branch1: branch1} do
-      # if the user specifies a registration date, it will be stored so the
-      # admin can review it before approving
-      params =
-        registration_params(branch1)
-        |> put_in([:registration, :datasheet, :registration_date], "1980-01-01")
+    def a_year_ago do
+      { date, _time } = Timex.Date.today |> Timex.shift(years: -1, days: -1) |> Timex.to_erlang_datetime
+      Ecto.Date.from_erl(date)
+    end
 
-      post(conn, registration_path(conn, :create, params))
-
-      user = get_user_by_email("u1@example.com")
-      assert user.datasheet.registration_date == ~D[1980-01-01]
+    def less_than_a_year_ago do
+      Ecto.Date.utc
     end
   end
 
   test "fails if a non-eligible branch is sent", %{conn: conn, branch2: branch2} do
-    post(conn, registration_path(conn, :create, registration_params(branch2)))
+    params = registration_params(branch2, %{ colaboration_kind: "new_colaboration",
+                                             new_colaboration: %{ role: "volunteer" }})
+
+    post(conn, registration_path(conn, :create, params))
 
     user = Repo.get_by(User, email: "u1@example.com") |> Repo.preload(:datasheet)
 
     assert is_nil(user)
   end
 
-  def registration_params(branch) do
-    %{ registration: %{
-        email: "u1@example.com",
-        password: "fooo",
-        password_confirmation: "fooo",
+  def registration_params(branch, base_params) do
+    Map.merge(base_params,
+      %{registration: %{
+          email: "u1@example.com",
+          password: "fooo",
+          password_confirmation: "fooo",
 
-        datasheet: %{
-          first_name: "John",
-          last_name: "Doe",
-          legal_id_kind: "DNI",
-          legal_id: "1",
-          birth_date: "1980-01-01",
-          occupation: "-",
-          address: "-",
-          phone_number: "+1222222",
-          country_id: some_country!.id,
-          global_grant: nil,
 
-          role: "volunteer",
-          branch_id: branch.id }}}
+          datasheet: %{
+            first_name: "John",
+            last_name: "Doe",
+            legal_id_kind: "DNI",
+            legal_id: "1",
+            birth_date: "1980-01-01",
+            occupation: "-",
+            address: "-",
+            phone_number: "+1222222",
+            country_id: some_country!.id,
+            global_grant: nil,
+            branch_id: branch.id,
+          }}})
   end
 end

@@ -47,52 +47,84 @@
     [ validated_field(fd, :occupation, text: "Ocupación", required: true)
     ],
 
-    [ select(fd, :branch_id, @conn.assigns[:branches], class: "form-control", required: ""),
-      label(fd, :branch_id, "Filial")
-    ],
-
     [ textarea(fd, :observations, class: "materialize-textarea"),
       label(fd, :observations, "Observaciones")
     ]
   ] %>
 
-    <div class="row">
-      <div class="col s12 registration_date_selector">
-        <input type="checkbox" id="old_volunteer">
-        <label for="old_volunteer">Ya soy voluntario de CRA</label>
-        <div class="registration_date hide input-field">
-          <%= label(fd, :registration_date, "Fecha de inicio de voluntariado") %>
-          <%= date_picker(fd, :registration_date) %>
+  <div class="row">
+    <div class="col s12 input-field">
+      <%= select fd, :branch_id, @conn.assigns[:branches], class: "form-control", required: ""  %>
+      <%= label(fd, :branch_id, "Filial") %>
+    </div>
+  </div>
+
+  <h3>Afiliación</h3>
+
+  <div class="row">
+    <div id="colaboration-kinds" class="col s12">
+      <div class="option head">
+        <input name="colaboration_kind" type="radio" id="new_colaboration" value="new_colaboration" class="with-gap">
+        <label for="new_colaboration">Nueva afiliación</label>
+
+        <span class="inline-settings">
+          <span>como</span>
+          <div class="input-field inline">
+            <%= raw_select("new_colaboration[role]", [
+              {"voluntario", "volunteer"},
+              {"asociado", "associate"}
+            ])%>
+          </div>
+        </span>
+      </div>
+
+      <div class="option">
+        <div class="head">
+          <input name="colaboration_kind" type="radio" id="current_volunteer" value="current_volunteer" class="with-gap">
+          <label for="current_volunteer">Ya soy voluntario</label>
+
+          <span class="inline-settings">
+            <span>desde</span>
+            <div class="input-field inline">
+              <%= date_picker(fd, nil, input_name: "current_volunteer[registration_date]") %>
+            </div>
+            <span>y</span>
+            <div class="desired-role input-field inline">
+              <%= raw_select("current_volunteer[desired_role]", [
+                {"quiero seguir siendo voluntario", "volunteer"},
+                {"quiero ser asociado", "associate"}
+              ])%>
+            </div>
+          </span>
+        </div>
+
+        <div class="payment-warning inline-settings" style="display:none">
+          Para ser asociado con menos de un año de antigüedad es necesario pagar
+          una cuota mensual. Un representante de la filial se pondrá en contacto
+          con vos para arreglar los detalles.
         </div>
       </div>
-    </div>
 
-    <br/>
-    <div class="row">
-      <div class="col s12">
-        Me quiero anotar como:
-        <p>
-          <%= radio_button fd, :role, "volunteer", checked: "checked", id: "registration_datasheet_volunteer", class: "with-gap" %>
-          <%= label fd, "volunteer", "Voluntario" %>
-        </p>
-        <p>
-          <%= radio_button fd, :role, "associate", id: "registration_datasheet_associate", class: "with-gap" %>
-          <%= label fd, "associate", "Asociado" %>
-        </p>
+      <div class="option">
+        <input name="colaboration_kind" type="radio" id="current_associate" value="current_associate" class="with-gap">
+        <label for="current_associate">Ya soy asociado</label>
+        <span class="inline-settings"></span>
       </div>
     </div>
+  </div>
+
   <% end %>
 
   <br/>
 
   <div class="row">
-    <div class="col s12 captcha center-align">
+    <div class="col s12 captcha">
       <%= content_tag(:div, [], [{:class, "g-recaptcha"}, {:"data-sitekey", Recaptcha.site_key}]) %>
     </div>
   </div>
 
   <div class="row">
-    <div class="col s12 actions right-align">
+    <div class="col s12 actions">
       <%= submit "Aceptar", class: "btn btn-large btn-primary" %>
       <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-large btn-flat" %>
     </div>

@@ -588,15 +588,6 @@ defmodule Registro.UsersControllerTest do
       |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, status: "approved"  })
       |> Repo.update!
     end
-
-    def a_year_ago do
-      { date, _time } = Timex.Date.today |> Timex.shift(years: -1, days: -1) |> Timex.to_erlang_datetime
-      Ecto.Date.from_erl(date)
-    end
-
-    def less_than_a_year_ago do
-      Ecto.Date.utc
-    end
   end
 
   # A super admin should be allowed to mark a user with no previous branch

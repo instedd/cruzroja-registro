@@ -21,9 +21,14 @@
     }
   }
 
+  input[type=radio] + label {
+    color: black;
+  }
   .radio-description {
+    color: $secondary-gray;
     font-size: 12px;
     padding-left: 35px;
+    margin-bottom: 15px;
   }
 }
 

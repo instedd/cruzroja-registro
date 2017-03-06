@@ -72,48 +72,8 @@
           <% end %>
 
 
-          <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
-            <div class="section">
-              <h3>Acceso global</h3>
-              <div class="row">
-                <div class="input_field col s12">
-                  <div>
-                    <p>
-                      <%= radio_button(fd, :global_grant, nil, class: "with-gap") %>
-                      <label for="datasheet_global_grant_">Deshabilitado</label>
-                    </p>
-                    <div class="radio-description">Acceder solamente a información de las filiales en las que participa.</div>
-                  </div>
-                  <div>
-                    <p>
-                      <%= radio_button(fd, :global_grant, "reader", class: "with-gap") %>
-                      <label for="datasheet_global_grant_reader">Lector</label>
-                    </p>
-                    <div class="radio-description">Ver información de todas las filiales y sus voluntarios.</div>
-                  </div>
-                  <div>
-                    <p>
-                      <%= radio_button(fd, :global_grant, "admin", class: "with-gap") %>
-                      <label for="datasheet_global_grant_admin">Administrador</label>
-                    </p>
-                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios.</div>
-                  </div>
-                  <div>
-                    <p>
-                      <%= radio_button(fd, :global_grant, "super_admin", class: "with-gap") %>
-                      <label for="datasheet_global_grant_super_admin">Super administrador</label>
-                    </p>
-                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios, y otorgar permisos globales a otros usuarios.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% else %>
-            <%= hidden_input fd, :global_grant, disabled: "" %>
-          <% end %>
-
           <div class="section">
-            <h3>Colaboración en filial</h3>
+            <h3>Afiliación</h3>
 
             <%= if @changeset.data.branch_identifier do %>
             <div class="row">
@@ -155,6 +115,47 @@
             </div>
             <span id="eligible-branch-warning">La filial seleccionada no es elegible por voluntarios</span>
           </div>
+
+          <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
+            <div class="section">
+              <h3>Acceso global</h3>
+              <div class="row">
+                <div class="input_field col s12">
+                  <div>
+                    <div>
+                      <%= radio_button(fd, :global_grant, nil, class: "with-gap") %>
+                      <label for="datasheet_global_grant_">Deshabilitado</label>
+                    </div>
+                    <div class="radio-description">Acceder solamente a información de las filiales en las que participa.</div>
+                  </div>
+                  <div>
+                    <div>
+                      <%= radio_button(fd, :global_grant, "reader", class: "with-gap") %>
+                      <label for="datasheet_global_grant_reader">Lector</label>
+                    </div>
+                    <div class="radio-description">Ver información de todas las filiales y sus voluntarios.</div>
+                  </div>
+                  <div>
+                    <div>
+                      <%= radio_button(fd, :global_grant, "admin", class: "with-gap") %>
+                      <label for="datasheet_global_grant_admin">Administrador</label>
+                    </div>
+                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios.</div>
+                  </div>
+                  <div>
+                    <div>
+                      <%= radio_button(fd, :global_grant, "super_admin", class: "with-gap") %>
+                      <label for="datasheet_global_grant_super_admin">Super administrador</label>
+                    </div>
+                    <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios, y otorgar permisos globales a otros usuarios.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% else %>
+            <%= hidden_input fd, :global_grant, disabled: "" %>
+          <% end %>
+
 
           <%= if !readonly do %>
             <div class="form-group actions right-align">

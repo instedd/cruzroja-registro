@@ -147,10 +147,6 @@ defmodule Registro.Datasheet do
     |> Ecto.Changeset.change
   end
 
-  def pending_approval?(datasheet) do
-    datasheet.status == "at_start" || datasheet.status == "associate_requested"
-  end
-
   def status_label(status) do
     case status do
       "at_start" -> "Pendiente"

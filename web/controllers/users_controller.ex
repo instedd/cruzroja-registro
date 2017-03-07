@@ -72,10 +72,9 @@ defmodule Registro.UsersController do
     current_user = Coherence.current_user(conn)
     datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
 
-    datasheet_params = params["datasheet"]
-                     |> set_state_changes(params["flow_action"], datasheet)
-                     |> set_branch_id_from_branch_name(params["branch_name"])
-                     |> set_status_if_creating_colaboration(datasheet)
+    datasheet_params =
+      params["datasheet"]
+      |> set_colaboration_settings(params["branch_name"], params["selected_role"], params["flow_action"], datasheet)
 
 
     if !authorize_update(conn, datasheet, datasheet_params) do
@@ -364,27 +363,71 @@ defmodule Registro.UsersController do
     end
   end
 
-  defp set_state_changes(datasheet_params, flow_action, datasheet) do
-    case {datasheet.status, flow_action} do
-      { "at_start", "approve" } ->
-        registration_date = datasheet.registration_date || Timex.Date.today
-        Map.merge(datasheet_params, %{ "status" => "approved",
-                                       "registration_date" => registration_date })
+  defp set_colaboration_settings(datasheet_params, branch_name, selected_role, flow_action, datasheet) do
+    datasheet_params = set_branch_id_from_branch_name(datasheet_params, branch_name)
 
-      { "at_start", "reject" } ->
-        Map.put(datasheet_params, "status", "rejected")
+    case flow_action do
+      "reject" ->
+        # rejected a volunteer requesting to become an associate turns him back
+        # into an approved volunteer
+        case {datasheet.role, datasheet.status} do
+          { "volunteer", "associate_requested" } ->
+            Map.merge(datasheet_params, %{ "role" => "volunteer",
+                                           "status" => "approved",
+                                           "is_paying_associate" => nil })
+          _ ->
+            Map.merge(datasheet_params, %{ "status" => "rejected" })
+        end
 
-      { "associate_requested", "approve" } ->
-        Map.merge(datasheet_params, %{ "role" => "associate",
-                                       "status" => "approved",
-                                     })
+      "approve" ->
+        # set registration date if nil, and apply
+        registration_date = datasheet.registration_date || Timex.Date.today # TODO: allow setting in form
 
-      { "associate_requested", "reject" } ->
-        Map.merge(datasheet_params, %{ "role" => "volunteer",
-                                       "status" => "approved" })
+        datasheet_params
+        |> Map.merge(%{ "status" => "approved", "registration_date" => registration_date })
+        |> apply_role_changes(selected_role)
 
       _ ->
         datasheet_params
+        |> apply_role_changes(selected_role)
+        |> set_status_if_creating_colaboration(datasheet)
+    end
+  end
+
+  defp apply_role_changes(datasheet_params, selected_role) do
+    # The UI encodes valid combinatios of {role, is_paying_associate} in a single input.
+    # Here we decode the input and apply the changes
+    case selected_role do
+      "volunteer" ->
+        Map.merge(datasheet_params, %{ "role" => "volunteer",
+                                       "is_paying_associate" => nil })
+      "paying_associate" ->
+        Map.merge(datasheet_params, %{ "role" => "associate",
+                                       "is_paying_associate" => true })
+      "non_paying_associate" ->
+        Map.merge(datasheet_params, %{ "role" => "associate",
+                                       "is_paying_associate" => false })
+      nil ->
+        datasheet_params
+    end
+  end
+
+  defp set_status_if_creating_colaboration(datasheet_params, datasheet) do
+    # if the user doesn't have a current colaboration in a branch
+    # and both brach_id and role are set, this means that a superadmin
+    # is assigning a user to a branch as a colaborator. the change is
+    # assumed to be approved.
+    if !Datasheet.is_colaborator?(datasheet) do
+      branch_id = datasheet_params["branch_id"]
+      role = datasheet_params["role"]
+
+      if !is_nil(branch_id) && !is_nil(role) do
+        Map.put(datasheet_params, "status", "approved")
+      else
+        datasheet_params
+      end
+    else
+      datasheet_params
     end
   end
 
@@ -398,26 +441,6 @@ defmodule Registro.UsersController do
         [branch_id] = Repo.one!(from b in Branch, where: b.name == ^branch_name, select: [b.id])
 
         Map.put(datasheet_params, "branch_id", branch_id)
-    end
-  end
-
-  defp set_status_if_creating_colaboration(datasheet_params, datasheet) do
-    # if the user doesn't have a current colaboration in a branch
-    # and both brach_id and role are set, this means that a superadmin
-    # is assigning a user to a branch as a colaborator. the change is
-    # assumed to be approved.
-
-    if !Datasheet.is_colaborator?(datasheet) do
-      case {datasheet_params["branch_id"], datasheet_params["role"]} do
-        {nil, _} ->
-          datasheet_params
-        {_, nil} ->
-          datasheet_params
-        _ ->
-          Map.put(datasheet_params, "status", "approved")
-      end
-    else
-      datasheet_params
     end
   end
 

@@ -211,7 +211,6 @@ defmodule Registro.DatasheetTest do
       assert invalid_fields(changeset) == [:is_paying_associate]
     end
 
-    @tag :debug
     test "is_paying_associate must be NULL for other volunteers", %{minimal_params: params} do
       branch = create_branch(name: "Branch")
 

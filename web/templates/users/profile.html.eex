@@ -7,6 +7,7 @@
     <% end %>
 
     <%= form_for @changeset, users_path(@conn, :update_profile), [id: "profileForm"], fn fd  -> %>
+    <% pending_approval = pending_approval?(@changeset.data.status)  %>
     <%= inputs_for fd, :user, fn fu -> %>
 
     <%= if @changeset.action do %>
@@ -48,7 +49,7 @@
       ],
     ] %>
 
-    <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
+    <%= if pending_approval do %>
       <div class="row">
         <div class="col s12 input-field">
           <%= label(fd, :observations, "Observaciones") %>
@@ -82,7 +83,7 @@
     <%= if Registro.Datasheet.is_colaborator?(@current_user.datasheet) do %>
       <div class="section">
         <h3>Colaboración en Filial</h3>
-        <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
+        <%= if pending_approval do %>
           <% desired_state = if @current_user.datasheet.status == "associate_requested" do
                                "asociado"
                              else

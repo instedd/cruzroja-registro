@@ -51,7 +51,7 @@ defmodule Registro.Coherence.RegistrationController do
   """
   def create(conn, params) do
     user_schema = Config.user_schema
-    registration_params = prepare_regitration_params(params)
+    registration_params = prepare_registration_params(params)
 
     cs = User.changeset(:registration, registration_params)
 
@@ -77,7 +77,7 @@ defmodule Registro.Coherence.RegistrationController do
     end
   end
 
-  defp prepare_regitration_params(params) do
+  defp prepare_registration_params(params) do
     registration_params = params["registration"]
     colaboration_kind = params["colaboration_kind"]
 

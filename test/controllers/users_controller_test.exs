@@ -306,7 +306,8 @@ defmodule Registro.UsersControllerTest do
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
       params = %{ branch_name: "Branch 2",
-                  datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false } }
+                  selected_role: "paying_associate",
+                  datasheet: %{ id: volunteer.datasheet.id } }
 
       {_conn, volunteer} = update_user(conn, "admin@instedd.org", volunteer, params)
 
@@ -320,7 +321,8 @@ defmodule Registro.UsersControllerTest do
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
       params = %{ branch_name: "Branch 2",
-                  datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false } }
+                  selected_role: "non_paying_associate",
+                  datasheet: %{ id: volunteer.datasheet.id } }
 
       {_conn, volunteer} = update_user(conn, "super_admin@instedd.org", volunteer, params)
 
@@ -334,7 +336,8 @@ defmodule Registro.UsersControllerTest do
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
       params = %{ branch_name: "Branch 2",
-                  datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false } }
+                  selected_role: "non_paying_associate",
+                  datasheet: %{ id: volunteer.datasheet.id } }
 
       {conn, updated_volunteer} = update_user(conn, "reader@instedd.org", volunteer, params)
 
@@ -347,10 +350,9 @@ defmodule Registro.UsersControllerTest do
 
       {"volunteer", "Branch 1"} = {volunteer.datasheet.role, volunteer.datasheet.branch.name}
 
-      params = %{
-        branch_name: "Branch 2",
-        datasheet: %{ id: volunteer.datasheet.id, role: "associate", is_paying_associate: false }
-        }
+      params = %{ branch_name: "Branch 2",
+                  selected_role: "non_paying_associate",
+                  datasheet: %{ id: volunteer.datasheet.id } }
 
       {_conn, updated_volunteer} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
 
@@ -363,11 +365,7 @@ defmodule Registro.UsersControllerTest do
 
       assert u2.datasheet.role == "volunteer"
 
-      params = %{ :datasheet => %{
-                  id: u2.datasheet.id,
-                  role: "associate",
-                  is_paying_associate: true,
-                  status: u2.datasheet.status }}
+      params = %{ :selected_role => "paying_associate", :datasheet => %{ }}
 
       {_conn, u2} = update_user(conn, u1, u2, params)
 
@@ -381,11 +379,7 @@ defmodule Registro.UsersControllerTest do
 
       assert u2.datasheet.role == "volunteer"
 
-      params = %{ :datasheet => %{
-                  id: u2.datasheet.id,
-                  role: "associate",
-                  is_paying_associate: true,
-                  status: u2.datasheet.status }}
+      params = %{ :selected_role => "paying_associate", :datasheet => %{ }}
 
       {conn, _u2} = update_user(conn, u1, u2, params)
 
@@ -398,11 +392,8 @@ defmodule Registro.UsersControllerTest do
 
       assert u2.datasheet.role == "volunteer"
 
-      params = %{ :datasheet => %{
-                id: u2.datasheet.id,
-                role: "associate",
-                is_paying_associate: true,
-                status: u2.datasheet.status }}
+      params = %{ :selected_role => "paying_associate",
+                  :datasheet => %{} }
 
       {conn, updated_u2} = update_user(conn, u1, u2, params)
 
@@ -413,47 +404,69 @@ defmodule Registro.UsersControllerTest do
 
   describe "status changes" do
     test "a global admin is allowed to approve any volunteer", %{conn: conn} do
-      {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :approve)
+      {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :approve, "volunteer")
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "approved"
     end
 
     test "a super admin is allowed to approve any volunteer", %{conn: conn} do
-      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :approve)
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :approve, "volunteer")
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "approved"
     end
 
+    test "a super admin is allowed to change a volunteer to paying associate upon approval", %{conn: conn} do
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :approve, "paying_associate")
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.status == "approved"
+      assert user.datasheet.is_paying_associate == true
+    end
+
+    test "a super admin is allowed to change a volunteer to non-associate upon approval", %{conn: conn} do
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :approve, "non_paying_associate")
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.status == "approved"
+      assert user.datasheet.is_paying_associate == false
+    end
+
     test "a global reader is not allowed to approve any volunteer", %{conn: conn} do
-      {conn, user} = update_state(conn, "reader@instedd.org", "volunteer1@example.com", :approve)
+      {conn, user} = update_state(conn, "reader@instedd.org", "volunteer1@example.com", :approve, "volunteer")
       assert_unauthorized(conn)
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "at_start"
     end
 
     test "a global admin is allowed to reject any volunteer", %{conn: conn} do
-      {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :reject)
+      {_conn, user} = update_state(conn, "admin@instedd.org", "volunteer1@example.com", :reject, "volunteer")
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "rejected"
     end
 
     test "a super admin is allowed to reject any volunteer", %{conn: conn} do
-      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :reject)
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :reject, "volunteer")
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "rejected"
     end
 
     test "a branch admin is allowed to change the status of volunteers of his administrated branches", %{conn: conn} do
-      {_conn, user} = update_state(conn, "branch_admin1@instedd.org", "volunteer1@example.com", :approve)
+      {_conn, user} = update_state(conn, "branch_admin1@instedd.org", "volunteer1@example.com", :approve, "volunteer")
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "approved"
     end
 
     test "a branch admin is not allowed to change the status of volunteers of branches he doesn't adminstrate", %{conn: conn} do
-      {conn, user} = update_state(conn, "branch_admin2@instedd.org", "volunteer1@example.com", :approve)
+      {conn, user} = update_state(conn, "branch_admin2@instedd.org", "volunteer1@example.com", :approve, "volunteer")
 
       assert_unauthorized(conn)
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "at_start"
     end
 
     test "a volunteer is not allowed to change his status", %{conn: conn} do
-      {conn, user} = update_state(conn, "volunteer1@example.com", "volunteer1@example.com", :approve)
+      {conn, user} = update_state(conn, "volunteer1@example.com", "volunteer1@example.com", :approve, "volunteer")
 
       assert_unauthorized(conn)
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "at_start"
     end
 
@@ -463,14 +476,31 @@ defmodule Registro.UsersControllerTest do
       volunteer =
         volunteer
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
+                                                  status: "associate_requested",
+                                                  is_paying_associate: false } })
+                                                  |> Repo.update!
+
+        {_conn, user} = update_state(conn, "admin@instedd.org", volunteer, :approve, "non_paying_associate")
+
+        assert user.datasheet.role == "associate"
+        assert user.datasheet.is_paying_associate == false
+        assert user.datasheet.status == "approved"
+    end
+
+    test "a global admin is allowed to reject requests from volunteers to become associates", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      volunteer =
+        volunteer
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                     status: "associate_requested",
                                                     is_paying_associate: false } })
         |> Repo.update!
 
-      {_conn, user} = update_state(conn, "admin@instedd.org", volunteer, :approve)
+      {_conn, user} = update_state(conn, "admin@instedd.org", volunteer, :reject, "non_paying_associate")
 
-      assert user.datasheet.role == "associate"
-      assert user.datasheet.is_paying_associate == false
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.is_paying_associate == nil
       assert user.datasheet.status == "approved"
     end
 
@@ -482,12 +512,29 @@ defmodule Registro.UsersControllerTest do
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                   status: "associate_requested",
                                                   is_paying_associate: false } })
+                                                  |> Repo.update!
+
+        {_conn, user} = update_state(conn, "super_admin@instedd.org", volunteer, :approve, "non_paying_associate")
+
+        assert user.datasheet.role == "associate"
+        assert user.datasheet.is_paying_associate == false
+        assert user.datasheet.status == "approved"
+    end
+
+    test "a super admin is allowed to change associate kind uppon approval", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      volunteer =
+        volunteer
+        |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
+                                                  status: "associate_requested",
+                                                  is_paying_associate: false } })
         |> Repo.update!
 
-      {_conn, user} = update_state(conn, "super_admin@instedd.org", volunteer, :approve)
+      {_conn, user} = update_state(conn, "super_admin@instedd.org", volunteer, :approve, "paying_associate")
 
       assert user.datasheet.role == "associate"
-      assert user.datasheet.is_paying_associate == false
+      assert user.datasheet.is_paying_associate == true
       assert user.datasheet.status == "approved"
     end
 
@@ -501,7 +548,7 @@ defmodule Registro.UsersControllerTest do
                                                     is_paying_associate: false } })
         |> Repo.update!
 
-      {conn, user} = update_state(conn, "reader@instedd.org", volunteer, :approve)
+      {conn, user} = update_state(conn, "reader@instedd.org", volunteer, :approve, "non_paying_associate")
 
       assert_unauthorized(conn)
 
@@ -515,7 +562,7 @@ defmodule Registro.UsersControllerTest do
 
       assert is_nil(user.datasheet.registration_date)
 
-      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve)
+      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve, "volunteer")
 
       refute is_nil(updated_user.datasheet.registration_date)
     end
@@ -527,15 +574,16 @@ defmodule Registro.UsersControllerTest do
       |> Datasheet.changeset(%{registration_date: ~D[1980-01-01]})
       |> Repo.update!
 
-      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve)
+      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve, "volunteer")
 
       assert updated_user.datasheet.registration_date == ~D[1980-01-01]
     end
 
-    def update_state(conn, current_user_email, %User{} = volunteer, action) do
+    def update_state(conn, current_user_email, %User{} = volunteer, action, selected_role) do
       params = %{
           email: volunteer.email,
           flow_action: (to_string action),
+          selected_role: selected_role,
           datasheet: %{
             id: volunteer.datasheet.id,
           }}
@@ -543,9 +591,9 @@ defmodule Registro.UsersControllerTest do
       update_user(conn, current_user_email, volunteer, params)
     end
 
-    def update_state(conn, current_user_email, target_user_email, action) do
+    def update_state(conn, current_user_email, target_user_email, action, selected_role) do
       volunteer = get_user_by_email(target_user_email)
-      update_state(conn, current_user_email, volunteer, action)
+      update_state(conn, current_user_email, volunteer, action, selected_role)
     end
   end
 
@@ -602,7 +650,8 @@ defmodule Registro.UsersControllerTest do
 
       params = %{
           email: user.email,
-          datasheet: %{ id: user.datasheet.id, branch_id: branch2.id, role: "volunteer" }
+          selected_role: "volunteer",
+          datasheet: %{ id: user.datasheet.id, branch_id: branch2.id }
         }
 
       {_conn, user} = update_user(conn, "super_admin@instedd.org", user, params)
@@ -617,8 +666,10 @@ defmodule Registro.UsersControllerTest do
     test "a super_admin can grant global permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      {_conn, user} = update_user(conn, "super_admin@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
-                                                                                            global_grant: "super_admin" })
+      params = %{selected_role: "volunteer",
+                 datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" }}
+
+      {_conn, user} = update_user(conn, "super_admin@instedd.org", volunteer, params)
 
       assert Datasheet.is_super_admin?(user.datasheet)
     end
@@ -626,8 +677,10 @@ defmodule Registro.UsersControllerTest do
     test "a regular global admin can not grant global permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      {conn, user} = update_user(conn, "admin@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
-                                                                                     global_grant: "super_admin" })
+      params = %{selected_role: "volunteer",
+                 datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" }}
+
+      {conn, user} = update_user(conn, "admin@instedd.org", volunteer, params)
 
       assert_unauthorized(conn)
       refute Datasheet.is_super_admin?(user.datasheet)
@@ -636,8 +689,10 @@ defmodule Registro.UsersControllerTest do
     test "a global reader can not grant global permissions to other users", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      {conn, user} = update_user(conn, "reader@instedd.org", volunteer, datasheet: %{ id: volunteer.datasheet.id,
-                                                                                     global_grant: "super_admin" })
+      params = %{selected_role: "volunteer",
+                 datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" }}
+
+      {conn, user} = update_user(conn, "reader@instedd.org", volunteer, params)
 
       assert_unauthorized(conn)
       refute Datasheet.is_super_admin?(user.datasheet)
@@ -646,7 +701,8 @@ defmodule Registro.UsersControllerTest do
     test "a branch admin cannot grant global permission", %{conn: conn} do
       volunteer = get_user_by_email("volunteer1@example.com")
 
-      params = %{ datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" } }
+      params = %{ selected_role: "volunteer", datasheet: %{ id: volunteer.datasheet.id, global_grant: "super_admin" } }
+
       {_conn, user} = update_user(conn, "branch_admin1@instedd.org", volunteer, params)
 
       refute Datasheet.is_super_admin?(user.datasheet)
@@ -655,9 +711,10 @@ defmodule Registro.UsersControllerTest do
     test "a super_admin can revoke super_admin permissions to other users", %{conn: conn} do
       other_admin = create_super_admin("admin2@instedd.org")
 
-      {_conn, other_admin} = update_user(conn, "super_admin@instedd.org", other_admin, datasheet: %{
-                                                                                    id: other_admin.datasheet.id,
-                                                                                    global_grant: nil})
+      params = %{selected_role: nil,
+                 datasheet: %{ id: other_admin.datasheet.id, global_grant: nil}}
+
+      {_conn, other_admin} = update_user(conn, "super_admin@instedd.org", other_admin, params)
 
       refute Datasheet.is_super_admin?(other_admin.datasheet)
     end

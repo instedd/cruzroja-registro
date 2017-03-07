@@ -19,4 +19,12 @@ defmodule Registro.ViewHelpers do
 
     "#{branch_part}-#{datasheet_part}"
   end
+
+  def info_card(id, icon, text) do
+    import Phoenix.HTML.Tag
+
+    content_tag(:div, class: "info-card row", id: id) do
+      [content_tag(:i, icon, class: "material-icons"), content_tag(:span, text)]
+    end
+  end
 end

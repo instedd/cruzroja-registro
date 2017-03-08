@@ -60,40 +60,39 @@
   </div>
 
   <h3>Afiliación</h3>
-
   <div class="row">
     <div id="colaboration-kinds" class="col s12">
       <div class="option head">
-        <input name="colaboration_kind" type="radio" id="new_colaboration" value="new_colaboration" class="with-gap">
+        <%= raw_radio_button("colaboration_kind", "new_colaboration", @prefill) %>
         <label for="new_colaboration">Nueva afiliación</label>
 
         <span class="inline-settings">
           <span>como</span>
           <div class="input-field inline">
-            <%= raw_select("new_colaboration[role]", [
+            <%= raw_select("new_colaboration_role", [
               {"voluntario", "volunteer"},
               {"asociado", "associate"}
-            ])%>
+            ], @prefill)%>
           </div>
         </span>
       </div>
 
       <div class="option">
         <div class="head">
-          <input name="colaboration_kind" type="radio" id="current_volunteer" value="current_volunteer" class="with-gap">
+          <%= raw_radio_button("colaboration_kind", "current_volunteer", @prefill) %>
           <label for="current_volunteer">Ya soy voluntario</label>
 
           <span class="inline-settings">
             <span>desde</span>
             <div class="input-field inline">
-              <%= date_picker(fd, nil, input_name: "current_volunteer[registration_date]") %>
+              <%= raw_date_picker("current_volunteer_registration_date", @prefill) %>
             </div>
             <span>y</span>
             <div class="desired-role input-field inline">
-              <%= raw_select("current_volunteer[desired_role]", [
+              <%= raw_select("current_volunteer_desired_role", [
                 {"quiero seguir siendo voluntario", "volunteer"},
                 {"quiero ser asociado", "associate"}
-              ])%>
+              ], @prefill)%>
             </div>
           </span>
         </div>
@@ -106,7 +105,7 @@
       </div>
 
       <div class="option">
-        <input name="colaboration_kind" type="radio" id="current_associate" value="current_associate" class="with-gap">
+        <%= raw_radio_button("colaboration_kind", "current_associate", @prefill) %>
         <label for="current_associate">Ya soy asociado</label>
         <span class="inline-settings"></span>
       </div>

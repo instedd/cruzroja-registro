@@ -66,12 +66,12 @@ defmodule Registro.Coherence.RegistrationController do
             |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
           {:error, changeset} ->
             conn
-            |> load_registration_form_data
+            |> load_registration_form_data(params)
             |> render("new.html", changeset: changeset)
         end
       :error ->
         conn
-        |> load_registration_form_data
+        |> load_registration_form_data(params)
         |> put_flash(:error, "Hubo un problema. Por favor reintentar.")
         |> render("new.html", changeset: cs)
     end
@@ -83,19 +83,19 @@ defmodule Registro.Coherence.RegistrationController do
 
     case colaboration_kind do
       "new_colaboration" ->
-        is_paying_associate = case params["new_colaboration"]["role"] do
+        is_paying_associate = case params["new_colaboration_role"] do
                                 "volunteer" -> nil
                                 "associate" -> true
                               end
 
         registration_params
-        |> put_in(["datasheet", "role"], params["new_colaboration"]["role"])
+        |> put_in(["datasheet", "role"], params["new_colaboration_role"])
         |> put_in(["datasheet", "status"], "at_start")
         |> put_in(["datasheet", "is_paying_associate"], is_paying_associate)
 
       "current_volunteer" ->
-        registration_date = params["current_volunteer"]["registration_date"]
-        {status, is_paying_associate} = case params["current_volunteer"]["desired_role"] do
+        registration_date = params["current_volunteer_registration_date"]
+        {status, is_paying_associate} = case params["current_volunteer_desired_role"] do
                                           "volunteer" ->
                                             {"at_start", nil}
                                           "associate" ->
@@ -131,10 +131,16 @@ defmodule Registro.Coherence.RegistrationController do
     Helpers.login_user(conn, user, params)
   end
 
-  defp load_registration_form_data(conn) do
+  defp load_registration_form_data(conn, submitted_params \\ %{}) do
     conn
     |> assign(:branches, Branch.eligible |> Enum.map(&{&1.name, &1.id }))
     |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
     |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
+    # additional params not included in the changeset to prefil form fields
+    |> assign(:prefill, Map.take(submitted_params, ["colaboration_kind",
+                                                    "new_colaboration_role",
+                                                    "current_volunteer_registration_date",
+                                                    "current_volunteer_desired_role"
+                                                   ]))
   end
 end

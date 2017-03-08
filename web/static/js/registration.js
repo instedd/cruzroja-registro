@@ -26,6 +26,11 @@ let initColaborationSettings = (container) => {
     select(opt)
   }
 
+  let prefillSelection = () => {
+    let opt = $(".option input[checked=checked]").closest(".option")
+    select(opt)
+  }
+
   let refreshWarning = () => {
     let selectedDate = datePicker.get('select').obj
     let desiredRole = desiredRoleSelect.val()
@@ -39,6 +44,7 @@ let initColaborationSettings = (container) => {
 
   datePicker.on('set', refreshWarning)
   desiredRoleSelect.on('change', refreshWarning)
+  prefillSelection()
 }
 
 export var Registration = {

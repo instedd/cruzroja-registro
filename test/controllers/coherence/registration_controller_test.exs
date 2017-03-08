@@ -28,7 +28,7 @@ defmodule Registro.RegistrationControllerTest do
   describe "creation" do
     test "allows new volunteers", %{conn: conn, branch1: branch1} do
       params = registration_params(branch1, %{ colaboration_kind: "new_colaboration",
-                                               new_colaboration: %{ role: "volunteer" }})
+                                               new_colaboration_role: "volunteer" })
 
       post(conn, registration_path(conn, :create, params))
 
@@ -42,7 +42,7 @@ defmodule Registro.RegistrationControllerTest do
 
     test "allows new associates", %{conn: conn, branch1: branch1} do
       params = registration_params(branch1, %{ colaboration_kind: "new_colaboration",
-                                               new_colaboration: %{ role: "associate" }})
+                                               new_colaboration_role: "associate" })
 
       post(conn, registration_path(conn, :create, params))
 
@@ -56,8 +56,8 @@ defmodule Registro.RegistrationControllerTest do
 
     test "allows pre-existing volunteers", %{conn: conn, branch1: branch1} do
       params = registration_params(branch1, %{ colaboration_kind: "current_volunteer",
-                                               current_volunteer: %{ desired_role: "volunteer",
-                                                                     registration_date: "2010-01-01" }})
+                                               current_volunteer_desired_role: "volunteer",
+                                               current_volunteer_registration_date: "2010-01-01" })
 
       post(conn, registration_path(conn, :create, params))
 
@@ -74,8 +74,8 @@ defmodule Registro.RegistrationControllerTest do
       date = a_year_ago
 
       params = registration_params(branch1, %{ colaboration_kind: "current_volunteer",
-                                               current_volunteer: %{ desired_role: "associate",
-                                                                     registration_date: Ecto.Date.to_iso8601(date) }})
+                                               current_volunteer_desired_role: "associate",
+                                               current_volunteer_registration_date: Ecto.Date.to_iso8601(date)})
 
       post(conn, registration_path(conn, :create, params))
 
@@ -92,8 +92,8 @@ defmodule Registro.RegistrationControllerTest do
       date = less_than_a_year_ago
 
       params = registration_params(branch1, %{ colaboration_kind: "current_volunteer",
-                                               current_volunteer: %{ desired_role: "associate",
-                                                                     registration_date: Ecto.Date.to_iso8601(date) }})
+                                               current_volunteer_desired_role: "associate",
+                                               current_volunteer_registration_date: Ecto.Date.to_iso8601(date)})
 
       post(conn, registration_path(conn, :create, params))
 
@@ -134,7 +134,7 @@ defmodule Registro.RegistrationControllerTest do
 
   test "fails if a non-eligible branch is sent", %{conn: conn, branch2: branch2} do
     params = registration_params(branch2, %{ colaboration_kind: "new_colaboration",
-                                             new_colaboration: %{ role: "volunteer" }})
+                                             new_colaboration_role: "volunteer"})
 
     post(conn, registration_path(conn, :create, params))
 

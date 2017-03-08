@@ -5,8 +5,6 @@ defmodule Registro.UsersView do
   import Registro.ViewHelpers
   import Registro.FormHelpers
 
-  alias Registro.Datasheet
-
   def branch_label(datasheet) do
     case datasheet.branch do
       nil -> ""
@@ -16,7 +14,7 @@ defmodule Registro.UsersView do
 
   def readonly_colaboration_controls(form, selected_branch_name, branch_identifier) do
     [
-      branch_control(form, selected_branch_name, branch_identifier, false),
+      branch_control(selected_branch_name, branch_identifier, false),
 
       content_tag(:div, class: "input-field col s4") do
         [ label(form, :role, "Rol", class: "control-label"),
@@ -40,7 +38,7 @@ defmodule Registro.UsersView do
     branch_editable = Registro.Datasheet.is_global_admin?(current_user_datasheet)
 
     [
-      branch_control(form, selected_branch_name, branch_identifier, branch_editable),
+      branch_control(selected_branch_name, branch_identifier, branch_editable),
 
       content_tag(:div, class: "input-field col s6") do
         role_selector(form)
@@ -54,12 +52,11 @@ defmodule Registro.UsersView do
   end
 
   def editable_colaboration_controls(form, selected_branch_name, branch_identifier, current_user_datasheet) do
-    role = input_value(form, :role)
     status = input_value(form, :status)
     branch_editable = Registro.Datasheet.is_global_admin?(current_user_datasheet)
 
     [
-      branch_control(form, selected_branch_name, branch_identifier, branch_editable),
+      branch_control(selected_branch_name, branch_identifier, branch_editable),
 
       content_tag(:div, class: "input-field col s4") do
         role_selector(form)
@@ -85,11 +82,11 @@ defmodule Registro.UsersView do
     ]
   end
 
-  defp branch_control(form, selected_branch_name, branch_identifier, branch_editable) do
+  defp branch_control(selected_branch_name, branch_identifier, branch_editable) do
     if branch_identifier do
       [
         content_tag(:div, class: "input-field col s6") do
-          branch_selector(form, selected_branch_name, branch_editable)
+          branch_selector(selected_branch_name, branch_editable)
         end,
 
         content_tag(:div, class: "input-field col s6") do
@@ -99,12 +96,12 @@ defmodule Registro.UsersView do
       ]
     else
       content_tag(:div, class: "input-field col s12") do
-        branch_selector(form, selected_branch_name, branch_editable)
+        branch_selector(selected_branch_name, branch_editable)
       end
     end
   end
 
-  defp branch_selector(form, selected_branch_name, editable) do
+  defp branch_selector(selected_branch_name, editable) do
     [
       content_tag(:label, "Filial", class: "control-label", for: "user_datasheet_branch_name"),
 

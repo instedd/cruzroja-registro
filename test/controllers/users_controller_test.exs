@@ -415,6 +415,22 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.status == "approved"
     end
 
+    test "a super admin is allowed to change a registration_date upon approval", %{conn: conn} do
+      volunteer = get_user_by_email("volunteer1@example.com")
+
+      params = %{
+        email: volunteer.email,
+        flow_action: "approve", selected_role: "volunteer",
+        datasheet: %{id: volunteer.datasheet.id, registration_date: "2010-01-01" }}
+
+      {_conn, user} = update_user(conn, "super_admin@instedd.org", volunteer, params)
+
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.status == "approved"
+      assert user.datasheet.is_paying_associate == nil
+      assert user.datasheet.registration_date == ~D[2010-01-01]
+    end
+
     test "a super admin is allowed to change a volunteer to paying associate upon approval", %{conn: conn} do
       {_conn, user} = update_state(conn, "super_admin@instedd.org", "volunteer1@example.com", :approve, "paying_associate")
       assert user.datasheet.role == "associate"

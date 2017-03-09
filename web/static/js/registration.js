@@ -1,49 +1,89 @@
 import { RegistrationDateSelector } from "./registration_date_selector";
 
+
 let initColaborationSettings = (container) => {
   let oneYearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1))
-  let datePicker = container.find(".datepicker").pickadate('picker')
-  let desiredRoleSelect = $("select[name='current_volunteer_desired_role']")
-  let paymentWarning = container.find(".payment-warning")
+  let paymentWarning = container.find("#payment-warning")
 
-  let unselect = (opt) => {
-    opt.removeClass("visible")
+  let refreshWarning = (opt) => {
+    paymentWarning.toggle(opt.shouldDisplayWarning())
   }
 
   let select = (opt) => {
-    opt = $(opt)
-    opt.addClass("visible")
-
-    if (!datePicker.get()) {
-      datePicker.set('select', new Date())
-    }
+    opt.container.addClass("visible")
+    refreshWarning(opt)
   }
 
-  let optionChanged = (e) => {
-    let opt = $(e.target).closest(".option")
+  let opts = [
+    {
+      id: "new-colaboration-option",
+      init: function() {
+        this.container = container.find(`#${this.id}`),
 
-    unselect($(".option"))
-    select(opt)
+        this.roleInput = this.container.find("select[name='new_colaboration_role']")
+        this.roleInput.on('change', () => { refreshWarning(this) })
+      },
+      shouldDisplayWarning: function() {
+        return this.roleInput.val() == "associate"
+      }
+    },
+    {
+      id: "current-volunteer-option",
+      init: function() {
+        this.container = container.find(`#${this.id}`)
+
+        this.datePicker = this.container.find(".datepicker").pickadate('picker')
+        this.datePicker.on('set', () => { refreshWarning(this) })
+
+        this.roleInput = this.container.find("select[name='current_volunteer_desired_role']")
+        this.roleInput.on('change', () => { refreshWarning(this) })
+
+        if (!this.datePicker.get()) {
+          this.datePicker.set('select', new Date())
+        }
+      },
+      shouldDisplayWarning: function() {
+        let selectedDate = this.datePicker.get('select').obj
+        let desiredRole = this.roleInput.val()
+
+        return (desiredRole == "associate") && (selectedDate > oneYearAgo)
+      }
+    },
+    {
+      id: "current-associate-option",
+      init: function() {
+        this.container = container.find(`#${this.id}`)
+      },
+      shouldDisplayWarning: function() {
+        return false
+      }
+    },
+  ]
+
+  let optionChanged = (e) => {
+    let optId = $(e.target).closest(".option").attr("id")
+
+    opts.forEach((opt) => {
+      if (opt.id == optId) {
+        select(opt)
+      } else {
+        opt.container.removeClass("visible")
+      }
+    })
   }
 
   let prefillSelection = () => {
-    let opt = $(".option input[checked=checked]").closest(".option")
-    select(opt)
-  }
+    let optId = $(".option input[checked=checked]").closest(".option").attr("id")
 
-  let refreshWarning = () => {
-    let selectedDate = datePicker.get('select').obj
-    let desiredRole = desiredRoleSelect.val()
-    let displayWarning = (desiredRole == "associate") && (selectedDate > oneYearAgo)
-
-    paymentWarning.toggle(displayWarning)
+    opts.forEach((opt) => {
+      if (opt.id == optId) {
+        select(opt)
+      }
+    })
   }
 
   container.find("input[type=radio]").bind('change', optionChanged)
-  select(container.find("input[type=radio]:checked").siblings(".inline-settings"))
-
-  datePicker.on('set', refreshWarning)
-  desiredRoleSelect.on('change', refreshWarning)
+  opts.forEach((opt) => opt.init())
   prefillSelection()
 }
 

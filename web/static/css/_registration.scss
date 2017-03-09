@@ -52,11 +52,13 @@
       }
     }
 
-    .payment-warning {
-      font-size: 11px;
+    #payment-warning {
       margin-top: 10px;
       margin-left: 25px;
-      padding: 10px;
+
+      &.hidden {
+        display: none;
+      }
     }
   }
 }

@@ -1,6 +1,8 @@
 defmodule Coherence.RegistrationView do
   use Registro.Coherence.Web, :view
 
+  import Registro.ViewHelpers
+
   def raw_radio_button(name, value, prefill) do
     attrs = [ {:type, "radio"},
               {:value, value},

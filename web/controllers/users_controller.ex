@@ -380,8 +380,13 @@ defmodule Registro.UsersController do
         end
 
       "approve" ->
-        # set registration date if nil, and apply
-        registration_date = datasheet_params["registration_date"] || datasheet.registration_date || Timex.Date.today
+        fallback_date = datasheet.registration_date || Timex.Date.today
+
+        registration_date = case datasheet_params["registration_date"] do
+                              nil -> fallback_date
+                              ""  -> fallback_date
+                              val -> val
+                            end
 
         datasheet_params
         |> Map.merge(%{ "status" => "approved", "registration_date" => registration_date })

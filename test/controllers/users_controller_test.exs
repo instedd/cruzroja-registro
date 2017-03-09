@@ -578,7 +578,13 @@ defmodule Registro.UsersControllerTest do
 
       assert is_nil(user.datasheet.registration_date)
 
-      {_conn, updated_user} = update_state(conn, "admin@instedd.org", user, :approve, "volunteer")
+      # the view sends empty string when date is not selected
+      params = %{
+        email: user.email,
+        flow_action: "approve", selected_role: "volunteer",
+        datasheet: %{id: user.datasheet.id, registration_date: "" }}
+
+      {_conn, updated_user} = update_user(conn, "admin@instedd.org", user, params)
 
       refute is_nil(updated_user.datasheet.registration_date)
     end

@@ -89,6 +89,15 @@ defmodule Registro.ModelTestHelpers do
     User.query_with_datasheet |> Repo.get_by!(email: email)
   end
 
+  def a_year_ago do
+    { date, _time } = Timex.Date.today |> Timex.shift(years: -1, days: -1) |> Timex.to_erlang_datetime
+    Ecto.Date.from_erl(date)
+  end
+
+  def less_than_a_year_ago do
+    Ecto.Date.utc
+  end
+
   defp name(email) do
     String.replace(email, ~r/@.*/, "")
   end

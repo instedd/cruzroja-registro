@@ -23,4 +23,12 @@ defmodule Registro.DateTime do
       to_string(number)
     end
   end
+
+  def less_than_a_year_ago(d) do
+    a_year_ago = Timex.Date.today |> Timex.shift(years: -1)
+    {:ok, erl_date} = d |> Ecto.Date.cast! |> Ecto.Date.dump
+    before_a_year_ago = Timex.to_date(erl_date) |> Timex.before?(a_year_ago)
+
+    !before_a_year_ago
+  end
 end

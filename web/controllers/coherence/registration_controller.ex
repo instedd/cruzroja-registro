@@ -99,7 +99,7 @@ defmodule Registro.Coherence.RegistrationController do
                                           "volunteer" ->
                                             {"at_start", nil}
                                           "associate" ->
-                                            {"associate_requested", less_than_a_year_ago(registration_date)}
+                                            {"associate_requested", Registro.DateTime.less_than_a_year_ago(registration_date)}
                                         end
 
         registration_params
@@ -114,14 +114,6 @@ defmodule Registro.Coherence.RegistrationController do
         |> put_in(["datasheet", "status"], "at_start")
         |> put_in(["datasheet", "is_paying_associate"], false)
     end
-  end
-
-  defp less_than_a_year_ago(d) do
-    a_year_ago = Timex.Date.today |> Timex.shift(years: -1)
-    {:ok, erl_date} = d |> Ecto.Date.cast! |> Ecto.Date.dump
-    before_a_year_ago = Timex.to_date(erl_date) |> Timex.before?(a_year_ago)
-
-    !before_a_year_ago
   end
 
   defp redirect_or_login(conn, _user, params, 0) do

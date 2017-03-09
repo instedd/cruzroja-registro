@@ -108,6 +108,11 @@ defmodule Registro.Datasheet do
     |> Ecto.Changeset.put_assoc(:clerk_branches, branches)
   end
 
+  def associate_request_changeset(datasheet) do
+    changeset(datasheet, %{ status: "associate_requested",
+                            is_paying_associate: Registro.DateTime.less_than_a_year_ago(datasheet.registration_date) })
+  end
+
   def validate_required_fields(changeset) do
     # these validations should be present every time @required_fields are casted
     changeset

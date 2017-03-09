@@ -620,42 +620,54 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "volunteer transition to associate" do
-    test "an approved volunteer can ask to become associate", %{conn: conn, some_branch: branch} do
+    test "an approved volunteer with less than a year can ask to become paying associate", %{conn: conn, some_branch: branch} do
       {conn, user} =
-        create_approved_volunteer(branch)
-        |> request_volunteer_update(conn, is_paying_associate: true)
+        create_approved_volunteer(branch, less_than_a_year_ago)
+        |> request_volunteer_update(conn)
 
       assert redirected_to(conn) == users_path(Registro.Endpoint, :profile)
+      assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "associate_requested"
       assert user.datasheet.is_paying_associate == true
     end
 
+    test "an approved volunteer with a year or more can ask to become non-paying associate", %{conn: conn, some_branch: branch} do
+      {conn, user} =
+        create_approved_volunteer(branch, a_year_ago)
+        |> request_volunteer_update(conn)
+
+      assert redirected_to(conn) == users_path(Registro.Endpoint, :profile)
+      assert user.datasheet.role == "volunteer"
+      assert user.datasheet.status == "associate_requested"
+      assert user.datasheet.is_paying_associate == false
+    end
+
     test "an audit entry is created when the user requests to become associate", %{conn: conn, some_branch: branch} do
       {_conn, user} =
-        create_approved_volunteer(branch)
-        |> request_volunteer_update(conn, is_paying_associate: true)
+        create_approved_volunteer(branch, less_than_a_year_ago)
+        |> request_volunteer_update(conn)
 
       audit_entries = Registro.UserAuditLogEntry.for(user.datasheet, "associate_requested")
 
       assert Enum.count(audit_entries) == 1
     end
 
-    def request_volunteer_update(volunteer, conn, is_paying_associate: is_paying_associate) do
+    def request_volunteer_update(volunteer, conn) do
       conn = conn
       |> log_in(volunteer)
-      |> post(users_path(Registro.Endpoint, :associate_request, %{"is_paying_associate" => is_paying_associate}))
+      |> post(users_path(Registro.Endpoint, :associate_request))
 
       updated_volunteer = Repo.get(User.query_with_datasheet, volunteer.id)
 
       {conn, updated_volunteer}
     end
 
-    def create_approved_volunteer(branch) do
+    def create_approved_volunteer(branch, registration_date) do
       user = create_volunteer("approved_volunteer@example.com", branch.id)
 
       user
       |> Ecto.Changeset.change
-      |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, status: "approved"  })
+      |> Ecto.Changeset.put_assoc(:datasheet, %{ id: user.datasheet.id, status: "approved", registration_date: registration_date })
       |> Repo.update!
     end
   end

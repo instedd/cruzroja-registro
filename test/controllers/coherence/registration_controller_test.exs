@@ -121,15 +121,6 @@ defmodule Registro.RegistrationControllerTest do
       assert user.datasheet.status == "at_start"
       assert is_nil(user.datasheet.registration_date)
     end
-
-    def a_year_ago do
-      { date, _time } = Timex.Date.today |> Timex.shift(years: -1, days: -1) |> Timex.to_erlang_datetime
-      Ecto.Date.from_erl(date)
-    end
-
-    def less_than_a_year_ago do
-      Ecto.Date.utc
-    end
   end
 
   test "fails if a non-eligible branch is sent", %{conn: conn, branch2: branch2} do

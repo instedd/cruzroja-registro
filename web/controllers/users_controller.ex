@@ -107,11 +107,11 @@ defmodule Registro.UsersController do
     end
   end
 
-  def associate_request(conn, %{"is_paying_associate" => is_paying_associate}) do
+  def associate_request(conn, _params) do
     current_user = Coherence.current_user(conn)
     datasheet = current_user.datasheet
-    changeset = Datasheet.changeset(datasheet, %{ status: "associate_requested",
-                                                  is_paying_associate: is_paying_associate })
+
+    changeset = Datasheet.associate_request_changeset(datasheet)
 
     case Repo.update(changeset) do
       {:ok, _} ->

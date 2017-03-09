@@ -109,6 +109,23 @@ defmodule Registro.InvitationControllerTest do
       verify_invitation(params)
     end
 
+    test "invited associates are assumed to be paying", %{conn: conn, branch1: branch, super_admin: super_admin} do
+      params = invitation_params(branch.id, "associate")
+
+      conn =
+        conn
+        |> log_in(super_admin)
+        |> post("/usuarios/alta", params)
+
+      assert html_response(conn, 302)
+
+      datasheet = datasheet_for_invitation(params)
+
+      assert datasheet.status == "at_start"
+      assert datasheet.role == "associate"
+      assert datasheet.is_paying_associate == true
+    end
+
     test "global reader can not send invitations", %{conn: conn, branch1: branch, reader: reader} do
       params = invitation_params(branch.id)
 
@@ -176,7 +193,7 @@ defmodule Registro.InvitationControllerTest do
       assert Invitation.count == 0
     end
 
-    defp invitation_params(branch_id) do
+    defp invitation_params(branch_id, role \\ "volunteer") do
       %{ "invitation" =>
         %{ "email" => "john@example.com",
            "datasheet" => %{
@@ -189,16 +206,21 @@ defmodule Registro.InvitationControllerTest do
              "address" => "...",
              "phone_number" => "...",
              "country_id" => some_country!.id,
-             "role" => "volunteer",
+             "role" => role,
              "branch_id" => "#{branch_id}"
            }
          }
       }
     end
 
+    defp datasheet_for_invitation(params) do
+      %Invitation{datasheet: datasheet} = Repo.get_by!(Invitation, email: params["invitation"]["email"]) |> Repo.preload([:datasheet])
+
+      datasheet
+    end
+
     defp verify_invitation(params) do
-      %Invitation{datasheet: datasheet} = Repo.get_by!(Invitation, email: params["invitation"]["email"])
-      |> Repo.preload([:datasheet])
+      datasheet = datasheet_for_invitation(params)
 
       assert datasheet.status == "at_start"
       assert datasheet.role == "volunteer"

@@ -170,7 +170,7 @@ defmodule Registro.UsersView do
     [
       content_tag(:select, id: field_name, name: field_name, class: "form-control") do
           [
-            opt("Selecctionar", "", true, selection),
+            opt("Seleccionar", "", true, selection),
             opt("Voluntario", "volunteer", false, selection),
             opt("Asociado por pago", "paying_associate", false, selection),
             opt("Asociado por antigüedad", "non_paying_associate", false, selection)

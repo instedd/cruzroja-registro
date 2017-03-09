@@ -2,6 +2,14 @@
   <form>
     <div class="row">
     <div class="input-field col s3">
+      <select id="role">
+        <option value="" disabled selected>Rol</option>
+        <option value="">Todos</option>
+        <%= role_option("volunteer") %>
+        <%= role_option("associate") %>
+      </select>
+    </div>
+    <div class="input-field col s3">
       <select id="status">
         <option value="" disabled selected>Estado</option>
         <option value="">Todos</option>

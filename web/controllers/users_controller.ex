@@ -226,16 +226,16 @@ defmodule Registro.UsersController do
     query
   end
 
-  def role_filter(query, param) when is_nil(param), do: query
+  def role_filter(query, nil), do: query
   def role_filter(query, param), do: from d in query, where: d.role == ^param
 
-  def branch_filter(query, param) when is_nil(param), do: query
+  def branch_filter(query, nil), do: query
   def branch_filter(query, param), do: from d in query, where: d.branch_id == ^param
 
-  def status_filter(query, param) when is_nil(param), do: query
+  def status_filter(query, nil), do: query
   def status_filter(query, param), do: from d in query, where: d.status == ^param
 
-  def name_filter(query, param) when is_nil(param), do: query
+  def name_filter(query, nil), do: query
   def name_filter(query, param) do
     name = "%" <> param <> "%"
     from d in query,

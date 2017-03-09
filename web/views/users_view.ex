@@ -5,6 +5,12 @@ defmodule Registro.UsersView do
   import Registro.ViewHelpers
   import Registro.FormHelpers
 
+  def role_option(role) do
+    content_tag(:option, value: role) do
+      Registro.Role.label(role)
+    end
+  end
+
   def branch_label(datasheet) do
     case datasheet.branch do
       nil -> ""

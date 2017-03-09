@@ -82,7 +82,7 @@
 
     <%= if Registro.Datasheet.is_colaborator?(@current_user.datasheet) do %>
       <div class="section">
-        <h3>Colaboración en Filial</h3>
+        <h3>Afiliación</h3>
         <%= if pending_approval do %>
           <% desired_state = if @current_user.datasheet.status == "associate_requested" do
                                "asociado"
@@ -107,14 +107,24 @@
     <% end %>
     <% end %>
 
-    <div class="form-group actions right-align">
-      <%= if Registro.Datasheet.can_ask_to_become_associate?(@current_user.datasheet) do %>
-        <%= form_tag(users_path(@conn, :associate_request), method: :post, style: "display:inline-block") do %>
-        <%= submit "Solicitar pase a asociado", class: "btn btn-large" %>
-        <% end %>
-      <% end %>
+    <% display_associate_switch = Registro.Datasheet.can_ask_to_become_associate?(@current_user.datasheet) %>
 
-      <%=  submit "Guardar", class: "btn btn-large btn-primary", form: "profileForm" %>
+    <%=
+    if display_associate_switch and !Registro.Datasheet.registered_for_more_than_a_year?(@current_user.datasheet) do
+      info_card("associate-info", "info", "Para ser asociado con menos de un año de antigüedad es necesario pagar una cuota mensual. Un representante de la filial se pondrá en contacto con vos para arreglar los detalles.")
+    end
+    %>
+
+    <div class="form-group actions right-align">
+      <%=
+      if display_associate_switch do
+        form_tag(users_path(@conn, :associate_request), method: :post, style: "display:inline-block") do
+          submit("Solicitar pase a asociado", class: "btn btn-large")
+        end
+      end
+      %>
+
+      <%= submit "Guardar", class: "btn btn-large btn-primary", form: "profileForm" %>
     </div>
   <% end %>
 </div>

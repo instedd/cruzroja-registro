@@ -99,7 +99,7 @@ defmodule Registro.Coherence.RegistrationController do
                                           "volunteer" ->
                                             {"at_start", nil}
                                           "associate" ->
-                                            {"associate_requested", Registro.DateTime.less_than_a_year_ago(registration_date)}
+                                            {"associate_requested", Registro.DateTime.less_than_a_year_ago?(registration_date)}
                                         end
 
         registration_params

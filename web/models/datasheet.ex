@@ -110,7 +110,7 @@ defmodule Registro.Datasheet do
 
   def associate_request_changeset(datasheet) do
     changeset(datasheet, %{ status: "associate_requested",
-                            is_paying_associate: Registro.DateTime.less_than_a_year_ago(datasheet.registration_date) })
+                            is_paying_associate: !registered_for_more_than_a_year?(datasheet) })
   end
 
   def validate_required_fields(changeset) do
@@ -376,4 +376,9 @@ defmodule Registro.Datasheet do
         false
     end
   end
+
+  def registered_for_more_than_a_year?(datasheet) do
+    !(Registro.DateTime.less_than_a_year_ago?(datasheet.registration_date))
+  end
+
 end

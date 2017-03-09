@@ -3,7 +3,7 @@ import { RegistrationDateSelector } from "./registration_date_selector";
 let initColaborationSettings = (container) => {
   let oneYearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1))
   let datePicker = container.find(".datepicker").pickadate('picker')
-  let desiredRoleSelect = $("select[name='current_volunteer[desired_role]']")
+  let desiredRoleSelect = $("select[name='current_volunteer_desired_role']")
   let paymentWarning = container.find(".payment-warning")
 
   let unselect = (opt) => {

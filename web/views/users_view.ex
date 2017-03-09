@@ -79,6 +79,8 @@ defmodule Registro.UsersView do
             tag(:input, class: "form-control", name: "", type: "text", disabled: "", value: Registro.Datasheet.status_label(status))
           ]
         end
+      else
+        content_tag(:span, [])
       end,
 
       content_tag(:div, class: "input-field col s4") do

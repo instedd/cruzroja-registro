@@ -876,6 +876,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "CSV download" do
+    @tag :focus
     test "it allows downloading all users' information as CSV", %{conn: conn} do
       conn = conn
       |> log_in("super_admin@instedd.org")
@@ -884,17 +885,17 @@ defmodule Registro.UsersControllerTest do
       response = response(conn, 200)
 
       assert response == """
-      Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado\r
-      Doe,admin,admin@instedd.org,Cédula de Identidad,2,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin1,branch_admin1@instedd.org,Cédula de Identidad,4,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin2,branch_admin2@instedd.org,Cédula de Identidad,5,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_admin3,branch_admin3@instedd.org,Cédula de Identidad,6,Argentina,1980-01-01,-,-,,,\r
-      Doe,branch_clerk1,branch_clerk1@instedd.org,Cédula de Identidad,7,Argentina,1980-01-01,-,-,,,\r
-      Doe,reader,reader@instedd.org,Cédula de Identidad,3,Argentina,1980-01-01,-,-,,,\r
-      Doe,super_admin,super_admin@instedd.org,Cédula de Identidad,1,Argentina,1980-01-01,-,-,,,\r
-      Doe,volunteer1,volunteer1@example.com,Cédula de Identidad,8,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente\r
-      Doe,volunteer2,volunteer2@example.com,Cédula de Identidad,9,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente\r
-      Doe,volunteer3,volunteer3@example.com,Cédula de Identidad,10,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente\r
+      Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado,Asociado Pago\r
+      Doe,admin,admin@instedd.org,Cédula de Identidad,2,Argentina,1980-01-01,-,-,,,,\r
+      Doe,branch_admin1,branch_admin1@instedd.org,Cédula de Identidad,4,Argentina,1980-01-01,-,-,,,,\r
+      Doe,branch_admin2,branch_admin2@instedd.org,Cédula de Identidad,5,Argentina,1980-01-01,-,-,,,,\r
+      Doe,branch_admin3,branch_admin3@instedd.org,Cédula de Identidad,6,Argentina,1980-01-01,-,-,,,,\r
+      Doe,branch_clerk1,branch_clerk1@instedd.org,Cédula de Identidad,7,Argentina,1980-01-01,-,-,,,,\r
+      Doe,reader,reader@instedd.org,Cédula de Identidad,3,Argentina,1980-01-01,-,-,,,,\r
+      Doe,super_admin,super_admin@instedd.org,Cédula de Identidad,1,Argentina,1980-01-01,-,-,,,,\r
+      Doe,volunteer1,volunteer1@example.com,Cédula de Identidad,8,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente,\r
+      Doe,volunteer2,volunteer2@example.com,Cédula de Identidad,9,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente,\r
+      Doe,volunteer3,volunteer3@example.com,Cédula de Identidad,10,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente,\r
       """
     end
 

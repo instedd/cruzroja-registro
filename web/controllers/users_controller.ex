@@ -171,7 +171,9 @@ defmodule Registro.UsersController do
               "Dirección",
               "Filial",
               "Rol",
-              "Estado"]
+              "Estado",
+              "Asociado Pago"
+             ]
 
     format = fn(d) ->
       [
@@ -186,7 +188,12 @@ defmodule Registro.UsersController do
         d.address,
         if(d.branch == nil, do: "", else: d.branch.name),
         Role.label(d.role),
-        Datasheet.status_label(d.status)
+        Datasheet.status_label(d.status),
+        (case d.is_paying_associate do
+           nil -> ""
+           true -> "Sí"
+           false -> "No"
+         end)
       ]
     end
 

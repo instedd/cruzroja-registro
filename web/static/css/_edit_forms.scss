@@ -21,9 +21,14 @@
     }
   }
 
+  input[type=radio] + label {
+    color: black;
+  }
   .radio-description {
+    color: $secondary-gray;
     font-size: 12px;
     padding-left: 35px;
+    margin-bottom: 15px;
   }
 }
 
@@ -31,13 +36,5 @@
 #register {
   .captcha {
     margin-bottom: 20px;
-  }
-}
-
-#profile {
-  #eligible-branch-warning {
-    display: none;
-    font-weight: bold;
-    font-size: 13px;
   }
 }

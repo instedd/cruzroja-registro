@@ -1,0 +1,64 @@
+#register {
+  #colaboration-kinds {
+    .option {
+      &.head, .head {
+        display: flex;
+        align-items: baseline;
+        flex-flow: row nowrap;
+        min-height: 46px;
+      }
+
+      margin-bottom: 1px;
+
+      label {
+        width: 160px;
+        line-height: 46px;
+
+        &:before, &:after {
+          top: 9px;
+        }
+      }
+
+      .inline-settings {
+        display: none;
+      }
+
+      &.visible .inline-settings {
+        display: inline-flex;
+        align-items: baseline;
+        flex-flow: row wrap;
+
+        > div, > span {
+          margin-left: 10px;
+        }
+
+        .desired-role {
+          min-width: 230px;
+        }
+
+        input.datepicker {
+          width: 78px;
+        }
+
+        .input-field {
+          margin-top: 0;
+          margin-bottom: 0;
+
+          input {
+            margin-top: 0;
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+
+    #payment-warning {
+      margin-top: 10px;
+      margin-left: 25px;
+
+      &.hidden {
+        display: none;
+      }
+    }
+  }
+}

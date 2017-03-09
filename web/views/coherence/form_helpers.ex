@@ -46,21 +46,17 @@ defmodule Registro.FormHelpers do
     end
   end
 
-  def date_picker(f, name, opts \\ []) do
-    import Phoenix.HTML.Form, only: [input_id: 2, input_name: 2, input_value: 2]
-
-    value = case input_value(f, name) do
+  def raw_date_picker(name, prefill, opts \\ []) do
+    value = case prefill[name] do
               %Date{} = d ->
                 Date.to_iso8601(d)
-              _ ->
-                nil
+              encoded_value ->
+                encoded_value
             end
 
-    attrs = [ {:type, "date"},
-              {:class, "datepicker"},
-              {:id, input_id(f, name)},
-              {:name, input_name(f, name)}
-            ]
+    id = opts[:id] || name
+
+    attrs = [{:type, "date"}, {:class, "datepicker"}, {:id, id}, {:name, name}]
 
     attrs = if opts[:disabled] do
               [{:disabled, ""}, {:value, value} | attrs]
@@ -69,6 +65,16 @@ defmodule Registro.FormHelpers do
             end
 
     tag(:input, attrs)
+  end
+
+  def date_picker(f, name, opts \\ []) do
+    import Phoenix.HTML.Form, only: [input_id: 2, input_name: 2, input_value: 2]
+
+    input_name = input_name(f, name)
+    prefill = %{input_name => input_value(f, name)}
+    opts = [{:id, input_id(f, name)} | opts]
+
+    raw_date_picker(input_name, prefill, opts)
   end
 
   def form_rows(rows) do

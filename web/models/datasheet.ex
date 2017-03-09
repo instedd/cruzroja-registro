@@ -24,6 +24,7 @@ defmodule Registro.Datasheet do
 
     field :status, :string
     field :role, :string
+    field :is_paying_associate, :boolean
     field :global_grant, :string
 
     field :filled, :boolean
@@ -57,7 +58,7 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:observations, :registration_date, :status, :branch_id, :role, :global_grant])
+    |> cast(params, @required_fields ++ [:observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
@@ -73,12 +74,13 @@ defmodule Registro.Datasheet do
     |> cast(%{status: "at_start"}, [:status])
     |> changeset(params)
     |> validate_required([:branch_id, :role])
+    |> validate_colaboration
     |> validate_branch_is_eligible
   end
 
   def profile_filled_changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields)
+    |> cast(params, @required_fields ++ [:registration_date])
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
@@ -104,6 +106,11 @@ defmodule Registro.Datasheet do
     |> Registro.Repo.preload(:clerk_branches)
     |> Ecto.Changeset.change
     |> Ecto.Changeset.put_assoc(:clerk_branches, branches)
+  end
+
+  def associate_request_changeset(datasheet) do
+    changeset(datasheet, %{ status: "associate_requested",
+                            is_paying_associate: !registered_for_more_than_a_year?(datasheet) })
   end
 
   def validate_required_fields(changeset) do
@@ -143,10 +150,6 @@ defmodule Registro.Datasheet do
   def new_empty_changeset() do
     %Datasheet{ filled: false }
     |> Ecto.Changeset.change
-  end
-
-  def pending_approval?(datasheet) do
-    datasheet.status == "at_start" || datasheet.status == "associate_requested"
   end
 
   def status_label(status) do
@@ -262,6 +265,7 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
+        |> validate_associates_paying_flag
     end
   end
 
@@ -323,6 +327,18 @@ defmodule Registro.Datasheet do
     end
   end
 
+  defp validate_associates_paying_flag(changeset) do
+    is_associate = Ecto.Changeset.get_field(changeset, :role) == "associate"
+    requested_associate = Ecto.Changeset.get_field(changeset, :status) == "associate_requested"
+    is_paying_associate = Ecto.Changeset.get_field(changeset, :is_paying_associate)
+
+    if is_nil(is_paying_associate) == (is_associate || requested_associate) do
+      Ecto.Changeset.add_error(changeset, :is_paying_associate, "is invalid")
+    else
+      changeset
+    end
+  end
+
   defp valid_status?(status) do
     Enum.member? ["at_start", "approved", "rejected", "associate_requested"], status
   end
@@ -360,4 +376,9 @@ defmodule Registro.Datasheet do
         false
     end
   end
+
+  def registered_for_more_than_a_year?(datasheet) do
+    !(Registro.DateTime.less_than_a_year_ago?(datasheet.registration_date))
+  end
+
 end

@@ -1,7 +1,6 @@
 <% current_user = Coherence.current_user(@conn) %>
-<% datasheet = @changeset.data %>
 <% readonly = !has_ability?(@conn, :update) %>
-<% pending_confirmation = Registro.Datasheet.pending_approval?(datasheet) %>
+<% pending_approval = pending_approval?(@changeset.data.status)  %>
 
 <%= if @changeset.action do %>
   <%= set_generic_error_toast %>
@@ -56,13 +55,10 @@
 
               [ validated_field(fd, :occupation, text: "Ocupación", required: true, disabled: readonly)
               ],
-
-              [ validated_field(fd, :registration_date, text: "Fecha de inicio de voluntariado", disabled: readonly)
-              ]
             ] %>
           </div>
 
-          <%= if pending_confirmation do %>
+          <%= if pending_approval do %>
             <div class="row">
               <div class="col s12 input-field">
                 <%= label(fd, :observations, "Observaciones") %>
@@ -71,38 +67,37 @@
             </div>
           <% end %>
 
-
           <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
             <div class="section">
               <h3>Acceso global</h3>
               <div class="row">
                 <div class="input_field col s12">
                   <div>
-                    <p>
+                    <div>
                       <%= radio_button(fd, :global_grant, nil, class: "with-gap") %>
                       <label for="datasheet_global_grant_">Deshabilitado</label>
-                    </p>
+                    </div>
                     <div class="radio-description">Acceder solamente a información de las filiales en las que participa.</div>
                   </div>
                   <div>
-                    <p>
+                    <div>
                       <%= radio_button(fd, :global_grant, "reader", class: "with-gap") %>
                       <label for="datasheet_global_grant_reader">Lector</label>
-                    </p>
+                    </div>
                     <div class="radio-description">Ver información de todas las filiales y sus voluntarios.</div>
                   </div>
                   <div>
-                    <p>
+                    <div>
                       <%= radio_button(fd, :global_grant, "admin", class: "with-gap") %>
                       <label for="datasheet_global_grant_admin">Administrador</label>
-                    </p>
+                    </div>
                     <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios.</div>
                   </div>
                   <div>
-                    <p>
+                    <div>
                       <%= radio_button(fd, :global_grant, "super_admin", class: "with-gap") %>
                       <label for="datasheet_global_grant_super_admin">Super administrador</label>
-                    </p>
+                    </div>
                     <div class="radio-description">Ver y editar información de todas las filiales y sus voluntarios, y otorgar permisos globales a otros usuarios.</div>
                   </div>
                 </div>
@@ -113,53 +108,41 @@
           <% end %>
 
           <div class="section">
-            <h3>Colaboración en filial</h3>
+            <h3>Afiliación</h3>
 
-            <%= if @changeset.data.branch_identifier do %>
-            <div class="row">
-              <div class="input-field col s6">
-                <%= tag(:input, class: "form-control", type: "text", disabled: "", value: format_datasheet_identifier(@changeset.data.branch, @changeset.data)) %>
-                <%= content_tag(:label, "Número de orden", class: "control-label") %>
-              </div>
-            </div>
-            <%= end %>
+            <% branch_identifier = if input_value(fd, :branch_identifier), do: format_datasheet_identifier(@changeset.data.branch, @changeset.data), else: nil %>
 
-            <div class="row">
-              <div class="input-field col s6">
-                <label class="control-label" for="user_datasheet_branch_name">Filial</label>
-                <%= if Registro.Datasheet.is_global_admin?(current_user.datasheet) do %>
-                  <%= tag(:input,
-                    type: "text",
-                    id: "user_datasheet_branch_name",
-                    name: "branch_name",
-                    autocomplete: "off",
-                    class: "autocomplete form-control",
-                    value: @branch_name,
-                  ) %>
-                  <%= error_tag fd, :branch_name %>
-                <% else %>
-                  <%= tag(:input,
-                          class: "form-control", name: "", type: "text", disabled: "",
-                          value: @branch_name
-                          ) %>
-                <% end %>
-              </div>
+            <%=
+            cond do
+              readonly ->
+                content_tag(:div, class: "row") do
+                  readonly_colaboration_controls(fd, @branch_name, branch_identifier)
+                end
 
-              <%=
-              if readonly || pending_confirmation do
-                readonly_colaboration_controls(fd, @datasheet)
-              else
-                editable_colaboration_controls(fd, @datasheet)
-              end
-              %>
-            </div>
-            <span id="eligible-branch-warning">La filial seleccionada no es elegible por voluntarios</span>
+              pending_approval ->
+                content_tag(:div, class: "row") do
+                  pending_colaboration_controls(fd, @branch_name, branch_identifier, current_user.datasheet)
+                end
+
+              true ->
+                content_tag(:div, class: "row") do
+                  editable_colaboration_controls(fd, @branch_name, branch_identifier, current_user.datasheet)
+                end
+            end
+            %>
+
+            <%= if input_value(fd, :status) == "associate_requested" do %>
+              <%= info_card("associate-requested-warning", "info", "El usuario es un voluntario preexistente que quiere reempadronarse como asociado.") %>
+            <% end %>
+
+            <%= info_card("eligible-branch-warning", "warning", "La filial seleccionada no es elegible por voluntarios.") %>
           </div>
+
 
           <%= if !readonly do %>
             <div class="form-group actions right-align">
               <%=
-              if pending_confirmation do
+              if pending_approval do
                 [ content_tag(:button, "Aprobar", class: "btn btn-large", type: "submit", name: "flow_action", value: "approve"),
                   content_tag(:button, "Rechazar", class: "btn btn-large red", type: "submit", name: "flow_action", value: "reject"),
                 ]

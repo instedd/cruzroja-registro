@@ -4,6 +4,7 @@
     <br/>
     <%= render "form.html", conn: @conn,
                             changeset: @changeset,
+                            prefill: @prefill,
                             required: [required: ""],
                             action: registration_path(@conn, :create) %>
   <% end %>

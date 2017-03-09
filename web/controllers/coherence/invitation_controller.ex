@@ -179,8 +179,12 @@ defmodule Registro.Coherence.InvitationController do
   end
 
   def add_default_datasheet_fields(invitation_params) do
-    datasheet_params = invitation_params["datasheet"]
-                     |> Map.merge(%{ "status" => "at_start" })
+    datasheet_params = Map.put(invitation_params["datasheet"], "status", "at_start")
+
+    datasheet_params = case invitation_params["datasheet"]["role"] do
+                         "volunteer" -> datasheet_params
+                         "associate" -> Map.put(datasheet_params, "is_paying_associate", true)
+                       end
 
     Map.merge(invitation_params, %{ "name" => datasheet_params["first_name"],
                                     "datasheet" => datasheet_params})

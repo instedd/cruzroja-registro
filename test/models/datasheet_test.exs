@@ -61,17 +61,14 @@ defmodule Registro.DatasheetTest do
   test "role can not have arbitrary values", %{minimal_params: params} do
     branch = create_branch(name: "Branch")
 
-    changeset = fn(role) ->
-      params = Map.merge(params, %{role: role,
-                                   branch_id: branch.id,
-                                   status: "approved" })
+    params = Map.merge(params, %{role: "invalid_role",
+                                 branch_id: branch.id,
+                                 status: "approved" })
 
-      Datasheet.changeset(%Datasheet{}, params)
-    end
+    changeset = Datasheet.changeset(%Datasheet{}, params)
 
-    assert changeset.("volunteer").valid?
-    assert changeset.("associate").valid?
-    refute changeset.("something_else").valid?
+    refute changeset.valid?
+    assert invalid_fields(changeset) == [:role]
   end
 
   test "global_grant can not have arbitrary values", %{minimal_params: params} do
@@ -183,6 +180,65 @@ defmodule Registro.DatasheetTest do
               |> Repo.update!
 
     assert Datasheet.can_filter_by_branch?(datasheet)
+  end
+
+  describe "paying associates" do
+    test "is_paying_associate must not be NULL for associates", %{minimal_params: params} do
+      branch = create_branch(name: "Branch")
+
+      params = Map.merge(params, %{ branch_id: branch.id,
+                                    role: "associate",
+                                    status: "approved",
+                                    is_paying_associate: nil })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      refute changeset.valid?
+      assert invalid_fields(changeset) == [:is_paying_associate]
+    end
+
+    test "is_paying_associate must not be NULL for volunteers requesting to become associate", %{minimal_params: params} do
+      branch = create_branch(name: "Branch")
+
+      params = Map.merge(params, %{ branch_id: branch.id,
+                                    role: "volunteer",
+                                    status: "associate_requested",
+                                    is_paying_associate: nil })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      refute changeset.valid?
+      assert invalid_fields(changeset) == [:is_paying_associate]
+    end
+
+    test "is_paying_associate must be NULL for other volunteers", %{minimal_params: params} do
+      branch = create_branch(name: "Branch")
+
+      params = Map.merge(params, %{ branch_id: branch.id,
+                                    role: "volunteer",
+                                    status: "approved",
+                                    is_paying_associate: false })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      refute changeset.valid?
+      assert invalid_fields(changeset) == [:is_paying_associate]
+    end
+
+
+    test "associates can have the flag set", %{minimal_params: params} do
+      branch = create_branch(name: "Branch")
+
+      params = Map.merge(params, %{ branch_id: branch.id,
+                                    role: "associate",
+                                    status: "approved",
+                                    is_paying_associate: false })
+
+      changeset = Datasheet.changeset(%Datasheet{}, params)
+
+      assert changeset.valid?
+    end
+
   end
 
   describe "legal id" do

@@ -18,6 +18,7 @@
         <option value="rejected"><%= Registro.Datasheet.status_label("rejected") %></option>
       </select>
     </div>
+
     <%= if Registro.Datasheet.can_filter_by_branch?(Coherence.current_user(@conn).datasheet) do %>
     <div class="input-field col s3">
       <input type="text" id="branch" class="autocomplete">

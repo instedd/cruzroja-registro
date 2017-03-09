@@ -7,6 +7,7 @@
     <% end %>
 
     <%= form_for @changeset, users_path(@conn, :update_profile), [id: "profileForm"], fn fd  -> %>
+    <% pending_approval = pending_approval?(@changeset.data.status)  %>
     <%= inputs_for fd, :user, fn fu -> %>
 
     <%= if @changeset.action do %>
@@ -48,7 +49,7 @@
       ],
     ] %>
 
-    <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
+    <%= if pending_approval do %>
       <div class="row">
         <div class="col s12 input-field">
           <%= label(fd, :observations, "Observaciones") %>
@@ -57,8 +58,18 @@
       </div>
     <% end %>
 
+    <%= if @filled do %>
+      <%= if @current_user.datasheet.registration_date do %>
+        <%# It doesn't make sense to display this field to users that don't have it (eg. admins) %>
+        <div class="row">
+          <div class="input-field col s12">
+            <%= validated_field(fd, :registration_date, text: "Fecha de inicio de voluntariado", disabled: true) %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
     <div class="row">
-      <div class="col s12">
+      <div class="col s12 registration_date_selector">
         <input type="checkbox" id="old_volunteer" <%= if @current_user.datasheet.registration_date, do: "checked=\"checked\"" %>>
         <label for="old_volunteer">Ya soy voluntario de CRA</label>
         <div class="registration_date input-field <%= if !@current_user.datasheet.registration_date, do: "hide" %>">
@@ -67,11 +78,12 @@
         </div>
       </div>
     </div>
+    <% end %>
 
     <%= if Registro.Datasheet.is_colaborator?(@current_user.datasheet) do %>
       <div class="section">
-        <h3>Colaboración en Filial</h3>
-        <%= if Registro.Datasheet.pending_approval?(@current_user.datasheet) do %>
+        <h3>Afiliación</h3>
+        <%= if pending_approval do %>
           <% desired_state = if @current_user.datasheet.status == "associate_requested" do
                                "asociado"
                              else
@@ -95,14 +107,24 @@
     <% end %>
     <% end %>
 
-    <div class="form-group actions right-align">
-      <%= if Registro.Datasheet.can_ask_to_become_associate?(@current_user.datasheet) do %>
-        <%= form_tag(users_path(@conn, :associate_request), method: :post, style: "display:inline-block") do %>
-        <%= submit "Solicitar pase a asociado", class: "btn btn-large" %>
-        <% end %>
-      <% end %>
+    <% display_associate_switch = Registro.Datasheet.can_ask_to_become_associate?(@current_user.datasheet) %>
 
-      <%=  submit "Guardar", class: "btn btn-large btn-primary", form: "profileForm" %>
+    <%=
+    if display_associate_switch and !Registro.Datasheet.registered_for_more_than_a_year?(@current_user.datasheet) do
+      info_card("associate-info", "info", "Para ser asociado con menos de un año de antigüedad es necesario pagar una cuota mensual. Un representante de la filial se pondrá en contacto con vos para arreglar los detalles.")
+    end
+    %>
+
+    <div class="form-group actions right-align">
+      <%=
+      if display_associate_switch do
+        form_tag(users_path(@conn, :associate_request), method: :post, style: "display:inline-block") do
+          submit("Solicitar pase a asociado", class: "btn btn-large")
+        end
+      end
+      %>
+
+      <%= submit "Guardar", class: "btn btn-large btn-primary", form: "profileForm" %>
     </div>
   <% end %>
 </div>

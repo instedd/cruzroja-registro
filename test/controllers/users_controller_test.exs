@@ -493,6 +493,7 @@ defmodule Registro.UsersControllerTest do
         volunteer
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                   status: "associate_requested",
+                                                  registration_date: ~D[2010-01-01],
                                                   is_paying_associate: false } })
                                                   |> Repo.update!
 
@@ -510,6 +511,7 @@ defmodule Registro.UsersControllerTest do
         volunteer
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                     status: "associate_requested",
+                                                    registration_date: ~D[2010-01-01],
                                                     is_paying_associate: false } })
         |> Repo.update!
 
@@ -527,6 +529,7 @@ defmodule Registro.UsersControllerTest do
         volunteer
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                   status: "associate_requested",
+                                                  registration_date: ~D[2010-01-01],
                                                   is_paying_associate: false } })
                                                   |> Repo.update!
 
@@ -544,6 +547,7 @@ defmodule Registro.UsersControllerTest do
         volunteer
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                   status: "associate_requested",
+                                                  registration_date: ~D[2010-01-01],
                                                   is_paying_associate: false } })
         |> Repo.update!
 
@@ -561,6 +565,7 @@ defmodule Registro.UsersControllerTest do
         volunteer
         |> User.changeset(:update, %{ datasheet: %{ id: volunteer.datasheet.id,
                                                     status: "associate_requested",
+                                                    registration_date: ~D[2010-01-01],
                                                     is_paying_associate: false } })
         |> Repo.update!
 
@@ -693,6 +698,7 @@ defmodule Registro.UsersControllerTest do
       assert user.datasheet.branch_id == branch2.id
       assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "approved"
+      assert !is_nil(user.datasheet.registration_date)
     end
   end
 
@@ -876,7 +882,6 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "CSV download" do
-    @tag :focus
     test "it allows downloading all users' information as CSV", %{conn: conn} do
       conn = conn
       |> log_in("super_admin@instedd.org")

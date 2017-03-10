@@ -50,7 +50,7 @@ defmodule Registro.DatasheetTest do
   test "a volunteer cannot have empty branch_id", %{minimal_params: params} do
     params = Map.merge(params, %{role: "volunteer",
                                  branch_id: nil,
-                                 status: "approved",
+                                 status: "at_start",
                                 })
 
     cs = Datasheet.changeset(%Datasheet{}, params)
@@ -58,12 +58,25 @@ defmodule Registro.DatasheetTest do
     assert invalid_fields(cs) == [:branch_id]
   end
 
+  test "registration_date must be set for approved volunteers", %{minimal_params: params} do
+    branch = create_branch(name: "Branch")
+
+    params = Map.merge(params, %{role: "volunteer",
+                                 branch_id: branch.id,
+                                 status: "approved",
+                                })
+
+    cs = Datasheet.changeset(%Datasheet{}, params)
+
+    assert invalid_fields(cs) == [:registration_date]
+  end
+
   test "role can not have arbitrary values", %{minimal_params: params} do
     branch = create_branch(name: "Branch")
 
     params = Map.merge(params, %{role: "invalid_role",
                                  branch_id: branch.id,
-                                 status: "approved" })
+                                 status: "at_start" })
 
     changeset = Datasheet.changeset(%Datasheet{}, params)
 
@@ -203,6 +216,7 @@ defmodule Registro.DatasheetTest do
       params = Map.merge(params, %{ branch_id: branch.id,
                                     role: "volunteer",
                                     status: "associate_requested",
+                                    registration_date: ~D[2010-01-01],
                                     is_paying_associate: nil })
 
       changeset = Datasheet.changeset(%Datasheet{}, params)
@@ -216,7 +230,7 @@ defmodule Registro.DatasheetTest do
 
       params = Map.merge(params, %{ branch_id: branch.id,
                                     role: "volunteer",
-                                    status: "approved",
+                                    status: "at_start",
                                     is_paying_associate: false })
 
       changeset = Datasheet.changeset(%Datasheet{}, params)

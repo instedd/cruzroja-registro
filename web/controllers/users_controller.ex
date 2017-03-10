@@ -387,16 +387,9 @@ defmodule Registro.UsersController do
         end
 
       "approve" ->
-        fallback_date = datasheet.registration_date || Timex.Date.today
-
-        registration_date = case datasheet_params["registration_date"] do
-                              nil -> fallback_date
-                              ""  -> fallback_date
-                              val -> val
-                            end
-
         datasheet_params
-        |> Map.merge(%{ "status" => "approved", "registration_date" => registration_date })
+        |> Map.put("status", "approved")
+        |> ensure_registration_date(datasheet)
         |> apply_role_changes(selected_role)
 
       _ ->
@@ -404,6 +397,18 @@ defmodule Registro.UsersController do
         |> apply_role_changes(selected_role)
         |> set_status_if_creating_colaboration(datasheet)
     end
+  end
+
+  def ensure_registration_date(datasheet_params, datasheet) do
+    fallback_date = datasheet.registration_date || Timex.Date.today
+
+    registration_date = case datasheet_params["registration_date"] do
+                          nil -> fallback_date
+                          ""  -> fallback_date
+                          val -> val
+                        end
+
+    Map.put(datasheet_params, "registration_date", registration_date)
   end
 
   defp apply_role_changes(datasheet_params, selected_role) do
@@ -434,7 +439,15 @@ defmodule Registro.UsersController do
       role = datasheet_params["role"]
 
       if !is_nil(branch_id) && !is_nil(role) do
-        Map.put(datasheet_params, "status", "approved")
+        case role do
+          "volunteer" ->
+            datasheet_params
+            |> Map.put("status", "approved")
+            |> ensure_registration_date(datasheet)
+          _ ->
+            datasheet_params
+            |> Map.put("status", "approved")
+        end
       else
         datasheet_params
       end

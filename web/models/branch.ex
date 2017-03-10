@@ -73,10 +73,8 @@ defmodule Registro.Branch do
   end
 
   def all_by_province() do
-    branches = Registro.Repo.all(from b in Registro.Branch, where: b.eligible, select: b, order_by: :province)
-
-    Enum.reduce branches, %{}, fn(branch, opts) ->
-      Map.update(opts, branch.province, [{branch.name, branch.id}], fn arr -> [{branch.name, branch.id } | arr] end)
-    end
+    (from b in Registro.Branch, where: b.eligible, select: b, order_by: :name)
+    |> Registro.Repo.all
+    |> Enum.group_by(&(&1.province), &({&1.name, &1.id}))
   end
 end

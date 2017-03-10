@@ -22,7 +22,7 @@ defmodule Registro.RegistrationControllerTest do
 
     branch_names = conn.assigns[:branches]["La Pampa"] |> Enum.map(fn {name, _id} -> name end)
 
-    assert branch_names == ["Branch 3", "Branch 1"]
+    assert branch_names == ["Branch 1", "Branch 3"]
   end
 
   describe "creation" do

@@ -54,6 +54,13 @@
 
     <div class="row">
       <div class="input-field col s12">
+        <%= select(f, :province, Registro.Province.all, class: "form-control") %>
+        <%= label(f, :province, "Provincia") %>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="input-field col s12">
         <%= validated_input f, :phone_number, [disabled: @readonly], class: "form-control" %>
         <%= validated_label f, :phone_number, [text: "Teléfono"], class: "control-label" %>
       </div>

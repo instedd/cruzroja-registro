@@ -11,6 +11,7 @@ defmodule Registro.Branch do
     field :email, :string
     field :president, :string
     field :authorities, :string
+    field :province, :string
 
     field :eligible, :boolean
     field :identifier, :integer
@@ -33,7 +34,7 @@ defmodule Registro.Branch do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities, :eligible])
+    |> cast(params, [:name, :address, :phone_number, :cell_phone_number, :email, :president, :authorities, :eligible, :province])
     |> validate_required([:name, :eligible])
     |> unique_constraint(:name, message: "ya pertenece a otra filial")
   end
@@ -69,5 +70,11 @@ defmodule Registro.Branch do
   def generate_identifier(changeset) do
     {:ok, identifier} = PgSql.next_branch_seq_num
     put_change(changeset, :identifier, identifier)
+  end
+
+  def all_by_province() do
+    (from b in Registro.Branch, where: b.eligible, select: b, order_by: :name)
+    |> Registro.Repo.all
+    |> Enum.group_by(&(&1.province), &({&1.name, &1.id}))
   end
 end

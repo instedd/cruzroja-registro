@@ -8,9 +8,9 @@ defmodule Registro.RegistrationControllerTest do
   setup(context) do
     create_country("Argentina")
 
-    branch1 = create_branch(name: "Branch 1", eligible: true)
-    branch2 = create_branch(name: "Branch 2", eligible: false)
-    branch3 = create_branch(name: "Branch 3", eligible: true)
+    branch1 = create_branch(name: "Branch 1", eligible: true, province: "La Pampa")
+    branch2 = create_branch(name: "Branch 2", eligible: false, province: "La Pampa")
+    branch3 = create_branch(name: "Branch 3", eligible: true, province: "La Pampa")
 
     {:ok, Map.merge(context, %{ branch1: branch1,
                                 branch2: branch2,
@@ -20,7 +20,7 @@ defmodule Registro.RegistrationControllerTest do
   test "form only lists eligible branches", %{conn: conn} do
     conn = get(conn, registration_path(conn, :new))
 
-    branch_names = conn.assigns[:branches] |> Enum.map(fn {name, _id} -> name end)
+    branch_names = conn.assigns[:branches]["La Pampa"] |> Enum.map(fn {name, _id} -> name end)
 
     assert branch_names == ["Branch 1", "Branch 3"]
   end

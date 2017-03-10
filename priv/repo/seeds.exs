@@ -122,16 +122,17 @@ defmodule Seed do
     File.stream!("priv/data/branches.csv")
     |> Enum.map(&parse_branch_line/1)
     |> Enum.each(fn line ->
-      [branch_name, address, province, president, authorities, phone, cell, email] = line
+      [branch_name, address, city, president, authorities, phone, cell, email, province] = line
 
       params = %{ name: titleize(branch_name),
-                  address: titleize(address <> " - " <> province),
+                  address: titleize(address <> " - " <> city),
                   president: titleize(president),
                   authorities: titleize(authorities),
                   phone_number: phone,
                   cell_phone_number: cell,
                   email: email,
-                  eligible: true }
+                  eligible: true,
+                  province: province }
 
       Branch.creation_changeset(params) |> Repo.insert!
     end)

@@ -70,6 +70,7 @@ defmodule Seed do
           phone_number: "+54 11111111",
           role: "volunteer",
           status: "approved",
+          registration_date: ~D[2017-01-01],
           branch_id: branch1.id
         }
       },
@@ -103,6 +104,7 @@ defmodule Seed do
           phone_number: "+54 11111111",
           role: "volunteer",
           status: "approved",
+          registration_date: ~D[2017-01-01],
           branch_id: branch2.id
         }
       }

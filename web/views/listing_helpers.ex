@@ -2,6 +2,24 @@ defmodule Registro.ListingsHelpers do
 
   use Phoenix.HTML
 
+  def listing_header(fields, {sorting_field, sorting_dir} \\ {nil, :asc}) do
+    header_class = if is_nil(sorting_field), do: "", else: "sortable"
+
+    content_tag(:thead) do
+      content_tag(:tr) do
+        Enum.map(fields, fn {field_name, label} ->
+          header_class = if sorting_field == to_string(field_name) do
+                          "sort sort-#{sorting_dir} #{header_class}"
+                        else
+                          header_class
+                        end
+
+          content_tag(:th, label, [{:'data-field', field_name}, {:class, header_class}])
+        end)
+      end
+    end
+  end
+
   @doc """
   Builds a pagination control.
   - current_page: current page number (starting at 1)

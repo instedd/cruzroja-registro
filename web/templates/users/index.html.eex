@@ -47,7 +47,7 @@
     </ul>
   </div>
 
-  <%= render "listing.html", conn: @conn, datasheets: @datasheets, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
+  <%= render "listing.html", conn: @conn, datasheets: @datasheets, sorting: @sorting, page: @page, page_size: @page_size, page_count: @page_count, total_count: @total_count %>
 </div>
 
 <script>

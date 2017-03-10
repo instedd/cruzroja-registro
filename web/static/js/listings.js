@@ -1,32 +1,76 @@
-var navigatePage = (page, config) => {
+function changeSorting(field, config) {
   return (e) => {
-    e.preventDefault();
+    let header = config.container.find(`th[data-field=${field}]`)
+    var direction
 
-    var params = filterParams(config.filters);
-
-    if (config.pagination) {
-      var paginationData = config.container.find(".pager").data();
-
-      var targetPage = paginationData[page] || 1;
-
-      if (targetPage) {
-        params = params.concat([["page", targetPage]])
-        fetch(config, params)
-      }
+    if (header.hasClass("sort-desc")) {
+      header.removeClass("sort-desc")
+      direction = "asc"
     } else {
-      fetch(config, params)
+      header.removeClass("sort-asc")
+      direction = "desc"
     }
+
+    config.container.
+      find("th")
+      .removeClass("sort")
+      .removeClass("sort-asc")
+      .removeClass("sort-desc")
+
+    header.addClass(`sort sort-${direction}`)
+
+    loadResults("initial", config)
   }
 }
 
-var buildUri = (endpoint, params) => {
-  var query = params.map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
+function addSorting(params, config) {
+  let sortingHeader = $($("th.sort")[0])
+  let field = sortingHeader.data("field")
+
+  if (sortingHeader.hasClass("sort-desc")) {
+    return params.concat([["sorting", field], ["sorting_direction", "desc"]])
+  } else {
+    return params.concat([["sorting", field], ["sorting_direction", "asc"]])
+  }
+}
+
+function loadResults(page, config) {
+  var params = filterParams(config.filters);
+
+  if (config.sorting) {
+    params = addSorting(params, config)
+  }
+
+  params = params.concat([["raw", 1]])
+
+  if (config.pagination) {
+    let paginationData = config.container.find(".pager").data();
+    let targetPage = paginationData[page] || 1;
+
+    if (targetPage) {
+      params = params.concat([["page", targetPage]])
+      fetch(config, params)
+    }
+  } else {
+    fetch(config, params)
+  }
+}
+
+function navigateHandler(page, config) {
+  return (e) => {
+    e.preventDefault();
+    loadResults(page, config)
+  }
+}
+
+function buildUri(endpoint, params) {
+  let query = params.map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
       .join("&")
 
   return endpoint + "?" + query;
 }
 
-var fetch = (config, params) => {
+function fetch(config, params) {
   params = params.concat([["raw", 1]])
 
   $.ajax({
@@ -35,8 +79,7 @@ var fetch = (config, params) => {
   }).done( data => {
     config.container.find('#replaceable').html(data)
 
-    initPagination(config)
-    bindItemClick(config)
+    initBindings(config)
 
     if (config.afterFetch) {
       config.afterFetch()
@@ -47,35 +90,42 @@ var fetch = (config, params) => {
   ;
 }
 
-var filterParams = (filters) => {
+function filterParams(filters) {
   return filters.map(f => [f.name, f.getValue()])
     .filter(kv => kv[1])
 }
 
-var initPagination = (config) => {
+function initBindings(config) {
   if (config.pagination) {
-    var pager = config.container.find(".pager")
+    let pager = config.container.find(".pager")
 
     pager.find(".pager-left")
-         .on("click", navigatePage("previousPage", config))
+      .on("click", navigateHandler("previousPage", config))
 
     pager.find(".pager-right")
-         .on("click", navigatePage("nextPage", config))
+      .on("click", navigateHandler("nextPage", config))
 
     pager.find(".disabled")
-         .on("click", (e) => e.preventDefault())
+      .on("click", (e) => e.preventDefault())
   }
-}
 
-var bindItemClick = (config) => {
   if (config.onItemClick) {
     config.container.find('tbody tr').on("click", config.onItemClick)
+  }
+
+  if (config.sorting) {
+    config.container.find("th").each((i, e) => {
+      let header = $(e)
+      let field = header.data("field")
+
+      header.bind("click", changeSorting(field, config))
+    })
   }
 }
 
 export var Listings = {
   init : (config) => {
-    var container = $(config.selector);
+    let container = $(config.selector);
 
     if (container.length) {
       config.container = container;
@@ -83,10 +133,9 @@ export var Listings = {
       return;
     }
 
-    var applyFilters = navigatePage("initial", config);
+    let applyFilters = navigateHandler("initial", config);
 
-    initPagination(config)
-    bindItemClick(config)
+    initBindings(config)
 
     config.filters.forEach((filter) => {
       filter.subscribe(applyFilters);

@@ -17,6 +17,28 @@
 }
 
 .listing {
+  thead {
+    cursor: default;
+
+    th.sortable {
+      cursor: pointer;
+
+      &.sort::after {
+        margin-left: 20px;
+      }
+      &.sort-asc::after {
+        content: "▲";
+      }
+      &.sort-desc::after {
+        content: "▼";
+      }
+    }
+
+    .sorting-indicator {
+      margin-left: 20px;
+    }
+  }
+
   &.clickable tbody tr {
     cursor: pointer;
   }

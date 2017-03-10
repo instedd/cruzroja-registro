@@ -16,16 +16,23 @@ defmodule Registro.UsersController do
   import Ecto.Query
 
   plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
-  plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:filter]
+  plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:listing]
   plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
   plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
   def index(conn, _params) do
     current_user = Coherence.current_user(conn)
-    query = listing_page_query(conn, 1)
-    datasheets = Repo.all(query)
-    total_count = Repo.aggregate(query, :count, :id)
+
+    filtered_query = listing_query(conn)
+
+    datasheets =
+      filtered_query
+      |> order_by([d], d.last_name)
+      |> Pagination.query(page_number: 1)
+      |> Repo.all
+
+    total_count = Repo.count(filtered_query)
 
     render(conn, "index.html",
       branches: Branch.accessible_by(current_user.datasheet),
@@ -139,14 +146,21 @@ defmodule Registro.UsersController do
     |> render("show.html", changeset: changeset, datasheet: datasheet, branch_name: branch_name)
   end
 
-  def filter(conn, params) do
+  def listing(conn, params) do
     page = Pagination.requested_page(params)
 
-    query = listing_page_query(conn, page)
-          |> apply_filters(params)
+    filtered_query =
+      conn
+      |> listing_query
+      |> apply_filters(params)
 
-    total_count = Repo.aggregate(query, :count, :id)
-    datasheets = Repo.all(query |> Pagination.restrict(page_number: page))
+    datasheets =
+      filtered_query
+      |> order_by([d], d.last_name)
+      |> Pagination.query(page_number: page)
+      |> Repo.all
+
+    total_count = Repo.count(filtered_query)
 
     conn
     |> put_layout(false)
@@ -354,12 +368,6 @@ defmodule Registro.UsersController do
         where: d.filled == true
 
     restrict_to_visible_users(q, conn)
-  end
-
-  defp listing_page_query(conn, page_number) do
-    listing_query(conn)
-      |> order_by([d], d.last_name)
-      |> Pagination.query(page_number: page_number)
   end
 
   defp action_for(changeset) do

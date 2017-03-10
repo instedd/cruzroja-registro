@@ -39,7 +39,11 @@ defmodule Registro.BranchesController do
       page = Pagination.requested_page(params)
       total_count = Repo.aggregate(query, :count, :id)
       page_count = Pagination.page_count(total_count)
-      branches = Pagination.all(query, page_number: page)
+
+      branches =
+        query
+        |> Pagination.query(page_number: page)
+        |> Registro.Repo.all
 
       {template, conn} = if render_raw do
         { "listing.html", put_layout(conn, false) }

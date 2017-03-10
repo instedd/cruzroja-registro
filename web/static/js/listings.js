@@ -76,6 +76,7 @@ var bindItemClick = (config) => {
 export var Listings = {
   init : (config) => {
     var container = $(config.selector);
+
     if (container.length) {
       config.container = container;
     } else {

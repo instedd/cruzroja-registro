@@ -7,7 +7,7 @@ export var Users = {
     $("#users").each(() => {
       Listings.init({
         selector: "#users.listing",
-        endpoint: "/usuarios/listing",
+        endpoint: "/usuarios/",
         downloadEndpoint: "/usuarios/descargar",
         pagination: true,
         filters: [

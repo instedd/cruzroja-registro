@@ -15,33 +15,52 @@ defmodule Registro.UsersController do
 
   import Ecto.Query
 
-  plug Authorization, [ check: &UsersController.authorize_listing/2 ] when action in [:index]
-  plug Authorization, [ check: &UsersController.authorize_listing/2, redirect: false] when action in [:listing]
   plug Authorization, [ check: &UsersController.authorize_detail/2 ] when action in [:show, :update]
   plug Authorization, [ check: &UsersController.authorize_profile_update/2 ] when action in [:update_profile]
   plug Authorization, [ check: &UsersController.authorize_associate_request/2 ] when action in [:associate_request]
 
-  def index(conn, _params) do
+  def index(conn, params) do
     current_user = Coherence.current_user(conn)
+    render_raw = params["raw"] != nil
+    authorized = Datasheet.is_staff?(current_user.datasheet)
 
-    filtered_query = listing_query(conn)
+    if authorized do
+      page = Pagination.requested_page(params)
 
-    datasheets =
-      filtered_query
-      |> order_by([d], d.last_name)
-      |> Pagination.query(page_number: 1)
-      |> Repo.all
+      filtered_query =
+        conn
+        |> listing_query
+        |> apply_filters(params)
 
-    total_count = Repo.count(filtered_query)
+      datasheets =
+        filtered_query
+        |> order_by([d], d.last_name)
+        |> Pagination.query(page_number: page)
+        |> Repo.all
 
-    render(conn, "index.html",
-      branches: Branch.accessible_by(current_user.datasheet),
-      datasheets: datasheets,
-      page: 1,
-      page_count: Pagination.page_count(total_count),
-      page_size: Pagination.default_page_size,
-      total_count: total_count
-    )
+      total_count = Repo.count(filtered_query)
+
+      render_params = [
+        datasheets: datasheets,
+        page: page,
+        page_count: Pagination.page_count(total_count),
+        page_size: Pagination.default_page_size,
+        total_count: total_count
+      ]
+
+      if render_raw do
+        conn
+        |> put_layout(false)
+        |> render("listing.html", render_params)
+      else
+        branches = Branch.accessible_by(current_user.datasheet)
+        render_params = Keyword.put(render_params, :branches, branches)
+
+        render(conn, "index.html", render_params)
+      end
+    else
+      Authorization.handle_unauthorized(conn, redirect: !render_raw)
+    end
   end
 
   def profile(conn, _params) do
@@ -144,33 +163,6 @@ defmodule Registro.UsersController do
     |> assign(:history, UserAuditLogEntry.for(datasheet))
     |> load_datasheet_form_data
     |> render("show.html", changeset: changeset, datasheet: datasheet, branch_name: branch_name)
-  end
-
-  def listing(conn, params) do
-    page = Pagination.requested_page(params)
-
-    filtered_query =
-      conn
-      |> listing_query
-      |> apply_filters(params)
-
-    datasheets =
-      filtered_query
-      |> order_by([d], d.last_name)
-      |> Pagination.query(page_number: page)
-      |> Repo.all
-
-    total_count = Repo.count(filtered_query)
-
-    conn
-    |> put_layout(false)
-    |> render("listing.html",
-      datasheets: datasheets,
-      page: page,
-      page_count: Pagination.page_count(total_count),
-      page_size: Pagination.default_page_size,
-      total_count: total_count
-    )
   end
 
   def download_csv(conn, params) do
@@ -290,7 +282,7 @@ defmodule Registro.UsersController do
     end
   end
 
-  def authorize_listing(_conn, current_user) do
+  def authorize_listing(current_user) do
     datasheet = current_user.datasheet
     Datasheet.is_staff?(datasheet)
   end

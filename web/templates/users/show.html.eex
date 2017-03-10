@@ -110,8 +110,7 @@
           <div class="section">
             <h3>Afiliación</h3>
 
-            <% branch_identifier = if input_value(fd, :branch_identifier), do: format_datasheet_identifier(@changeset.data.branch, @changeset.data), else: nil %>
-
+            <% branch_identifier = if @changeset.data.branch_identifier, do: format_datasheet_identifier(@changeset.data.branch, @changeset.data), else: nil %>
             <%=
             cond do
               readonly ->

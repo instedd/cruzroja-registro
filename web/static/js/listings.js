@@ -3,19 +3,15 @@ function changeSorting(field, config) {
     let header = config.container.find(`th[data-field=${field}]`)
     var direction
 
-    if (header.hasClass("sort-desc")) {
-      header.removeClass("sort-desc")
-      direction = "asc"
-    } else {
-      header.removeClass("sort-asc")
+    if (header.hasClass("sort-asc")) {
       direction = "desc"
+    } else {
+      direction = "asc"
     }
 
-    config.container.
-      find("th")
-      .removeClass("sort")
-      .removeClass("sort-asc")
-      .removeClass("sort-desc")
+    config.container
+      .find("th")
+      .removeClass("sort sort-asc sort-desc")
 
     header.addClass(`sort sort-${direction}`)
 

@@ -10,6 +10,7 @@ export var Users = {
         endpoint: "/usuarios/",
         downloadEndpoint: "/usuarios/descargar",
         pagination: true,
+        sorting: true,
         filters: [
           Listings.onEventFilter("role", "#role", "change"),
           Listings.onEventFilter("status", "#status", "change"),

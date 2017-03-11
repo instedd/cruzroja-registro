@@ -43,6 +43,7 @@ export var Branches = {
         selector: "#page-branches.listing",
         endpoint: "/filiales/",
         pagination: true,
+        sorting: false,
         filters: [],
         onItemClick: (e) => {
           document.location.href = $(e.target).closest("tr").data("href")

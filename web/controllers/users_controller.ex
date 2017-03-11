@@ -27,14 +27,16 @@ defmodule Registro.UsersController do
     if authorized do
       page = Pagination.requested_page(params)
 
+      sorting = sorting(params)
+
       filtered_query =
         conn
         |> listing_query
         |> apply_filters(params)
+        |> apply_sorting(sorting)
 
       datasheets =
         filtered_query
-        |> order_by([d], d.last_name)
         |> Pagination.query(page_number: page)
         |> Repo.all
 
@@ -42,6 +44,7 @@ defmodule Registro.UsersController do
 
       render_params = [
         datasheets: datasheets,
+        sorting: sorting,
         page: page,
         page_count: Pagination.page_count(total_count),
         page_size: Pagination.default_page_size,
@@ -254,6 +257,32 @@ defmodule Registro.UsersController do
     from d in query,
       left_join: u in User, on: u.datasheet_id == d.id,
       where: ilike(d.first_name, ^name) or ilike(d.last_name, ^name) or ilike(u.email, ^name)
+  end
+
+  def sorting(params) do
+    field = params["sorting"] || "name"
+
+    direction = case params["sorting_direction"] do
+                  "desc" -> :desc
+                  _ -> :asc
+                end
+
+    {field, direction}
+  end
+
+  def apply_sorting(query, {field, direction}) do
+    case field do
+      "name" ->
+        order_by(query, [d], [{^direction, d.first_name}, {^direction, d.last_name}])
+      "email" ->
+        from d in query, left_join: u in User, on: u.datasheet_id == d.id, order_by: [{^direction, u.email}]
+      "role" ->
+        order_by(query, [d], [{^direction, d.role}])
+      "status" ->
+        order_by(query, [d], [{^direction, d.status}])
+      "branch" ->
+        from d in query, left_join: b in Branch, on: d.branch_id == b.id, order_by: [{^direction, b.name}]
+    end
   end
 
   defp restrict_to_visible_users(query, conn) do

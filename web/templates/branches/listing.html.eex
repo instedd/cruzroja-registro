@@ -1,15 +1,14 @@
 <div id="replaceable">
   <table class="bordered responsive-table highlight">
-    <thead>
-      <tr>
-        <th data-field="name">Nombre</th>
-        <th data-field="address">Dirección</th>
-        <th data-field="phone_number">Teléfono</th>
-        <th data-field="cell_phone_number">Celular</th>
-        <th data-field="email">E-mail</th>
-        <th data-field="compound-authorities">Autoridades</th>
-      </tr>
-    </thead>
+
+    <%= listing_header([
+        name: "Nombre",
+        address: "Dirección",
+        phone_number: "Teléfono",
+        cell_phone_number: "Celular",
+        email: "E-mail",
+        'compound-authorities': "Autoridades",
+    ]) %>
 
     <tbody>
       <%= for b <- @branches do %>

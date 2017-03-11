@@ -4,9 +4,9 @@ import { RegistrationDateSelector } from "./registration_date_selector";
 
 export var Users = {
   init: function() {
-    $("#users").each(() => {
+    $("#page-users").each(() => {
       Listings.init({
-        selector: "#users.listing",
+        selector: "#page-users.listing",
         endpoint: "/usuarios/",
         downloadEndpoint: "/usuarios/descargar",
         pagination: true,
@@ -24,11 +24,11 @@ export var Users = {
       BranchSelector.init(window.branches)
     })
 
-    $("#profile").each(() => {
+    $("#page-profile").each(() => {
       RegistrationDateSelector.init(".registration_date_selector")
     })
 
-    $("#profile-show").each(() => {
+    $("#page-profile-show").each(() => {
       let eligibilityWarning = $("#eligible-branch-warning");
 
       BranchSelector.init(window.branches, {

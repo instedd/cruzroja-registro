@@ -6,7 +6,7 @@
   <%= set_generic_error_toast %>
 <% end %>
 
-<div id="profile-show">
+<div id="page-profile-show" class="edit-form">
   <div class="row">
     <div class="col">
       <h2 class="name"><%= Registro.Datasheet.full_name(@changeset.data) %></h2>

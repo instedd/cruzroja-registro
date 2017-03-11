@@ -1,4 +1,4 @@
-<div id="profile">
+<div id="page-profile" class="edit-form">
   <%= single_column do %>
     <h5>Datos personales</h5>
 

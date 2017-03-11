@@ -1,4 +1,4 @@
-<div id="branch-details">
+<div id="page-branch-detail" class="edit-form">
   <div class="content-main">
     <%= render "form.html",
                 conn: @conn,

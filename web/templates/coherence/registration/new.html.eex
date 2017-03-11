@@ -1,4 +1,4 @@
-<div id="register">
+<div id="page-register" class="edit-form">
   <%= single_column do %>
     <h5>Ingresá tus datos</h5>
     <br/>

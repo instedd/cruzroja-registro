@@ -1,4 +1,4 @@
-#register, #profile, #branch-details, #profile-show {
+.edit-form {
   h2.name {
     font-size: 20px;
   }
@@ -29,12 +29,5 @@
     font-size: 12px;
     padding-left: 35px;
     margin-bottom: 15px;
-  }
-}
-
-
-#register {
-  .captcha {
-    margin-bottom: 20px;
   }
 }

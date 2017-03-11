@@ -38,9 +38,9 @@ var initAdminSelector = (containerId, initialData) => {
 
 export var Branches = {
   init: function() {
-    $("#branches").each(() =>
+    $("#page-branches").each(() =>
       Listings.init({
-        selector: "#branches.listing",
+        selector: "#page-branches.listing",
         endpoint: "/filiales/",
         pagination: true,
         filters: [],
@@ -50,7 +50,7 @@ export var Branches = {
       })
    )
 
-   $("#branch-details").each(() => {
+   $("#page-branch-detail").each(() => {
      if (window.branchAdmins) {
        initAdminSelector('admins-selector', branchAdmins)
      }

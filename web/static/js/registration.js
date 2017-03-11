@@ -89,7 +89,7 @@ let initColaborationSettings = (container) => {
 
 export var Registration = {
   init: function() {
-    $("#register").each(() => {
+    $("#page-register").each(() => {
       initColaborationSettings($("#colaboration-kinds"))
     })
   }};

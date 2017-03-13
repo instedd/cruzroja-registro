@@ -680,7 +680,7 @@ defmodule Registro.UsersControllerTest do
   # A super admin should be allowed to mark a user with no previous branch
   # colaboration (ie. other admins) as a colaborator of any branch.
   describe "marking users as colaborators of a branch after registration" do
-    test "the colaboration is assumed approved when set by a super_admin", %{conn: conn} do
+    test "a volunteer is assumed approved when set by a super_admin", %{conn: conn} do
       %{datasheet: datasheet} = user = get_user_by_email("branch_admin1@instedd.org")
 
       branch2 = Repo.get_by(Branch, name: "Branch 2")
@@ -688,16 +688,38 @@ defmodule Registro.UsersControllerTest do
       {nil, nil, nil} = {datasheet.branch_id, datasheet.role, datasheet.status}
 
       params = %{
-          email: user.email,
-          selected_role: "volunteer",
-          datasheet: %{ id: user.datasheet.id, branch_id: branch2.id }
-        }
+        email: user.email,
+        selected_role: "volunteer",
+        datasheet: %{ id: user.datasheet.id, branch_id: branch2.id }
+      }
 
       {_conn, user} = update_user(conn, "super_admin@instedd.org", user, params)
 
       assert user.datasheet.branch_id == branch2.id
       assert user.datasheet.role == "volunteer"
       assert user.datasheet.status == "approved"
+      assert !is_nil(user.datasheet.registration_date)
+    end
+
+    test "an associate is assumed approved when set by a super_admin", %{conn: conn} do
+      %{datasheet: datasheet} = user = get_user_by_email("branch_admin1@instedd.org")
+
+      branch2 = Repo.get_by(Branch, name: "Branch 2")
+
+      {nil, nil, nil} = {datasheet.branch_id, datasheet.role, datasheet.status}
+
+      params = %{
+        email: user.email,
+        selected_role: "paying_associate",
+        datasheet: %{ id: user.datasheet.id, branch_id: branch2.id }
+      }
+
+      {_conn, user} = update_user(conn, "super_admin@instedd.org", user, params)
+
+      assert user.datasheet.branch_id == branch2.id
+      assert user.datasheet.role == "associate"
+      assert user.datasheet.status == "approved"
+      assert user.datasheet.is_paying_associate == true
       assert !is_nil(user.datasheet.registration_date)
     end
   end

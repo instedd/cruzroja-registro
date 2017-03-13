@@ -265,7 +265,7 @@ defmodule Registro.Datasheet do
         |> validate_required([:role, :branch_id, :status])
         |> validate_role
         |> validate_status
-        |> validate_approved_volunteer_must_have_registration_date
+        |> validate_approved_colaborator_must_have_registration_date
         |> validate_associates_paying_flag
     end
   end
@@ -340,10 +340,25 @@ defmodule Registro.Datasheet do
     end
   end
 
-  def validate_approved_volunteer_must_have_registration_date(changeset) do
+  def validate_approved_colaborator_must_have_registration_date(changeset) do
     role = Ecto.Changeset.get_field(changeset, :role)
     status = Ecto.Changeset.get_field(changeset, :status)
     registration_date = Ecto.Changeset.get_field(changeset, :registration_date)
+
+    if !is_nil(role) do
+      case {status, registration_date} do
+        {"approved", nil} ->
+          Ecto.Changeset.add_error(changeset, :registration_date, "is invalid")
+        {"associate_requested", nil} ->
+          # All volunteers in "associate_requested" state should have gone through
+          # "approved" before. This validation is here just to catch bugs earlier,
+          # specially in tests were we create fake values without going through
+          # intermediate stages
+          Ecto.Changeset.add_error(changeset, :registration_date, "is invalid")
+        _ ->
+          changeset
+      end
+    end
 
     case {role, status, registration_date} do
       {"volunteer", "approved", nil} ->

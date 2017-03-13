@@ -468,15 +468,9 @@ defmodule Registro.UsersController do
       role = datasheet_params["role"]
 
       if !is_nil(branch_id) && !is_nil(role) do
-        case role do
-          "volunteer" ->
-            datasheet_params
-            |> Map.put("status", "approved")
-            |> ensure_registration_date(datasheet)
-          _ ->
-            datasheet_params
-            |> Map.put("status", "approved")
-        end
+        datasheet_params
+        |> Map.put("status", "approved")
+        |> ensure_registration_date(datasheet)
       else
         datasheet_params
       end

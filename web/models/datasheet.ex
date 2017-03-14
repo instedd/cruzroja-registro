@@ -17,10 +17,17 @@ defmodule Registro.Datasheet do
     field :legal_id, :string
     field :birth_date, :date
     field :occupation, :string
-    field :address, :string
     field :phone_number, :string
     field :registration_date, :date
     field :observations, :string
+    field :address_street, :string
+    field :address_number, :integer
+    field :address_block, :string
+    field :address_floor, :integer
+    field :address_apartement, :string
+    field :address_city, :string
+    field :address_province, :string
+    field :postal_code, :integer
 
     field :status, :string
     field :role, :string
@@ -52,13 +59,16 @@ defmodule Registro.Datasheet do
                      :country_id,
                      :birth_date,
                      :occupation,
-                     :address,
+                     :address_street,
+                     :address_number,
+                     :address_province,
+                     :address_city,
                      :phone_number
                    ]
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate])
+    |> cast(params, @required_fields ++ [:address_block, :address_floor, :address_province, :observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)
@@ -80,7 +90,7 @@ defmodule Registro.Datasheet do
 
   def profile_filled_changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:registration_date])
+    |> cast(params, @required_fields ++ [:registration_date, :address_block, :address_floor, :address_province])
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
@@ -89,9 +99,9 @@ defmodule Registro.Datasheet do
 
   def profile_update_changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:phone_number, :occupation, :address])
+    |> cast(params, [:phone_number, :occupation, :address_street, :address_apartement, :address_number, :address_province, :address_city, :address_block, :address_floor, :address_province])
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
-    |> validate_required([:phone_number, :occupation, :address])
+    |> validate_required([:phone_number, :occupation, :address_street, :address_province, :address_city, :address_province, :address_number])
   end
 
   def make_admin_changeset(datasheet, branches) do

@@ -519,6 +519,7 @@ defmodule Registro.UsersController do
   defp load_datasheet_form_data(conn) do
     conn
     |> assign(:countries, Country.all |> Enum.map(&{&1.name, &1.id }))
+    |> assign(:provinces, Registro.Province.all)
     |> assign(:legal_id_kinds, LegalIdKind.all |> Enum.map(&{&1.label, &1.id }))
   end
 

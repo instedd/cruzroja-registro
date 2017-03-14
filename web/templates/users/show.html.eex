@@ -47,15 +47,40 @@
               [ validated_field(fd, :legal_id, text: "Número de documento", required: true, disabled: readonly)
               ],
 
-              [ validated_field(fd, :phone_number, text: "Teléfono", required: true, disabled: readonly)
-              ],
-
-              [ validated_field(fd, :address, text: "Domicilio", required: true, disabled: readonly)
-              ],
-
               [ validated_field(fd, :occupation, text: "Ocupación", required: true, disabled: readonly)
               ],
+
+              [ validated_field(fd, :phone_number, text: "Teléfono", required: true, disabled: readonly)
+              ],
             ] %>
+          </div>
+
+          <div class="row">
+            <div class="col s4 input-field">
+              <%= validated_field(fd, :address_street, text: "Calle", required: true) %>
+            </div>
+            <div class="col s2 input-field">
+              <%= validated_field(fd, :address_number, text: "Número", required: true) %>
+            </div>
+            <div class="col s2 input-field">
+              <%= validated_field(fd, :address_block, text: "Bloque") %>
+            </div>
+            <div class="col s2 input-field">
+              <%= validated_field(fd, :address_floor, text: "Piso") %>
+            </div>
+            <div class="col s2 input-field">
+              <%= validated_field(fd, :address_apartement, text: "Depto.") %>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col s6 input-field">
+              <%= validated_field(fd, :address_city, text: "Localidad", required: true) %>
+            </div>
+            <div class="col s6 input-field">
+              <%= select(fd, :address_province, @conn.assigns[:provinces], [class: "form-control", required: true]) %>
+              <%= label(fd, :address_province, "Provincia") %>
+            </div>
           </div>
 
           <%= if pending_approval do %>

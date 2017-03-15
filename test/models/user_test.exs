@@ -25,7 +25,10 @@ defmodule Registro.UserTest do
                                            legal_id: "1",
                                            birth_date: ~D[1980-01-01],
                                            occupation: "-",
-                                           address: "-",
+                                           address_street: "-",
+                                           address_number: 1,
+                                           address_city: "-",
+                                           address_province: "Buenos Aires",
                                            phone_number: "+1222222",
                                            country_id: country.id,
                                            branch_id: branch1.id,
@@ -36,6 +39,7 @@ defmodule Registro.UserTest do
   test "a user can be created with a datasheet", %{minimal_params: params} do
     changeset = User.changeset(:registration, params)
 
+    IO.puts(changeset.errors)
     assert changeset.valid?
 
     %User{ datasheet: datasheet } = Registro.Repo.insert!(changeset)

@@ -25,6 +25,7 @@ defmodule Registro.HomeControllerTest do
     assert redirected_to(conn) == "/perfil"
   end
 
+  @tag :focus
   test "redirects branch_admin to users listing", %{conn: conn} do
     branch = create_branch(name: "Branch")
     branch_admin = create_branch_admin("admin@instedd.org", branch)

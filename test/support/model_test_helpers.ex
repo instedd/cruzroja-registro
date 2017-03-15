@@ -147,7 +147,10 @@ defmodule Registro.ModelTestHelpers do
                      legal_id: "1",
                      birth_date: ~D[1980-01-01],
                      occupation: "-",
-                     address: "-",
+                     address_street: "-",
+                     address_number: 1,
+                     address_city: "-",
+                     address_province: "Buenos Aires",
                      phone_number: "+1222222",
                      country_id: country_id,
                      global_grant: nil }

@@ -183,7 +183,10 @@ defmodule Registro.UsersControllerTest do
         legal_id: "1234567890",
         birth_date: ~D[1990-01-01],
         occupation: "occupation...",
-        address: "address...",
+        address_street: "-",
+        address_number: 1,
+        address_city: "-",
+        address_province: "Buenos Aires",
         phone_number: "+111",
         country: ^country,
       } = updated_user.datasheet
@@ -212,7 +215,10 @@ defmodule Registro.UsersControllerTest do
       params = %{datasheet: %{
                     phone_number: "phone number...",
                     occupation: "occupation...",
-                    address: "address...",
+                    address_street: "street...",
+                    address_number: 1,
+                    address_city: "-",
+                    address_province: "Buenos Aires",
                     user: %{ id: "#{user.id}",
                              email: "modified_email@instedd.org" }}}
 
@@ -223,7 +229,7 @@ defmodule Registro.UsersControllerTest do
       assert updated_user.email == "modified_email@instedd.org"
       assert updated_user.datasheet.phone_number == "phone number..."
       assert updated_user.datasheet.occupation == "occupation..."
-      assert updated_user.datasheet.address == "address..."
+      assert updated_user.datasheet.address_street == "street..."
     end
 
     test "it is not possible to change datasheet>user association", %{conn: conn} do
@@ -275,7 +281,10 @@ defmodule Registro.UsersControllerTest do
         legal_id: "1234567890",
         birth_date: "1990-01-01",
         occupation: "occupation...",
-        address: "address...",
+        address_street: "-",
+        address_number: 1,
+        address_city: "-",
+        address_province: "Buenos Aires",
         phone_number: "+111",
         country_id: country_id,
       }
@@ -904,6 +913,7 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "CSV download" do
+    @tag :focus
     test "it allows downloading all users' information as CSV", %{conn: conn} do
       conn = conn
       |> log_in("super_admin@instedd.org")
@@ -912,17 +922,17 @@ defmodule Registro.UsersControllerTest do
       response = response(conn, 200)
 
       assert response == """
-      Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Dirección,Filial,Rol,Estado,Asociado Pago\r
-      Doe,admin,admin@instedd.org,Cédula de Identidad,2,Argentina,1980-01-01,-,-,,,,\r
-      Doe,branch_admin1,branch_admin1@instedd.org,Cédula de Identidad,4,Argentina,1980-01-01,-,-,,,,\r
-      Doe,branch_admin2,branch_admin2@instedd.org,Cédula de Identidad,5,Argentina,1980-01-01,-,-,,,,\r
-      Doe,branch_admin3,branch_admin3@instedd.org,Cédula de Identidad,6,Argentina,1980-01-01,-,-,,,,\r
-      Doe,branch_clerk1,branch_clerk1@instedd.org,Cédula de Identidad,7,Argentina,1980-01-01,-,-,,,,\r
-      Doe,reader,reader@instedd.org,Cédula de Identidad,3,Argentina,1980-01-01,-,-,,,,\r
-      Doe,super_admin,super_admin@instedd.org,Cédula de Identidad,1,Argentina,1980-01-01,-,-,,,,\r
-      Doe,volunteer1,volunteer1@example.com,Cédula de Identidad,8,Argentina,1980-01-01,-,-,Branch 1,Voluntario,Pendiente,\r
-      Doe,volunteer2,volunteer2@example.com,Cédula de Identidad,9,Argentina,1980-01-01,-,-,Branch 2,Voluntario,Pendiente,\r
-      Doe,volunteer3,volunteer3@example.com,Cédula de Identidad,10,Argentina,1980-01-01,-,-,Branch 3,Voluntario,Pendiente,\r
+      Apellido,Nombre,Email,Tipo de documento,Número de documento,Nacionalidad,Fecha de nacimiento,Ocupación,Calle,Número,Bloque,Piso,Departamento,Localidad,Provincia,Filial,Rol,Estado,Asociado Pago\r
+      Doe,admin,admin@instedd.org,Cédula de Identidad,2,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,branch_admin1,branch_admin1@instedd.org,Cédula de Identidad,4,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,branch_admin2,branch_admin2@instedd.org,Cédula de Identidad,5,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,branch_admin3,branch_admin3@instedd.org,Cédula de Identidad,6,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,branch_clerk1,branch_clerk1@instedd.org,Cédula de Identidad,7,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,reader,reader@instedd.org,Cédula de Identidad,3,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,super_admin,super_admin@instedd.org,Cédula de Identidad,1,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,,,,\r
+      Doe,volunteer1,volunteer1@example.com,Cédula de Identidad,8,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,Branch 1,Voluntario,Pendiente,\r
+      Doe,volunteer2,volunteer2@example.com,Cédula de Identidad,9,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,Branch 2,Voluntario,Pendiente,\r
+      Doe,volunteer3,volunteer3@example.com,Cédula de Identidad,10,Argentina,1980-01-01,-,-,1,,,,-,Buenos Aires,Branch 3,Voluntario,Pendiente,\r
       """
     end
 
@@ -950,7 +960,10 @@ defmodule Registro.UsersControllerTest do
                                      legal_id: "1",
                                      birth_date: ~D[1980-01-01],
                                      occupation: "-",
-                                     address: "-",
+                                     address_street: "-",
+                                     address_number: 1,
+                                     address_city: "-",
+                                     address_province: "Buenos Aires",
                                      phone_number: "+1222222",
                                      country_id: country.id,
                                      filled: true })

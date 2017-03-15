@@ -24,3 +24,4 @@ erl_crash.dump
 /config/prod.secret.exs
 
 .iex.exs
+/priv/data/rrhh.csv

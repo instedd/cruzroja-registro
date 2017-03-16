@@ -29,7 +29,7 @@ defmodule Recaptcha do
     get_setting(:secret_key)
   end
 
-  defp skip? do
+  def skip? do
     get_setting(:skip) || false
   end
 

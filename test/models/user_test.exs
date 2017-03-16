@@ -39,7 +39,6 @@ defmodule Registro.UserTest do
   test "a user can be created with a datasheet", %{minimal_params: params} do
     changeset = User.changeset(:registration, params)
 
-    IO.puts(changeset.errors)
     assert changeset.valid?
 
     %User{ datasheet: datasheet } = Registro.Repo.insert!(changeset)

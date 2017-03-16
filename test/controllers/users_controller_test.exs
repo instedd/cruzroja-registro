@@ -913,7 +913,6 @@ defmodule Registro.UsersControllerTest do
   end
 
   describe "CSV download" do
-    @tag :focus
     test "it allows downloading all users' information as CSV", %{conn: conn} do
       conn = conn
       |> log_in("super_admin@instedd.org")

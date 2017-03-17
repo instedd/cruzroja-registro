@@ -45,6 +45,7 @@ defmodule Registro.Mixfile do
      {:csv, "~> 1.4.0"},
      {:gen_smtp, "~> 0.11.0"},
      {:httpoison, "~> 0.10.0"},
+     {:csv, "~> 1.4.2"}
     ]
   end
 

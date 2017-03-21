@@ -15,7 +15,7 @@ defmodule Registro.Coherence.RegistrationController do
   alias Coherence.ControllerHelpers, as: Helpers
   import Registro.ControllerHelpers
 
-  alias Registro.{Branch,Country, User}
+  alias Registro.{Branch,Country, User,ImportedUser}
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
@@ -40,6 +40,21 @@ defmodule Registro.Coherence.RegistrationController do
     conn
     |> load_registration_form_data
     |> render(:new, email: "", changeset: cs)
+  end
+
+  def imported_user_search(conn, params) do
+    ds_params = params["user"]["datasheet"]
+    search = Registro.Repo.one from u in Registro.ImportedUser, where: u.legal_id == ^ds_params["legal_id"], limit: 1
+    cs = case search do
+      nil -> User.changeset(:registration, %{ datasheet: %{country_id: Country.default.id,
+                                                  legal_id: ds_params["legal_id"],
+                                                  legal_id_kind: ds_params["legal_id_kind"] } })
+      found -> User.changeset(:registration, %{ datasheet: ImportedUser.as_params(found), email: found.email })
+    end
+
+    conn
+    |> load_registration_form_data
+    |> render(:full_new, email: "", changeset: cs)
   end
 
 

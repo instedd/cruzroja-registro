@@ -22,8 +22,14 @@ To start the Phoenix app:
   * Start Phoenix endpoint with `mix phoenix.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-Alternatively, run with `iex -S mix phoenix.sever` to use iex's interactive shell.
+Alternatively, run with `iex -S mix phoenix.server` to use iex's interactive shell.
 
 For development, run `mix run priv/repo/seeds.exs` to create an administrator user.
 
 *Note:* a recent version of npm is required. Otherwise the required Babel dependencies might not be fetched. The app is tested with node `v6.9.2` and npm `v3.10.9`. See [this issue](https://github.com/phoenixframework/phoenix/issues/1410) for more information.
+
+## Importing DB users
+
+There should be a CSV called `rrhh.csv` in `priv/data/`. The document matches CRA's old database schema, and the original is located in the corresponding drive folder (internal).
+
+After downloading the file to the proper folder, run `mix run priv/repo/import_associates.exs`

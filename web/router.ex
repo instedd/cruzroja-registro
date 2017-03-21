@@ -39,6 +39,7 @@ defmodule Registro.Router do
 
     get "/registracion",  Coherence.RegistrationController, :new
     post "/registracion", Coherence.RegistrationController, :create
+    post "/registracion/busqueda", Coherence.RegistrationController, :imported_user_search
     get  "/registracion/invitado/:id",         Coherence.InvitationController, :edit
     post "/registracion/invitado/confirmar",   Coherence.InvitationController, :create_user
     coherence_routes :public

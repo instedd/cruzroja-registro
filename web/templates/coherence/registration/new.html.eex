@@ -2,10 +2,26 @@
   <%= single_column do %>
     <h5>Ingresá tus datos</h5>
     <br/>
-    <%= render "form.html", conn: @conn,
-                            changeset: @changeset,
-                            prefill: @prefill,
-                            required: [required: ""],
-                            action: registration_path(@conn, :create) %>
+
+    <%= form_for @changeset, registration_path(@conn, :imported_user_search), fn f  -> %>
+      <%= inputs_for f, :datasheet, fn fd -> %>
+
+      <%= form_rows [
+        [ select(fd, :legal_id_kind, @conn.assigns[:legal_id_kinds], class: "form-control", required: ""),
+          label(fd, :legal_id_kind, "Tipo de documento")
+        ],
+
+        [ validated_field(fd, :legal_id, text: "Número de documento", required: true)
+        ],
+      ] %>
+
+      <% end %>
+      <div class="row">
+        <div class="col s12 actions">
+          <%= submit "Aceptar", class: "btn btn-large btn-primary" %>
+          <%= link "Cancelar", to: Coherence.Config.logged_out_url("/"), class: "btn btn-large btn-flat" %>
+        </div>
+      </div>
+    <% end %>
   <% end %>
 </div>

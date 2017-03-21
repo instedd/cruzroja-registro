@@ -1,0 +1,13 @@
+<div id="page-register" class="edit-form">
+  <%= single_column do %>
+    <h5>Ingresá tus datos</h5>
+    <br/>
+
+  <%= render "form.html", conn: @conn,
+                          changeset: @changeset,
+                          prefill: @prefill,
+                          required: [required: ""],
+                          action: registration_path(@conn, :create) %>
+
+  <% end %>
+</div>

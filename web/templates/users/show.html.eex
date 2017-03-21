@@ -52,6 +52,12 @@
 
               [ validated_field(fd, :phone_number, text: "Teléfono", required: true, disabled: readonly)
               ],
+
+              [ validated_field(fd, :sigrid_profile_id, text: "ID de Sigrid", disabled: readonly)
+              ],
+
+              [ validated_field(fd, :extranet_profile_id, text: "ID de extranet", disabled: readonly)
+              ]
             ] %>
           </div>
 
@@ -74,12 +80,15 @@
           </div>
 
           <div class="row">
-            <div class="col s6 input-field">
+            <div class="col s4 input-field">
               <%= validated_field(fd, :address_city, text: "Localidad", required: true) %>
             </div>
             <div class="col s6 input-field">
               <%= select(fd, :address_province, @conn.assigns[:provinces], [class: "form-control", required: true]) %>
               <%= label(fd, :address_province, "Provincia") %>
+            </div>
+            <div class="col s2 input-field">
+              <%= validated_field(fd, :postal_code, text: "Código Postal") %>
             </div>
           </div>
 

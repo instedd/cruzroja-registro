@@ -29,6 +29,9 @@ defmodule Registro.Datasheet do
     field :address_province, :string
     field :postal_code, :integer
 
+    field :sigrid_profile_id, :integer
+    field :extranet_profile_id, :integer
+
     field :status, :string
     field :role, :string
     field :is_paying_associate, :boolean

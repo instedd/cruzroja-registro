@@ -140,10 +140,12 @@ defmodule Registro.Coherence.RegistrationController do
         |> put_in(["datasheet", "is_paying_associate"], is_paying_associate)
 
       "current_associate" ->
+        registration_date = params["current_associate_registration_date"]
         registration_params
         |> put_in(["datasheet", "role"], "associate")
         |> put_in(["datasheet", "status"], "at_start")
         |> put_in(["datasheet", "is_paying_associate"], false)
+        |> put_in(["datasheet", "registration_date"], registration_date)
     end
   end
 

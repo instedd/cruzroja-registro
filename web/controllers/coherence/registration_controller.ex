@@ -73,6 +73,15 @@ defmodule Registro.Coherence.RegistrationController do
   def create(conn, params) do
     user_schema = Config.user_schema
     registration_params = prepare_registration_params(params)
+    search = Registro.Repo.one from u in Registro.ImportedUser, where: u.legal_id == ^registration_params["datasheet"]["legal_id"], limit: 1
+    if search do
+      branch = Registro.Repo.one from b in Branch, where: like(b.name, ^("%#{search.branch_name}%"))
+      if branch, do: branch = branch.id
+      registration_params = registration_params
+                            |> put_in(["datasheet","sigrid_profile_id"], search.sigrid_profile_id)
+                            |> put_in(["datasheet","extranet_profile_id"], search.extranet_profile_id)
+                            |> put_in(["datasheet","branch_id"], branch)
+    end
 
     cs = User.changeset(:registration, registration_params)
 
@@ -81,20 +90,17 @@ defmodule Registro.Coherence.RegistrationController do
         case Config.repo.insert(cs) do
           {:ok, user} ->
             Registro.UserAuditLogEntry.add(user.datasheet_id, user, :create)
-            # search = Registro.Repo.one from u in Registro.ImportedUser, where: u.legal_id == ^ds_params["legal_id"], limit: 1
             # if search, do: save_changes_in_history(conn, search, user)
             conn
             |> send_confirmation(user, user_schema)
             |> translate_flash
             |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
           {:error, changeset} ->
-            require IEx;IEx.pry
             conn
             |> load_registration_form_data(params)
             |> render("full_new.html", changeset: changeset)
         end
       :error ->
-        require IEx;IEx.pry
         conn
         |> load_registration_form_data(params)
         |> put_flash(:error, "Hubo un problema. Por favor reintentar.")

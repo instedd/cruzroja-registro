@@ -71,7 +71,7 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:address_block, :address_floor, :address_province, :observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate])
+    |> cast(params, @required_fields ++ [:address_block, :address_floor, :address_province, :observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate, :sigrid_profile_id, :extranet_profile_id])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
     |> put_change(:filled, true)

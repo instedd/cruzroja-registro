@@ -58,7 +58,9 @@ defmodule Registro.ImportedUser do
         postal_code: user.postal_code,
         role: user.role,
         is_paying_associate: user.is_paying_associate,
-        branch_identifier: branch
+        branch_id: branch,
+        sigrid_profile_id: user.sigrid_profile_id,
+        extranet_profile_id: user.extranet_profile_id
     }
   end
 end

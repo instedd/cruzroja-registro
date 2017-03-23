@@ -6,9 +6,9 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :registro, :recaptcha,
-  site_key: "6LeeohUUAAAAAH8CGP-vNMTQKT8yP6QgaJ2dyJhE",
-  secret_key: "6LeeohUUAAAAANoKVVlEiACn0AHAA0pTLWIAXmi-"
+# config :registro, :recaptcha,
+#   site_key: "6LeeohUUAAAAAH8CGP-vNMTQKT8yP6QgaJ2dyJhE",
+#   secret_key: "6LeeohUUAAAAANoKVVlEiACn0AHAA0pTLWIAXmi-"
 
 config :registro, Registro.Endpoint,
   http: [port: 4000],
@@ -45,3 +45,6 @@ config :registro, Registro.Repo,
   database: "registro_dev",
   hostname: "localhost",
   pool_size: 10
+
+config :registro, :recaptcha,
+  skip: true

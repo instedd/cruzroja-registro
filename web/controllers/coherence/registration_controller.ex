@@ -45,15 +45,21 @@ defmodule Registro.Coherence.RegistrationController do
   def imported_user_search(conn, params) do
     ds_params = params["user"]["datasheet"]
     search = Registro.Repo.one from u in Registro.ImportedUser, where: u.legal_id == ^ds_params["legal_id"], limit: 1
-    cs = case search do
-      nil -> User.changeset(:registration, %{ datasheet: %{country_id: Country.default.id,
+    {cs, col_details} = case search do
+      nil -> {User.changeset(:registration, %{ datasheet: %{country_id: Country.default.id,
                                                   legal_id: ds_params["legal_id"],
-                                                  legal_id_kind: ds_params["legal_id_kind"] } })
-      found -> User.changeset(:registration, %{ datasheet: ImportedUser.as_params(found), email: found.email })
+                                                  legal_id_kind: ds_params["legal_id_kind"] } }),
+              %{}
+              }
+      found -> {User.changeset(:registration, %{ datasheet: Dict.merge(ImportedUser.as_params(found),
+                                                      %{country_id: Country.default.id}),
+                                                email: found.email }),
+                %{"colaboration_kind" => "current_associate", "current_associate_registration_date" => found.registration_date}
+                }
     end
 
     conn
-    |> load_registration_form_data
+    |> load_registration_form_data(col_details)
     |> render(:full_new, email: "", changeset: cs)
   end
 
@@ -75,20 +81,24 @@ defmodule Registro.Coherence.RegistrationController do
         case Config.repo.insert(cs) do
           {:ok, user} ->
             Registro.UserAuditLogEntry.add(user.datasheet_id, user, :create)
+            # search = Registro.Repo.one from u in Registro.ImportedUser, where: u.legal_id == ^ds_params["legal_id"], limit: 1
+            # if search, do: save_changes_in_history(conn, search, user)
             conn
             |> send_confirmation(user, user_schema)
             |> translate_flash
             |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
           {:error, changeset} ->
+            require IEx;IEx.pry
             conn
             |> load_registration_form_data(params)
-            |> render("new.html", changeset: changeset)
+            |> render("full_new.html", changeset: changeset)
         end
       :error ->
+        require IEx;IEx.pry
         conn
         |> load_registration_form_data(params)
         |> put_flash(:error, "Hubo un problema. Por favor reintentar.")
-        |> render("new.html", changeset: cs)
+        |> render("full_new.html", changeset: cs)
     end
   end
 
@@ -148,7 +158,12 @@ defmodule Registro.Coherence.RegistrationController do
     |> assign(:prefill, Map.take(submitted_params, ["colaboration_kind",
                                                     "new_colaboration_role",
                                                     "current_volunteer_registration_date",
-                                                    "current_volunteer_desired_role"
+                                                    "current_volunteer_desired_role",
+                                                    "current_associate_registration_date"
                                                    ]))
+  end
+
+  defp save_changes_in_history(conn, original, new) do
+    Registro.UserAuditLogEntry.add(new.datasheet_id, Coherence.current_user(conn), :invite_send)
   end
 end

@@ -16,6 +16,7 @@ defmodule Registro.UserAuditLogEntry do
                   "branch_admin_revoked",
                   "branch_clerk_granted",
                   "branch_clerk_revoked",
+                  "changed_imported_data"
                  ]
 
   schema "user_audit_log_entries" do
@@ -106,6 +107,9 @@ defmodule Registro.UserAuditLogEntry do
 
       "branch_clerk_revoked" ->
         actor <> " lo removió como participante de una filial" <> date
+
+      "changed_imported_data" ->
+        "Encontró su registración importada y cambió algunos campos " <> date
     end
   end
 

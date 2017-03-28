@@ -33,7 +33,7 @@
               ],
               [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: readonly)
               ],
-              [ label(fd, :birth_date, "Fecha de nacimiento"),
+              [ label(fd, :birth_date, "Fecha de nacimiento", class: (if readonly, do: "active", else: "")),
                 date_picker(fd, :birth_date, disabled: readonly)
               ],
               [ select(fd, :country_id, @conn.assigns[:countries], attributes([disabled: readonly, required: true], class: "form-control")),
@@ -57,29 +57,32 @@
 
           <div class="row">
             <div class="col s4 input-field">
-              <%= validated_field(fd, :address_street, text: "Calle", required: true) %>
+              <%= validated_field(fd, :address_street, text: "Calle", required: true, disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_number, text: "Número", required: true) %>
+              <%= validated_field(fd, :address_number, text: "Número", required: true, disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_block, text: "Bloque") %>
+              <%= validated_field(fd, :address_block, text: "Bloque", disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_floor, text: "Piso") %>
+              <%= validated_field(fd, :address_floor, text: "Piso", disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_apartement, text: "Depto.") %>
+              <%= validated_field(fd, :address_apartement, text: "Depto.", disabled: readonly) %>
             </div>
           </div>
 
           <div class="row">
-            <div class="col s6 input-field">
-              <%= validated_field(fd, :address_city, text: "Localidad", required: true) %>
+            <div class="col s4 input-field">
+              <%= validated_field(fd, :address_city, text: "Localidad", required: true, disabled: readonly) %>
             </div>
             <div class="col s6 input-field">
-              <%= select(fd, :address_province, @conn.assigns[:provinces], [class: "form-control", required: true]) %>
+              <%= select(fd, :address_province, @conn.assigns[:provinces], [class: "form-control", required: true, disabled: readonly]) %>
               <%= label(fd, :address_province, "Provincia") %>
+            </div>
+            <div class="col s2 input-field">
+              <%= validated_field(fd, :postal_code, text: "Código Postal", disabled: readonly) %>
             </div>
           </div>
 

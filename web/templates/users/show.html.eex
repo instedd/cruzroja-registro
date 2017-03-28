@@ -1,6 +1,7 @@
 <% current_user = Coherence.current_user(@conn) %>
 <% readonly = !has_ability?(@conn, :update) %>
 <% pending_approval = pending_approval?(@changeset.data.status)  %>
+<% rejected = @datasheet.status == "rejected" %>
 
 <%= if @changeset.action do %>
   <%= set_generic_error_toast %>
@@ -167,6 +168,10 @@
 
 
           <%= if !readonly do %>
+            <%= if rejected do %>
+              <p>Esta aplicación fue <b>rechazada</b>. Si se reabre, va a volver a quedar en estado "Pendiente" hasta que un administrador la apruebe o rechace nuevamente.</p>
+            <% end %>
+
             <div class="form-group actions right-align">
               <%=
               if pending_approval do
@@ -174,7 +179,11 @@
                   content_tag(:button, "Rechazar", class: "btn btn-large red", type: "submit", name: "flow_action", value: "reject"),
                 ]
               else
-                submit("Actualizar", class: "btn btn-large btn-primary")
+                if rejected && Registro.Datasheet.is_super_admin?(current_user.datasheet) do
+                  content_tag(:button, "Reabrir", class: "btn btn-large", type: "submit", name: "flow_action", value: "reopen")
+                else
+                  submit("Actualizar", class: "btn btn-large btn-primary")
+                end
               end
               %>
             </div>

@@ -28,7 +28,7 @@ export var App = {
   run: function() {
     $('select').material_select();
 
-    $('.datepicker').pickadate({
+    $('.datepicker:not([disabled])').pickadate({
       selectMonths: false,
       selectYears: 110,
       today: null,

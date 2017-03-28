@@ -1,6 +1,7 @@
 <% current_user = Coherence.current_user(@conn) %>
 <% readonly = !has_ability?(@conn, :update) %>
 <% pending_approval = pending_approval?(@changeset.data.status)  %>
+<% rejected = @datasheet.status == "rejected" %>
 
 <%= if @changeset.action do %>
   <%= set_generic_error_toast %>
@@ -33,7 +34,7 @@
               ],
               [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: readonly)
               ],
-              [ label(fd, :birth_date, "Fecha de nacimiento"),
+              [ label(fd, :birth_date, "Fecha de nacimiento", class: (if readonly, do: "active", else: "")),
                 date_picker(fd, :birth_date, disabled: readonly)
               ],
               [ select(fd, :country_id, @conn.assigns[:countries], attributes([disabled: readonly, required: true], class: "form-control")),
@@ -63,32 +64,32 @@
 
           <div class="row">
             <div class="col s4 input-field">
-              <%= validated_field(fd, :address_street, text: "Calle", required: true) %>
+              <%= validated_field(fd, :address_street, text: "Calle", required: true, disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_number, text: "Número", required: true) %>
+              <%= validated_field(fd, :address_number, text: "Número", required: true, disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_block, text: "Bloque") %>
+              <%= validated_field(fd, :address_block, text: "Bloque", disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_floor, text: "Piso") %>
+              <%= validated_field(fd, :address_floor, text: "Piso", disabled: readonly) %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :address_apartement, text: "Depto.") %>
+              <%= validated_field(fd, :address_apartement, text: "Depto.", disabled: readonly) %>
             </div>
           </div>
 
           <div class="row">
             <div class="col s4 input-field">
-              <%= validated_field(fd, :address_city, text: "Localidad", required: true) %>
+              <%= validated_field(fd, :address_city, text: "Localidad", required: true, disabled: readonly) %>
             </div>
             <div class="col s6 input-field">
-              <%= select(fd, :address_province, @conn.assigns[:provinces], [class: "form-control", required: true]) %>
+              <%= select(fd, :address_province, @conn.assigns[:provinces], [class: "form-control", required: true, disabled: readonly]) %>
               <%= label(fd, :address_province, "Provincia") %>
             </div>
             <div class="col s2 input-field">
-              <%= validated_field(fd, :postal_code, text: "Código Postal") %>
+              <%= validated_field(fd, :postal_code, text: "Código Postal", disabled: readonly) %>
             </div>
           </div>
 
@@ -173,6 +174,10 @@
 
 
           <%= if !readonly do %>
+            <%= if rejected do %>
+              <p>Esta aplicación fue <b>rechazada</b>. Si se reabre, va a volver a quedar en estado "Pendiente" hasta que un administrador la apruebe o rechace nuevamente.</p>
+            <% end %>
+
             <div class="form-group actions right-align">
               <%=
               if pending_approval do
@@ -180,7 +185,11 @@
                   content_tag(:button, "Rechazar", class: "btn btn-large red", type: "submit", name: "flow_action", value: "reject"),
                 ]
               else
-                submit("Actualizar", class: "btn btn-large btn-primary")
+                if rejected && Registro.Datasheet.is_super_admin?(current_user.datasheet) do
+                  content_tag(:button, "Reabrir", class: "btn btn-large", type: "submit", name: "flow_action", value: "reopen")
+                else
+                  submit("Actualizar", class: "btn btn-large btn-primary")
+                end
               end
               %>
             </div>

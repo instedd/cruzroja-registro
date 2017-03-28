@@ -24,7 +24,7 @@
       [ validated_field(fd, :last_name, text: "Apellido", required: true, disabled: @filled)
       ],
 
-      [ label(fd, :birth_date, "Fecha de nacimiento"),
+      [ label(fd, :birth_date, "Fecha de nacimiento", class: (if @filled, do: "active", else: "")),
         date_picker(fd, :birth_date, disabled: @filled)
       ],
 

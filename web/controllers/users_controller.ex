@@ -407,6 +407,7 @@ defmodule Registro.UsersController do
     case changeset.changes[:status] do
       "approved" -> :approve
       "rejected" -> :reject
+      "at_start" -> :reopen
       _ -> :update
     end
   end
@@ -432,6 +433,10 @@ defmodule Registro.UsersController do
         |> Map.put("status", "approved")
         |> ensure_registration_date(datasheet)
         |> apply_role_changes(selected_role)
+
+      "reopen" ->
+        datasheet_params
+        |> Map.put("status", "at_start")
 
       _ ->
         datasheet_params

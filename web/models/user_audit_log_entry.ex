@@ -21,6 +21,7 @@ defmodule Registro.UserAuditLogEntry do
 
   schema "user_audit_log_entries" do
     field :action, :string
+    field :changes, {:array, :string}
     belongs_to :user, Registro.Datasheet, foreign_key: :target_datasheet_id
     belongs_to :actor, Registro.Datasheet, foreign_key: :actor_datasheet_id
     timestamps
@@ -28,15 +29,20 @@ defmodule Registro.UserAuditLogEntry do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:target_datasheet_id, :actor_datasheet_id, :action])
+    |> cast(params, [:target_datasheet_id, :actor_datasheet_id, :action, :changes])
     |> validate_required([:target_datasheet_id, :actor_datasheet_id, :action])
     |> validate_action
   end
 
   def add(target_datasheet_id, actor, action) do
+    UserAuditLogEntry.add(target_datasheet_id, actor, action, nil)
+  end
+
+  def add(target_datasheet_id, actor, action, changes_list) do
     changeset = changeset(%UserAuditLogEntry{}, %{ actor_datasheet_id: actor.datasheet_id,
                                                    target_datasheet_id: target_datasheet_id,
-                                                   action: Atom.to_string(action) })
+                                                   action: Atom.to_string(action),
+                                                   changes: changes_list })
 
     case Repo.insert(changeset) do
       {:ok, _entry} ->
@@ -109,7 +115,10 @@ defmodule Registro.UserAuditLogEntry do
         actor <> " lo removió como participante de una filial" <> date
 
       "changed_imported_data" ->
-        "Encontró su registración importada y cambió algunos campos " <> date
+        case entry.changes do
+          nil -> actor <> " se registró recuperando datos importados " <> date
+          changes -> actor <> " se registró recuperando datos importados " <> date <> " y cambió o agregó los siguientes campos: " <> Enum.join(changes, ", ")
+        end
     end
   end
 

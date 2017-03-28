@@ -75,12 +75,17 @@ defmodule Registro.Coherence.RegistrationController do
     registration_params = prepare_registration_params(params)
     search = Registro.Repo.one from u in Registro.ImportedUser, where: u.legal_id == ^registration_params["datasheet"]["legal_id"], limit: 1
     if search do
-      branch = Registro.Repo.one from b in Branch, where: like(b.name, ^("%#{search.branch_name}%"))
-      if branch, do: branch = branch.id
+      branch = case search.branch_name do
+        nil -> nil
+        name -> Registro.Repo.one from b in Branch, where: like(b.name, ^("%#{name}%"))
+      end
       registration_params = registration_params
                             |> put_in(["datasheet","sigrid_profile_id"], search.sigrid_profile_id)
                             |> put_in(["datasheet","extranet_profile_id"], search.extranet_profile_id)
-                            |> put_in(["datasheet","branch_id"], branch)
+      if branch do
+        registration_params = registration_params
+                            |> put_in(["datasheet","branch_id"], branch.id)
+      end
     end
 
     cs = User.changeset(:registration, registration_params)
@@ -90,7 +95,7 @@ defmodule Registro.Coherence.RegistrationController do
         case Config.repo.insert(cs) do
           {:ok, user} ->
             Registro.UserAuditLogEntry.add(user.datasheet_id, user, :create)
-            # if search, do: save_changes_in_history(conn, search, user)
+            if search, do: save_changes_in_history(search, user)
             conn
             |> send_confirmation(user, user_schema)
             |> translate_flash
@@ -171,7 +176,29 @@ defmodule Registro.Coherence.RegistrationController do
                                                    ]))
   end
 
-  defp save_changes_in_history(conn, original, new) do
-    Registro.UserAuditLogEntry.add(new.datasheet_id, Coherence.current_user(conn), :invite_send)
+  defp save_changes_in_history(imported, new_user) do
+    ds = new_user.datasheet
+    changes = []
+              |> add_change_if(imported.first_name != ds.first_name, "Nombre")
+              |> add_change_if(imported.last_name != ds.last_name, "Apellido")
+              |> add_change_if(imported.legal_id_kind != ds.legal_id_kind, "Tipo de documento")
+              |> add_change_if(imported.legal_id != ds.legal_id, "Número de documento")
+              |> add_change_if(imported.birth_date != ds.birth_date, "Fecha de nacimiento")
+              |> add_change_if(imported.occupation != ds.occupation, "Ocupación")
+              |> add_change_if(imported.phone_number != ds.phone_number, "Teléfono")
+              |> add_change_if(imported.registration_date != ds.registration_date, "Fecha de registro")
+              |> add_change_if(imported.email != new_user.email, "Email")
+              |> add_change_if(imported.address_street != ds.address_street ||
+                               imported.address_number != ds.address_number ||
+                               imported.address_block != ds.address_block ||
+                               imported.address_floor != ds.address_floor ||
+                               imported.address_apartement != ds.address_apartement ||
+                               imported.address_city != ds.address_city ||
+                               imported.address_province != ds.address_province, "Dirección")
+
+    Registro.UserAuditLogEntry.add(new_user.datasheet_id, new_user, :changed_imported_data, changes)
   end
+
+  defp add_change_if(changes_list, true, label), do: [label | changes_list]
+  defp add_change_if(changes_list, false, _label), do: changes_list
 end

@@ -35,7 +35,10 @@ defmodule Registro.ImportedUser do
   end
 
   def as_params(user) do
-    branch = Registro.Repo.one from b in Branch, where: like(b.name, ^("%#{user.branch_name}%"))
+    branch = case user.branch_name do
+      nil -> nil
+      name -> Registro.Repo.one from b in Branch, where: like(b.name, ^("%#{name}%"))
+    end
     if branch do
       branch = branch.id
     end

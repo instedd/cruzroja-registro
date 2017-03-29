@@ -49,7 +49,11 @@ defmodule Registro.BranchManagement do
   end
 
   defp admin_changes(changeset) do
-    previous_admins = changeset.data.admins |> Enum.map(&(&1.id))
+    previous_admins = if Ecto.assoc_loaded?(changeset.data.admins) do
+      changeset.data.admins |> Enum.map(&(&1.id))
+    else
+      []
+    end
     updated_admins  = changeset |> Ecto.Changeset.get_field(:admins) |> Enum.map(&(&1.id))
 
     added_admins =
@@ -64,7 +68,11 @@ defmodule Registro.BranchManagement do
   end
 
   defp clerk_changes(changeset) do
-    previous_clerks = changeset.data.clerks |> Enum.map(&(&1.id))
+    previous_clerks = if Ecto.assoc_loaded?(changeset.data.clerks) do
+      changeset.data.clerks |> Enum.map(&(&1.id))
+    else
+      []
+    end
     updated_clerks  = changeset |> Ecto.Changeset.get_field(:clerks) |> Enum.map(&(&1.id))
 
     added_clerks =

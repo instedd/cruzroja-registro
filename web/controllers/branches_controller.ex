@@ -133,8 +133,9 @@ defmodule Registro.BranchesController do
       |> BranchManagement.update_staff(current_user, admin_emails, clerk_emails)
 
     case Repo.insert(changeset) do
-      {:ok, _branch} ->
+      {:ok, branch} ->
         msg = msg_for_staff_invites(new_datasheets)
+        BranchManagement.log_changes(current_user, changeset)
         conn
         |> put_flash(:info, msg)
         |> redirect(to: branches_path(conn, :index))

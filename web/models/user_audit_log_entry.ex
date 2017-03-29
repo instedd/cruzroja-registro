@@ -92,7 +92,10 @@ defmodule Registro.UserAuditLogEntry do
         actor <> " aprobó su solicitud" <> date
 
       "reject" ->
-        actor <> " rechazó su solicitud" <> date
+        case entry.changes do
+          nil -> actor <> " rechazó su solicitud con el identificador " <> date
+          [id] -> actor <> " rechazó su solicitud con el identificador " <> id <> " " <> date
+        end
 
       "reopen" ->
         actor <> " reabrió su solicitud" <> date

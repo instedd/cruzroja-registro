@@ -121,7 +121,7 @@ defmodule Registro.UsersController do
 
       case Repo.update(changeset) do
         {:ok, ds} ->
-          UserAuditLogEntry.add(datasheet.id, current_user, action_for(changeset))
+          UserAuditLogEntry.add(datasheet.id, current_user, action_for(changeset), [format_identifier(ds)])
           send_email_on_status_change(conn, changeset, email, ds)
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")
@@ -555,5 +555,17 @@ defmodule Registro.UsersController do
     if action_for(changeset) == :reject do
       Registro.Coherence.UserEmail.reject(ds, users_url(conn, :profile), email)
     end
+  end
+
+  defp format_identifier(datasheet) do
+    branch_part = datasheet.branch.identifier
+                  |> Integer.to_string
+                  |> String.rjust(3, ?0)
+
+    datasheet_part = datasheet.branch_identifier
+                    |> Integer.to_string
+                    |> String.rjust(6, ?0)
+
+    "#{branch_part}-#{datasheet_part}"
   end
 end

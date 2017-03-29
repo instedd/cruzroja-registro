@@ -1,10 +1,7 @@
 defmodule Registro.ImportedUser do
   use Registro.Web, :model
 
-  alias __MODULE__
-  alias Registro.User
   alias Registro.Branch
-  alias Registro.Invitation
 
   schema "imported_users" do
     field :first_name, :string

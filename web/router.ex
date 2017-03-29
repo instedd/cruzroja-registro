@@ -36,6 +36,7 @@ defmodule Registro.Router do
     pipe_through [:browser, :set_user]
 
     get "/", HomeController, :index
+    get "/privacidad", HomeController, :privacy_policy
 
     get "/registracion",  Coherence.RegistrationController, :new
     post "/registracion", Coherence.RegistrationController, :create

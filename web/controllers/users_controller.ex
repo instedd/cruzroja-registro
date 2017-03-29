@@ -121,7 +121,8 @@ defmodule Registro.UsersController do
 
       case Repo.update(changeset) do
         {:ok, ds} ->
-          UserAuditLogEntry.add(datasheet.id, current_user, action_for(changeset), [format_identifier(ds)])
+          id = if action_for(changeset) == :reject, do: [format_identifier(ds)], else: nil
+          UserAuditLogEntry.add(datasheet.id, current_user, action_for(changeset), id)
           send_email_on_status_change(conn, changeset, email, ds)
           conn
           |> put_flash(:info, "Los cambios en la cuenta fueron efectuados.")

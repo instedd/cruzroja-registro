@@ -15,4 +15,8 @@ defmodule Registro.HomeController do
         end
     end
   end
+
+  def privacy_policy(conn, _params) do
+    render(conn, "privacy_policy.html")
+  end
 end

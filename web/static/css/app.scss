@@ -29,6 +29,20 @@ body {
   background-color: $brand-red !important;
 }
 
+h2 {
+  font-size: 22px;
+}
+
+footer {
+  border-top: 1px solid $table-border;
+  padding: 10px;
+  text-transform: uppercase;
+  color: $secondary-gray;
+  a {
+    color: $brand-red;
+  }
+}
+
 .content-main {
   background: $white;
   box-shadow: 0px 1px 5px #AAAAAA;

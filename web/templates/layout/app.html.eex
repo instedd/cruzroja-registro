@@ -61,6 +61,10 @@
 
     </div>
 
+    <footer>
+      Cruz Roja Argentina / <a href="<%= home_path(@conn, :privacy_policy) %>">Política de Privacidad</a>
+    </footer>
+
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <script>require("web/static/js/app").App.run()</script>
 

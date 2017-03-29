@@ -82,7 +82,8 @@ defmodule Registro.ModelTestHelpers do
     changeset = Branch.creation_changeset(%{ name: name,
                                              address: "generated",
                                              eligible: eligible,
-                                             province: "Buenos Aires" })
+                                             province: "Buenos Aires",
+                                             identifier: 1 })
     Repo.insert! changeset
   end
 
@@ -90,7 +91,8 @@ defmodule Registro.ModelTestHelpers do
     changeset = Branch.creation_changeset(%{ name: name,
                                              address: "generated",
                                              eligible: eligible,
-                                             province: province })
+                                             province: province,
+                                             identifier: 1 })
     Repo.insert! changeset
   end
 

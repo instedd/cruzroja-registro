@@ -170,6 +170,7 @@ defmodule Registro.Datasheet do
       "at_start" -> "Pendiente"
       "approved" -> "Aprobado"
       "rejected" -> "No aprobado"
+      "suspended" -> "Dado de baja"
       "associate_requested" -> "Solicitó ser asociado"
       nil        -> ""
     end
@@ -388,7 +389,7 @@ defmodule Registro.Datasheet do
   end
 
   defp valid_status?(status) do
-    Enum.member? ["at_start", "approved", "rejected", "associate_requested"], status
+    Enum.member? ["at_start", "approved", "rejected", "associate_requested","suspended"], status
   end
 
   def required_fields do

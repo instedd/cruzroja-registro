@@ -1,5 +1,6 @@
 <% current_user = Coherence.current_user(@conn) %>
-<% readonly = !has_ability?(@conn, :update) %>
+<% suspended = @datasheet.status == "suspended" %>
+<% readonly = !has_ability?(@conn, :update) || suspended %>
 <% pending_approval = pending_approval?(@changeset.data.status)  %>
 <% rejected = @datasheet.status == "rejected" %>
 
@@ -26,6 +27,9 @@
         <%= form_for @changeset, users_path(@conn, :update, @datasheet), fn fd -> %>
           <div class="section">
             <h3>Datos personales</h3>
+            <%= if suspended do %>
+              <p>Este voluntario está <b>dado de baja</b>, es decir, no tiene actividad en su filial. Mientras no esté activo, no se pueden modificar sus datos.</p>
+            <% end %>
             <label for="email">Email</label>
             <%= tag(:input, attributes([disabled: readonly], type: "text", id: "datasheet_user_email", name: "email", value: (if @datasheet.user, do: @datasheet.user.email, else: ""))) %>
 
@@ -102,7 +106,7 @@
             </div>
           <% end %>
 
-          <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) do %>
+          <%= if Registro.Datasheet.is_super_admin?(current_user.datasheet) && !suspended do %>
             <div class="section">
               <h3>Acceso global</h3>
               <div class="row">
@@ -188,10 +192,18 @@
                 if rejected && Registro.Datasheet.is_super_admin?(current_user.datasheet) do
                   content_tag(:button, "Reabrir", class: "btn btn-large", type: "submit", name: "flow_action", value: "reopen")
                 else
-                  submit("Actualizar", class: "btn btn-large btn-primary")
+                  [ submit("Actualizar", class: "btn btn-large btn-primary"),
+                    content_tag(:button, "Dar de baja", class: "btn btn-large btn-flat", type: "submit", name: "flow_action", value: "suspend")
+                  ]
                 end
               end
               %>
+            </div>
+          <% else %>
+            <div class="form-group actions right-align">
+              <%= if suspended && has_ability?(@conn, :update) do
+                content_tag(:button, "Reactivar", class: "btn btn-large", type: "submit", name: "flow_action", value: "reinstate")
+              end %>
             </div>
           <% end %>
         <% end %>

@@ -109,7 +109,11 @@ defmodule Registro.UsersController do
     if !authorize_update(conn, datasheet, datasheet_params) do
       Authorization.handle_unauthorized(conn)
     else
-      email = params["email"]
+      email = if params["flow_action"] == "reinstate" do
+                datasheet.user.email
+              else
+                params["email"]
+              end
 
       changeset = Datasheet.changeset(datasheet, datasheet_params)
       changeset = if email && email != "" do
@@ -255,17 +259,17 @@ defmodule Registro.UsersController do
     query
   end
 
-  def role_filter(query, nil), do: query
-  def role_filter(query, param), do: from d in query, where: d.role == ^param
+  defp role_filter(query, nil), do: query
+  defp role_filter(query, param), do: from d in query, where: d.role == ^param
 
-  def branch_filter(query, nil), do: query
-  def branch_filter(query, param), do: from d in query, where: d.branch_id == ^param
+  defp branch_filter(query, nil), do: query
+  defp branch_filter(query, param), do: from d in query, where: d.branch_id == ^param
 
-  def status_filter(query, nil), do: query
-  def status_filter(query, param), do: from d in query, where: d.status == ^param
+  defp status_filter(query, nil), do: query
+  defp status_filter(query, param), do: from d in query, where: d.status == ^param
 
-  def name_filter(query, nil), do: query
-  def name_filter(query, param) do
+  defp name_filter(query, nil), do: query
+  defp name_filter(query, param) do
     name = "%" <> param <> "%"
     from d in query,
       left_join: u in User, on: u.datasheet_id == d.id,
@@ -409,6 +413,7 @@ defmodule Registro.UsersController do
       "approved" -> :approve
       "rejected" -> :reject
       "at_start" -> :reopen
+      "suspended" -> :suspend
       _ -> :update
     end
   end
@@ -438,6 +443,15 @@ defmodule Registro.UsersController do
       "reopen" ->
         datasheet_params
         |> Map.put("status", "at_start")
+
+      "suspend" ->
+        datasheet_params
+        |> Map.put("status", "suspended")
+
+      "reinstate" ->
+        %{}
+        |> Map.put("id", datasheet.id)
+        |> Map.put("status", "approved")
 
       _ ->
         datasheet_params

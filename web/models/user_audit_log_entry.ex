@@ -10,6 +10,7 @@ defmodule Registro.UserAuditLogEntry do
                   "approve",
                   "reject",
                   "reopen",
+                  "suspend",
                   "associate_requested",
                   "invite_send",
                   "invite_confirm",
@@ -99,6 +100,9 @@ defmodule Registro.UserAuditLogEntry do
 
       "reopen" ->
         actor <> " reabrió su solicitud" <> date
+
+      "suspend" ->
+        actor <> " lo dio de baja" <> date
 
       "associate_requested" ->
         "Solicitó ser asociado" <> date

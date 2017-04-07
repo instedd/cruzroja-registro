@@ -1,4 +1,14 @@
 defmodule Registro.DateTime do
+  # Finally added Timex as a dependency.
+  # We might want to start switching all these to Timex whenever possible.
+
+  def now() do
+    :calendar.universal_time()
+  end
+
+  def now_locally() do
+    Registro.DateTime.to_local(Registro.DateTime.now())
+  end
 
   # This is set for argentinian timezone: UTC-3
   def to_local(datetime) do

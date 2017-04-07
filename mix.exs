@@ -22,7 +22,8 @@ defmodule Registro.Mixfile do
                     :phoenix_ecto, :postgrex,
                     :coherence,
                     :gen_smtp,
-                    :httpoison]]
+                    :httpoison,
+                    :timex]]
   end
 
   # Specifies which paths to compile per environment.
@@ -45,7 +46,8 @@ defmodule Registro.Mixfile do
      {:csv, "~> 1.4.0"},
      {:gen_smtp, "~> 0.11.0"},
      {:httpoison, "~> 0.10.0"},
-     {:csv, "~> 1.4.2"}
+     {:csv, "~> 1.4.2"},
+     {:timex, "~> 2.1"}
     ]
   end
 

@@ -176,6 +176,46 @@
             <%= info_card("eligible-branch-warning", "warning", "La filial seleccionada no es elegible por voluntarios.") %>
           </div>
 
+          <div class="section">
+            <h3>Actividad</h3>
+            <% last_year = 0 %>
+            <%= Enum.map @quarters, fn [quarter, desc] -> %>
+              <%= year = String.slice(quarter, -4..-1) %>
+              <%= last_year %>
+              <%= if last_year != year do %>
+                <div class="row">
+                <div class="col s12"><%= String.slice(quarter, -4..-1) %></div>
+              <% end %>
+              <div class="col s3">
+                <input type="text" name="activity[<%= quarter %>]" placeholder="<%= quarter %>" value="<%= desc %>">
+              </div>
+              <%= if last_year != year do %>
+                </div>
+              <% end %>
+              <% last_year = year %>
+            <% end %>
+          </div>
+
+          <%= if @months != [] do %>
+          <div class="section">
+            <h3>Pagos</h3>
+            <%= for {month, index} <- @months |> Stream.with_index do %>
+              <%= if rem(index,4) == 0 do %>
+                <div class="row">
+              <% end %>
+              <div class="col s2">
+                <input type="text" name="activity[]" placeholder="<%= month %>">
+              </div>
+              <div class="col pe-1">
+                <input type="checkbox" name="activity_greyed">
+              </div>
+              <%= if rem(index,4) == 3 do %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+          <% end %>
+
 
           <%= if !readonly do %>
             <%= if rejected do %>

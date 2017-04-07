@@ -8,7 +8,7 @@ defmodule Registro.Datasheet do
 
   import Registro.Gettext, only: [gettext: 1]
 
-  @assocs [:branch, :admin_branches, :clerk_branches, :country, :user]
+  @assocs [:branch, :admin_branches, :clerk_branches, :country, :user, :associate_payments, :volunteer_activities]
 
   schema "datasheets" do
     field :first_name, :string
@@ -28,6 +28,8 @@ defmodule Registro.Datasheet do
     field :address_city, :string
     field :address_province, :string
     field :postal_code, :integer
+    field :volunteer_to_associate_date, :date
+    field :staff_observations, :string
 
     field :sigrid_profile_id, :integer
     field :extranet_profile_id, :integer
@@ -53,6 +55,9 @@ defmodule Registro.Datasheet do
 
     # the branches in which the person acts as a clerk
     many_to_many :clerk_branches, Registro.Branch, join_through: "branches_clerks"
+
+    has_many :volunteer_activities, Registro.VolunteerActivity
+    has_many :associate_payments, Registro.AssociatePayment
   end
 
   @required_fields [ :first_name,

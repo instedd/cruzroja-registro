@@ -1,5 +1,6 @@
 defmodule Registro.UsersController do
   use Registro.Web, :controller
+  use Timex
 
   alias __MODULE__
   alias Registro.{
@@ -11,6 +12,7 @@ defmodule Registro.UsersController do
     Branch,
     Datasheet,
     UserAuditLogEntry,
+    VolunteerActivity
   }
 
   import Ecto.Query
@@ -99,12 +101,11 @@ defmodule Registro.UsersController do
 
   def update(conn, params) do
     current_user = Coherence.current_user(conn)
-    datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user
+    datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user  |> Registro.Repo.preload([:volunteer_activities])
 
     datasheet_params =
       params["datasheet"]
       |> set_colaboration_settings(params["branch_name"], params["selected_role"], params["flow_action"], datasheet)
-
 
     if !authorize_update(conn, datasheet, datasheet_params) do
       Authorization.handle_unauthorized(conn)
@@ -119,6 +120,12 @@ defmodule Registro.UsersController do
       changeset = if email && email != "" do
                     user = User.changeset(datasheet.user, :update, %{email: email})
                     Ecto.Changeset.put_assoc(changeset, :user, user)
+                  else
+                    changeset
+                  end
+      activities = setup_activities(params["activity"], datasheet)
+      changeset = if activities do
+                    Ecto.Changeset.put_assoc(changeset, :volunteer_activities, activities)
                   else
                     changeset
                   end
@@ -160,7 +167,7 @@ defmodule Registro.UsersController do
   end
 
   def show(conn, params) do
-    datasheet = Repo.one(from d in Datasheet.full_query, where: d.id == ^params["id"])
+    datasheet = Repo.one(from d in Datasheet.full_query, where: d.id == ^params["id"], preload: [:volunteer_activities])
     changeset = Ecto.Changeset.change(datasheet)
     branch = datasheet.branch
     branch_name = if branch, do: branch.name
@@ -169,6 +176,8 @@ defmodule Registro.UsersController do
     |> assign(:branches, Branch.all)
     |> assign(:roles, Role.all)
     |> assign(:history, UserAuditLogEntry.for(datasheet))
+    |> assign(:quarters, quarters_for(datasheet))
+    |> assign(:months, months_for(datasheet.volunteer_to_associate_date))
     |> load_datasheet_form_data
     |> render("show.html", changeset: changeset, datasheet: datasheet, branch_name: branch_name)
   end
@@ -299,6 +308,52 @@ defmodule Registro.UsersController do
         order_by(query, [d], [{^direction, d.status}])
       "branch" ->
         from d in query, left_join: b in Branch, on: d.branch_id == b.id, order_by: [{^direction, b.name}]
+    end
+  end
+
+  defp quarters_for(datasheet) do
+    case datasheet.registration_date do
+      nil -> []
+      date ->
+        quarter_start = Timex.beginning_of_quarter(Date.from(Elixir.Date.to_erl(date)))
+        Interval.new(from: quarter_start, until: Date.now("America/Buenos_Aires"), right_open: false)
+        |> Interval.with_step([months: 3])
+        |> Enum.map(fn(dt) -> [Timex.format(dt, "%m/%Y", :strftime), VolunteerActivity.desc_for(datasheet.volunteer_activities, dt)] end)
+        |> Enum.map(fn([{:ok, date}, desc]) -> [date, desc] end)
+    end
+  end
+
+  defp months_for(association_date) do
+    case association_date do
+      nil -> []
+      date ->
+        Interval.new(from: Date.from(Elixir.Date.to_erl(date)), until: Date.now("America/Buenos_Aires"), right_open: false)
+        |> Interval.with_step([months: 1])
+        |> Enum.map(fn(dt) -> Timex.format(dt, "%m/%Y", :strftime) end)
+        |> Enum.map(fn({:ok, date}) -> date end)
+    end
+  end
+
+  defp setup_activities(updated, datasheet) do
+    if updated == nil do
+      nil
+    else
+      updated
+      |> Enum.filter(fn {date, desc} -> desc != "" end)
+      |> Enum.map(fn {date, description} ->
+          dates = Regex.named_captures(~r/(?<month>[0-9]+)\/(?<year>[0-9]+)/, date)
+          {_res,formatted_date} = Elixir.Date.new(String.to_integer(dates["year"]),String.to_integer(dates["month"]),1)
+
+          if !VolunteerActivity.is_saved(formatted_date, description, datasheet.volunteer_activities) do
+            case Enum.find(datasheet.volunteer_activities, fn(act) -> act.date == formatted_date end) do
+              nil -> build_assoc(datasheet, :volunteer_activities, %{date: formatted_date, description: description})
+              found -> VolunteerActivity.changeset(found, %{description: description})
+            end
+          else
+            nil
+          end
+        end)
+      |> Enum.filter(fn res -> res != nil end)
     end
   end
 

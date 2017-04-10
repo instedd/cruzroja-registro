@@ -212,7 +212,7 @@ defmodule Registro.UsersController do
         Datasheet.legal_id_kind(d).label,
         d.legal_id,
         d.country.name,
-        Date.to_iso8601(d.birth_date),
+        Elixir.Date.to_iso8601(d.birth_date),
         d.occupation,
         d.address_street,
         d.address_number,

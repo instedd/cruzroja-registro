@@ -178,22 +178,25 @@
 
           <div class="section">
             <h3>Actividad</h3>
-            <% last_year = 0 %>
-            <%= Enum.map @quarters, fn [quarter, desc] -> %>
-              <%= year = String.slice(quarter, -4..-1) %>
-              <%= last_year %>
-              <%= if last_year != year do %>
+            <% # This "1000" is a hack so I don't have to add another if to the first, case. Sorry %>
+            <% drop_first = [["1000", nil] | Enum.drop(@quarters, 0)] %>
+            <% quarters_with_previous = Enum.zip(drop_first, @quarters) %>
+            <%= for {{[prev_quarter, _desc],[quarter, desc]}, index} <- quarters_with_previous |> Stream.with_index do %>
+              <% year = String.slice(quarter, -4..-1) %>
+              <% prev_year = String.slice(prev_quarter, -4..-1) %>
+              <%= if year != prev_year do %>
+                <%= if index != 0 do %>
+                  <% # This closes the previous row %>
+                  </div>
+                <% end %>
                 <div class="row">
-                <div class="col s12"><%= String.slice(quarter, -4..-1) %></div>
+                <div class="col s12"><%= year %></div>
               <% end %>
               <div class="col s3">
                 <input type="text" name="activity[<%= quarter %>]" placeholder="<%= quarter %>" value="<%= desc %>">
               </div>
-              <%= if last_year != year do %>
-                </div>
-              <% end %>
-              <% last_year = year %>
             <% end %>
+            </div>
           </div>
 
           <%= if @months != [] do %>

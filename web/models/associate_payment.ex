@@ -14,7 +14,16 @@ defmodule Registro.AssociatePayment do
     model
     |> cast(params, [:date])
     |> cast_assoc(:datasheet, required: true)
+    |> unique_constraint(:date)
     |> validate_required([:date])
+  end
+
+  def for(list, date) do
+    {:ok, formatted} = Elixir.Date.new(date.year, date.month, date.day)
+    case Enum.find(list, nil, fn act -> act.date == formatted end) do
+      nil -> false
+      found -> true
+    end
   end
 end
 

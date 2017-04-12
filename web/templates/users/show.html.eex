@@ -176,6 +176,7 @@
             <%= info_card("eligible-branch-warning", "warning", "La filial seleccionada no es elegible por voluntarios.") %>
           </div>
 
+          <%= if @quarters != [] && !pending_approval do %>
           <div class="section">
             <h3>Actividad</h3>
             <% # This "1000" is a hack so I don't have to add another if to the first, case. Sorry %>
@@ -198,21 +199,20 @@
             <% end %>
             </div>
           </div>
+          <% end %>
 
-          <%= if @months != [] do %>
+          <%= if @months != [] && !pending_approval do %>
           <div class="section">
             <h3>Pagos</h3>
-            <%= for {month, index} <- @months |> Stream.with_index do %>
-              <%= if rem(index,4) == 0 do %>
+            <%= for {[month, payed], index} <- @months |> Stream.with_index do %>
+              <%= if rem(index,6) == 0 do %>
                 <div class="row">
               <% end %>
-              <div class="col s2">
-                <input type="text" name="activity[]" placeholder="<%= month %>">
+              <div class="col s2 input-field">
+                <input type="checkbox" class="form-control" value="<%= payed %>" id="payment[<%= month %>]" name="payment[<%= month %>]" <%= if payed do %>checked="checked"<% end %>>
+                <label for="payment[<%= month %>]" class="control-label"><%= month %></label>
               </div>
-              <div class="col pe-1">
-                <input type="checkbox" name="activity_greyed">
-              </div>
-              <%= if rem(index,4) == 3 do %>
+              <%= if rem(index,6) == 5 do %>
                 </div>
               <% end %>
             <% end %>

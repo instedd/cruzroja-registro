@@ -7,7 +7,8 @@ defmodule Registro.DateTime do
   end
 
   def now_locally() do
-    Registro.DateTime.to_local(Registro.DateTime.now())
+    {:ok, dt} = NaiveDateTime.from_erl(Registro.DateTime.now())
+    Registro.DateTime.to_local(dt)
   end
 
   # This is set for argentinian timezone: UTC-3

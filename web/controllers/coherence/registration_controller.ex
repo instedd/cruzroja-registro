@@ -82,6 +82,7 @@ defmodule Registro.Coherence.RegistrationController do
       registration_params = registration_params
                             |> put_in(["datasheet","sigrid_profile_id"], search.sigrid_profile_id)
                             |> put_in(["datasheet","extranet_profile_id"], search.extranet_profile_id)
+                            |> put_in(["datasheet","volunteer_to_associate_date"], registration_params["datasheet"]["registration_date"])
       if branch do
         registration_params = registration_params
                             |> put_in(["datasheet","branch_id"], branch.id)

@@ -12,7 +12,8 @@ defmodule Registro.UsersController do
     Branch,
     Datasheet,
     UserAuditLogEntry,
-    VolunteerActivity
+    VolunteerActivity,
+    AssociatePayment
   }
 
   import Ecto.Query
@@ -101,7 +102,10 @@ defmodule Registro.UsersController do
 
   def update(conn, params) do
     current_user = Coherence.current_user(conn)
-    datasheet = Repo.get(Datasheet, params["id"]) |> Datasheet.preload_user  |> Registro.Repo.preload([:volunteer_activities])
+    datasheet = Repo.get(Datasheet, params["id"])
+                |> Datasheet.preload_user
+                |> Registro.Repo.preload([:volunteer_activities])
+                |> Registro.Repo.preload([:associate_payments])
 
     datasheet_params =
       params["datasheet"]
@@ -129,6 +133,14 @@ defmodule Registro.UsersController do
                   else
                     changeset
                   end
+      # {new_payments,existing} = setup_payments(params["payment"], datasheet)
+      # changeset = if new_payments || existing do
+      #         Ecto.Changeset.put_assoc(changeset, :associate_payments, new_payments ++ existing)
+      #       else
+      #         changeset
+      #       end
+
+      # require IEx;IEx.pry
 
       case Repo.update(changeset) do
         {:ok, ds} ->
@@ -142,6 +154,8 @@ defmodule Registro.UsersController do
           branch_name = if datasheet.branch, do: datasheet.branch.name
           conn
           |> assign(:history, UserAuditLogEntry.for(datasheet))
+          |> assign(:quarters, quarters_for(datasheet))
+          |> assign(:months, months_for(datasheet))
           |> load_datasheet_form_data
           |> render("show.html", changeset: changeset, branches: Branch.all, roles: Role.all, datasheet: datasheet, branch_name: branch_name)
       end
@@ -177,7 +191,7 @@ defmodule Registro.UsersController do
     |> assign(:roles, Role.all)
     |> assign(:history, UserAuditLogEntry.for(datasheet))
     |> assign(:quarters, quarters_for(datasheet))
-    |> assign(:months, months_for(datasheet.volunteer_to_associate_date))
+    |> assign(:months, months_for(datasheet))
     |> load_datasheet_form_data
     |> render("show.html", changeset: changeset, datasheet: datasheet, branch_name: branch_name)
   end
@@ -323,14 +337,15 @@ defmodule Registro.UsersController do
     end
   end
 
-  defp months_for(association_date) do
-    case association_date do
+  defp months_for(datasheet) do
+    case datasheet.volunteer_to_associate_date do
       nil -> []
       date ->
-        Interval.new(from: Date.from(Elixir.Date.to_erl(date)), until: Date.now("America/Buenos_Aires"), right_open: false)
+        month_start = Timex.beginning_of_month(Date.from(Elixir.Date.to_erl(date)))
+        Interval.new(from: month_start, until: Date.now("America/Buenos_Aires"), right_open: false)
         |> Interval.with_step([months: 1])
-        |> Enum.map(fn(dt) -> Timex.format(dt, "%m/%Y", :strftime) end)
-        |> Enum.map(fn({:ok, date}) -> date end)
+        |> Enum.map(fn(dt) -> [Timex.format(dt, "%m/%Y", :strftime), AssociatePayment.for(datasheet.associate_payments, dt)] end)
+        |> Enum.map(fn([{:ok, date}, payed]) -> [date, payed] end)
     end
   end
 
@@ -341,19 +356,50 @@ defmodule Registro.UsersController do
       updated
       |> Enum.filter(fn {date, desc} -> desc != "" end)
       |> Enum.map(fn {date, description} ->
-          dates = Regex.named_captures(~r/(?<month>[0-9]+)\/(?<year>[0-9]+)/, date)
-          {_res,formatted_date} = Elixir.Date.new(String.to_integer(dates["year"]),String.to_integer(dates["month"]),1)
-
-          if !VolunteerActivity.is_saved(formatted_date, description, datasheet.volunteer_activities) do
-            case Enum.find(datasheet.volunteer_activities, fn(act) -> act.date == formatted_date end) do
-              nil -> build_assoc(datasheet, :volunteer_activities, %{date: formatted_date, description: description})
-              found -> VolunteerActivity.changeset(found, %{description: description})
-            end
-          else
-            nil
+          formatted_date = string_to_db_date(date)
+          case Enum.find(datasheet.volunteer_activities, fn(act) -> act.date == formatted_date end) do
+            nil -> build_assoc(datasheet, :volunteer_activities, %{date: formatted_date, description: description})
+            found ->
+              if found.description == description do
+                found
+              else
+                Ecto.Changeset.change(found, description: description)
+              end
           end
         end)
       |> Enum.filter(fn res -> res != nil end)
+    end
+  end
+
+  defp string_to_db_date(date) do
+    dates = Regex.named_captures(~r/(?<month>[0-9]+)\/(?<year>[0-9]+)/, date)
+    {_res,formatted_date} = Elixir.Date.new(String.to_integer(dates["year"]),String.to_integer(dates["month"]),1)
+    formatted_date
+  end
+
+  defp setup_payments(updated, datasheet) do
+    if updated == nil do
+      {nil, nil}
+    else
+      new = updated
+          |> Enum.map(fn {date, _x} ->
+              formatted_date = string_to_db_date(date)
+              case Enum.find(datasheet.associate_payments, fn(pay) -> pay.date == formatted_date end) do
+                nil -> build_assoc(datasheet, :associate_payments, %{date: formatted_date})
+                found -> nil
+              end
+            end)
+          |> Enum.filter(fn e -> e != nil end)
+      existing = datasheet.associate_payments
+                  |> Enum.map(fn p ->
+                      if !Enum.any?(updated, fn {date, _x} ->
+                        formatted_date = string_to_db_date(date)
+                        p.date == formatted_date end) do
+                          %{build_assoc(datasheet, :associate_payments, p) | action: :delete}
+                      else
+                        p
+                      end end)
+      {new, existing}
     end
   end
 
@@ -494,6 +540,7 @@ defmodule Registro.UsersController do
         |> Map.put("status", "approved")
         |> ensure_registration_date(datasheet)
         |> apply_role_changes(selected_role)
+        |> add_associate_date(datasheet)
 
       "reopen" ->
         datasheet_params
@@ -525,6 +572,19 @@ defmodule Registro.UsersController do
                         end
 
     Map.put(datasheet_params, "registration_date", registration_date)
+  end
+
+  defp add_associate_date(datasheet_params, datasheet) do
+    case datasheet.volunteer_to_associate_date do
+      nil ->
+        case datasheet_params["role"] do
+          "associate" ->
+            Map.put(datasheet_params, "volunteer_to_associate_date", Timex.Date.today)
+          _ ->
+            datasheet_params
+        end
+      value -> datasheet_params
+    end
   end
 
   defp apply_role_changes(datasheet_params, selected_role) do

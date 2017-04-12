@@ -76,9 +76,10 @@ defmodule Registro.Datasheet do
 
   def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:address_block, :address_floor, :address_province, :observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate, :sigrid_profile_id, :extranet_profile_id])
+    |> cast(params, @required_fields ++ [:volunteer_to_associate_date, :address_block, :address_floor, :address_province, :observations, :registration_date, :status, :branch_id, :role, :global_grant, :is_paying_associate, :sigrid_profile_id, :extranet_profile_id])
     |> cast_assoc(:admin_branches, required: false)
     |> cast_assoc(:user, required: false)
+    # |> cast_assoc(:volunteer_activities, required: false)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
     |> validate_colaboration
@@ -98,7 +99,7 @@ defmodule Registro.Datasheet do
 
   def profile_filled_changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields ++ [:registration_date, :address_block, :address_floor, :address_province])
+    |> cast(params, @required_fields ++ [:volunteer_to_associate_date, :registration_date, :address_block, :address_floor, :address_province])
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> put_change(:filled, true)
     |> validate_required(@required_fields)
@@ -107,7 +108,7 @@ defmodule Registro.Datasheet do
 
   def profile_update_changeset(model, params \\ %{}) do
     model
-    |> cast(params, [:phone_number, :occupation, :address_street, :address_apartement, :address_number, :address_province, :address_city, :address_block, :address_floor, :address_province])
+    |> cast(params, [:volunteer_to_associate_date, :phone_number, :occupation, :address_street, :address_apartement, :address_number, :address_province, :address_city, :address_block, :address_floor, :address_province])
     |> cast_assoc(:user, required: false, with: fn(model, params) -> User.changeset(model, :update, params) end)
     |> validate_required([:phone_number, :occupation, :address_street, :address_province, :address_city, :address_province, :address_number])
   end

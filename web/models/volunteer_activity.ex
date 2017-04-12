@@ -20,7 +20,7 @@ defmodule Registro.VolunteerActivity do
   end
 
   def is_saved(date, desc, activities_list) do
-    Enum.find(activities_list, fn(act) -> act.date == date && act.desc == desc end)
+    Enum.find(activities_list, fn(act) -> act.date == date && act.description == desc end)
   end
 
   def desc_for(list, date) do

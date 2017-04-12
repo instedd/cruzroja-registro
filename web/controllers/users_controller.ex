@@ -133,14 +133,12 @@ defmodule Registro.UsersController do
                   else
                     changeset
                   end
-      # {new_payments,existing} = setup_payments(params["payment"], datasheet)
-      # changeset = if new_payments || existing do
-      #         Ecto.Changeset.put_assoc(changeset, :associate_payments, new_payments ++ existing)
-      #       else
-      #         changeset
-      #       end
-
-      # require IEx;IEx.pry
+      {new_payments,existing} = setup_payments(params["payment"], datasheet)
+      changeset = if new_payments || existing do
+              Ecto.Changeset.put_assoc(changeset, :associate_payments, new_payments ++ existing)
+            else
+              changeset
+            end
 
       case Repo.update(changeset) do
         {:ok, ds} ->
@@ -354,11 +352,15 @@ defmodule Registro.UsersController do
       nil
     else
       updated
-      |> Enum.filter(fn {date, desc} -> desc != "" end)
       |> Enum.map(fn {date, description} ->
           formatted_date = string_to_db_date(date)
           case Enum.find(datasheet.volunteer_activities, fn(act) -> act.date == formatted_date end) do
-            nil -> build_assoc(datasheet, :volunteer_activities, %{date: formatted_date, description: description})
+            nil ->
+              if description == "" do
+                nil
+              else
+                build_assoc(datasheet, :volunteer_activities, %{date: formatted_date, description: description})
+              end
             found ->
               if found.description == description do
                 found
@@ -395,7 +397,7 @@ defmodule Registro.UsersController do
                       if !Enum.any?(updated, fn {date, _x} ->
                         formatted_date = string_to_db_date(date)
                         p.date == formatted_date end) do
-                          %{build_assoc(datasheet, :associate_payments, p) | action: :delete}
+                          %{Ecto.Changeset.change(p) | action: :delete}
                       else
                         p
                       end end)

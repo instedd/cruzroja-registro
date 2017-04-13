@@ -542,7 +542,7 @@ defmodule Registro.UsersController do
         |> Map.put("status", "approved")
         |> ensure_registration_date(datasheet)
         |> apply_role_changes(selected_role)
-        |> add_associate_date(datasheet)
+        |> add_associate_date(datasheet_params["role"], datasheet)
 
       "reopen" ->
         datasheet_params
@@ -560,6 +560,7 @@ defmodule Registro.UsersController do
       _ ->
         datasheet_params
         |> apply_role_changes(selected_role)
+        |> add_associate_date(selected_role, datasheet)
         |> set_status_if_creating_colaboration(datasheet)
     end
   end
@@ -576,11 +577,15 @@ defmodule Registro.UsersController do
     Map.put(datasheet_params, "registration_date", registration_date)
   end
 
-  defp add_associate_date(datasheet_params, datasheet) do
+  defp add_associate_date(datasheet_params, selected_role, datasheet) do
     case datasheet.volunteer_to_associate_date do
       nil ->
-        case datasheet_params["role"] do
+        case selected_role do
           "associate" ->
+            Map.put(datasheet_params, "volunteer_to_associate_date", Timex.Date.today)
+          "non_paying_associate" ->
+            Map.put(datasheet_params, "volunteer_to_associate_date", Timex.Date.today)
+          "paying_associate" ->
             Map.put(datasheet_params, "volunteer_to_associate_date", Timex.Date.today)
           _ ->
             datasheet_params

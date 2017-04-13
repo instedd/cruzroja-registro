@@ -388,7 +388,7 @@ defmodule Registro.UsersController do
               formatted_date = string_to_db_date(date)
               case Enum.find(datasheet.associate_payments, fn(pay) -> pay.date == formatted_date end) do
                 nil -> build_assoc(datasheet, :associate_payments, %{date: formatted_date})
-                found -> nil
+                _found -> nil
               end
             end)
           |> Enum.filter(fn e -> e != nil end)
@@ -595,7 +595,7 @@ defmodule Registro.UsersController do
           _ ->
             datasheet_params
         end
-      value -> datasheet_params
+      _value -> datasheet_params
     end
   end
 

@@ -1,8 +1,6 @@
 defmodule Registro.VolunteerActivity do
   use Registro.Web, :model
 
-  alias __MODULE__
-
   schema "volunteer_activity" do
     field :date, :date
     field :description, :string

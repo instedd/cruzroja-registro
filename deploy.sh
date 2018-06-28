@@ -58,7 +58,7 @@ docker run -w /app -v `pwd`:/app -v `pwd`/deps:/app/deps -v `pwd`/node_modules:/
 # Build and push Docker image
 echo "Docker tag: $DOCKER_TAG"
 docker build -t ${DOCKER_REPOSITORY}:${DOCKER_TAG} .
-docker login -e ${DOCKER_EMAIL} -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
+docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
 docker push ${DOCKER_REPOSITORY}:${DOCKER_TAG}
 
 # Push extra image on exact tags

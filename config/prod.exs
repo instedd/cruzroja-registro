@@ -41,3 +41,7 @@ config :coherence, Registro.Coherence.Mailer,
   password: {:system, "SMTP_PASS"},
   tls: :always,
   auth: :always
+
+config :coherence,
+  email_from_name: System.get_env("EMAIL_FROM_NAME"),
+  email_from_email: System.get_env("EMAIL_FROM_EMAIL")
